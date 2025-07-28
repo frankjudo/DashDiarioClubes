@@ -20,40 +20,38 @@ h1 {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    margin: 20px auto 30px auto;
+    margin: 20px auto;
     max-width: 1000px;
 }
 
 .card {
     background: #222;
+    border-radius: 8px;
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #0f0;
     width: 180px;
     margin: 10px;
+    box-shadow: 0 0 10px #0f0;
     font-weight: bold;
     font-size: 18px;
 }
 
 .graficos {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 30px;
     max-width: 1200px;
     margin: 30px auto;
-    padding: 0 20px;
 }
 
 .grafico-container {
     background: #222;
     padding: 10px;
     border-radius: 8px;
-    box-shadow: 0 0 10px #0f0;
 }
 
 canvas {
     width: 100% !important;
-    height: 300px !important;
+    height: 250px !important;
 }
 
 table {
