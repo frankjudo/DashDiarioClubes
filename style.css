@@ -7,9 +7,9 @@ body {
     text-align: center;
 }
 
-h1 {
-    margin: 20px 0;
+h1, h2 {
     color: #0f0;
+    margin: 20px 0;
 }
 
 .filtros {
@@ -20,14 +20,14 @@ h1 {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    max-width: 1000px;
     margin: 20px auto;
+    max-width: 1000px;
 }
 
 .card {
     background: #222;
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 10px;
     width: 180px;
     margin: 10px;
     box-shadow: 0 0 10px #0f0;
@@ -47,7 +47,11 @@ h1 {
     background: #222;
     padding: 10px;
     border-radius: 8px;
-    height: 300px;
+}
+
+canvas {
+    width: 100% !important;
+    height: 250px !important;
 }
 
 table {
@@ -65,9 +69,4 @@ th, td {
 
 th {
     background: #222;
-}
-
-canvas {
-    width: 100% !important;
-    height: 250px !important;
 }
