@@ -47,19 +47,12 @@ h1 {
     background: #222;
     padding: 10px;
     border-radius: 8px;
-    margin: 10px;
-    max-width: 400px;
-}
-
-canvas {
-    width: 100% !important;
-    height: 250px !important;
 }
 
 table {
     margin: 20px auto;
     border-collapse: collapse;
-    width: 50%;
+    width: 70%;
     color: #0f0;
 }
 
@@ -71,4 +64,9 @@ th, td {
 
 th {
     background: #222;
+}
+
+canvas {
+    width: 100% !important;
+    height: 250px !important;
 }

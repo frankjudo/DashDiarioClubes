@@ -1,43 +1,40 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Financeiro</title>
+    <title>Dashboard de Clubes</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
     <h1>Dashboard de Clubes</h1>
-
     <div class="filtros">
-        <label for="filtroData">Data:</label>
-        <input type="date" id="filtroData">
-        <label for="filtroClube">Clube:</label>
-        <select id="filtroClube"></select>
+        <label>Data: <input type="date" id="dataFiltro"></label>
+        <label>Clube: <select id="clubeSelect"></select></label>
+        <button onclick="aplicarFiltros()">Aplicar</button>
     </div>
-
     <div class="cards">
-        <div class="card" id="cardFTD">FTD<br><span id="totalFTD">R$ 0</span></div>
-        <div class="card" id="cardDepositos">Depósitos<br><span id="totalDepositos">R$ 0</span></div>
-        <div class="card" id="cardGGR">GGR<br><span id="totalGGR">R$ 0</span></div>
+        <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0,00</p></div>
+        <div class="card"><h2>Depósitos</h2><p id="totalDepositos">R$ 0,00</p></div>
+        <div class="card"><h2>GGR</h2><p id="totalGGR">R$ 0,00</p></div>
     </div>
 
     <div class="graficos">
-        <div class="grafico-container">
-            <canvas id="graficoGGR"></canvas>
-        </div>
-        <div class="grafico-container">
-            <canvas id="graficoFTD"></canvas>
-        </div>
-        <div class="grafico-container">
-            <canvas id="graficoDepositos"></canvas>
-        </div>
+        <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
     </div>
 
     <h2>Top 10 Clubes - Depósitos</h2>
-    <table id="ranking"></table>
+    <table id="rankingDepositos"></table>
+
+    <h2>Top 10 Clubes - FTD</h2>
+    <table id="rankingFTD"></table>
+
+    <h2>Top 10 Clubes - GGR</h2>
+    <table id="rankingGGR"></table>
 
     <script src="script.js"></script>
 </body>
