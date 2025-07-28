@@ -13,24 +13,26 @@ h1 {
 }
 
 .filtros {
-    margin-bottom: 20px;
+    margin: 20px 0;
 }
 
 .cards {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    margin-bottom: 30px;
+    margin: 20px auto;
+    max-width: 1000px;
 }
 
 .card {
     background: #222;
-    border-radius: 8px;
     padding: 20px;
-    width: 180px;
+    border-radius: 10px;
     box-shadow: 0 0 10px #0f0;
     font-weight: bold;
     font-size: 18px;
+    width: 180px;
+    margin: 10px;
 }
 
 .graficos {
@@ -45,20 +47,13 @@ h1 {
     background: #222;
     padding: 10px;
     border-radius: 8px;
-    box-shadow: 0 0 10px #0f0;
-}
-
-canvas {
-    width: 100% !important;
-    height: 250px !important;
 }
 
 table {
     margin: 20px auto;
     border-collapse: collapse;
-    width: 80%;
+    width: 60%;
     color: #0f0;
-    font-size: 14px;
 }
 
 th, td {
