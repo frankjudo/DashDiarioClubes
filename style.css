@@ -13,23 +13,21 @@ h1 {
 }
 
 .filtros {
-    margin: 20px 0;
+    margin-bottom: 20px;
 }
 
 .cards {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    margin: 20px auto;
-    max-width: 1000px;
+    margin-bottom: 30px;
 }
 
 .card {
     background: #222;
-    padding: 20px;
     border-radius: 8px;
+    padding: 20px;
     width: 180px;
-    margin: 10px;
     box-shadow: 0 0 10px #0f0;
     font-weight: bold;
     font-size: 18px;
@@ -47,13 +45,20 @@ h1 {
     background: #222;
     padding: 10px;
     border-radius: 8px;
+    box-shadow: 0 0 10px #0f0;
+}
+
+canvas {
+    width: 100% !important;
+    height: 250px !important;
 }
 
 table {
     margin: 20px auto;
     border-collapse: collapse;
-    width: 70%;
+    width: 80%;
     color: #0f0;
+    font-size: 14px;
 }
 
 th, td {
@@ -64,9 +69,4 @@ th, td {
 
 th {
     background: #222;
-}
-
-canvas {
-    width: 100% !important;
-    height: 250px !important;
 }
