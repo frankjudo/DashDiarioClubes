@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Relatório Diário</title>
+    <style>
+        body {
+            background: #000;
+            color: #00ff00;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            margin: 20px 0;
+        }
+        .cards {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: #111;
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            padding: 20px;
+            width: 200px;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        table {
+            width: 50%;
+            margin: 40px auto;
+            border-collapse: collapse;
+            color: #00ff00;
+        }
+        th, td {
+            border: 1px solid #00ff00;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background: #111;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+    <h1>Dashboard Relatório Diário</h1>
+
+    <div class="cards">
+        <div class="card">
+            <h2 id="ftdTotal">0</h2>
+            <p>FTD Total</p>
+        </div>
+        <div class="card">
+            <h2 id="depositosTotal">0</h2>
+            <p>Depósitos Totais</p>
+        </div>
+        <div class="card">
+            <h2 id="ggrTotal">0</h2>
+            <p>GGR Total</p>
+        </div>
+    </div>
+
+    <h2>Top 10 Depósitos</h2>
+    <table id="topDepositos">
+        <thead>
+            <tr>
+                <th>Usuário</th>
+                <th>Depósitos</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?output=csv";
+
+        function carregarDados() {
+            Papa.parse(SHEETS_URL, {
+                download: true,
+                header: true,
+                complete: function(result) {
+                    const dados = result.data;
+
+                    // Conversão para números
+                    let ftdTotal = 0;
+                    let depositosTotal = 0;
+                    let ggrTotal = 0;
+
+                    const clubes = {};
+
+                    dados.forEach(linha => {
+                        const email = linha["Usuário - Nome de usuário do principal"] || "Sem Clube";
+                        const ftd = parseFloat(linha["Usuário - FTD-Montante"] || 0);
+                        const depositos = parseFloat(linha["Usuário - Depósitos"] || 0);
+                        const ggr = parseFloat(linha["Cálculo - GGR"] || 0);
+
+                        ftdTotal += ftd;
+                        depositosTotal += depositos;
+                        ggrTotal += ggr;
+
+                        if (!clubes[email]) {
+                            clubes[email] = { depositos: 0 };
+                        }
+                        clubes[email].depositos += depositos;
+                    });
+
+                    // Atualiza os cards
+                    document.getElementById("ftdTotal").innerText = "R$ " + ftdTotal.toLocaleString("pt-BR");
+                    document.getElementById("depositosTotal").innerText = "R$ " + depositosTotal.toLocaleString("pt-BR");
+                    document.getElementById("ggrTotal").innerText = "R$ " + ggrTotal.toLocaleString("pt-BR");
+
+                    // Ordena por depósitos e pega top 10
+                    const top10 = Object.entries(clubes)
+                        .sort((a, b) => b[1].depositos - a[1].depositos)
+                        .slice(0, 10);
+
+                    const tbody = document.querySelector("#topDepositos tbody");
+                    tbody.innerHTML = "";
+                    top10.forEach(([email, valores]) => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `<td>${email}</td><td>R$ ${valores.depositos.toLocaleString("pt-BR")}</td>`;
+                        tbody.appendChild(tr);
+                    });
+                },
+                error: function() {
+                    alert("Erro ao carregar dados do Google Sheets");
+                }
+            });
+        }
+
+        carregarDados();
+    </script>
+</body>
+</html>
