@@ -26,8 +26,9 @@ h1 {
 
 .card {
     background: #222;
-    border-radius: 8px;
-    padding: 20px;
+    border: 2px solid #0f0;
+    border-radius: 10px;
+    padding: 15px;
     width: 180px;
     margin: 10px;
     box-shadow: 0 0 10px #0f0;
@@ -45,8 +46,9 @@ h1 {
 
 .grafico-container {
     background: #222;
-    padding: 10px;
     border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 0 10px #0f0;
 }
 
 canvas {
@@ -66,7 +68,6 @@ th, td {
     padding: 8px;
     text-align: center;
 }
-
 th {
     background: #222;
 }
