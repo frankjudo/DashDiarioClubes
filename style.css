@@ -1,7 +1,7 @@
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #1e1e2f;
-    color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
     margin: 0;
     padding: 0;
     text-align: center;
@@ -9,7 +9,7 @@ body {
 
 h1 {
     margin: 20px 0;
-    color: #4da6ff;
+    color: #00cc66;
 }
 
 .filtros {
@@ -25,27 +25,23 @@ h1 {
 }
 
 .card {
-    background: #2a2a3d;
+    background: #1a1a1a;
     padding: 20px;
     width: 200px;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    transition: transform 0.2s ease-in-out;
-}
-.card:hover {
-    transform: translateY(-5px);
+    box-shadow: 0 0 10px #00cc66;
 }
 
 .card h2 {
     font-size: 1.3em;
     margin-bottom: 10px;
-    color: #ffffff;
+    color: #00cc66;
 }
 
 .card p {
     font-size: 1.5em;
     font-weight: bold;
-    color: #4da6ff;
+    color: #fff;
 }
 
 .graficos {
@@ -57,11 +53,11 @@ h1 {
 }
 
 .grafico-container {
-    background: #2a2a3d;
+    background: #1a1a1a;
     padding: 15px;
     border-radius: 10px;
     width: 300px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px #00cc66;
 }
 
 .tabelas {
@@ -73,34 +69,34 @@ h1 {
 }
 
 .tabela-container {
-    background: #2a2a3d;
+    background: #1a1a1a;
     padding: 15px;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px #00cc66;
 }
 
 .tabela-container h2 {
     margin-bottom: 10px;
-    color: #4da6ff;
+    color: #00cc66;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    color: #f0f0f0;
+    color: #fff;
 }
 
 th, td {
     padding: 10px;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #00cc66;
     text-align: center;
 }
 
 th {
-    background: #3a3a4f;
-    color: #4da6ff;
+    background: #222;
+    color: #00cc66;
 }
 
 tr:hover td {
-    background: rgba(77, 166, 255, 0.1);
+    background: rgba(0, 204, 102, 0.2);
 }
