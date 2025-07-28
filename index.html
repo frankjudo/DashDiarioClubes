@@ -10,17 +10,20 @@
 </head>
 <body>
     <h1>Dashboard Clubes</h1>
+
     <div class="filtros">
         <label>Data Inicial: <input type="date" id="dataInicial"></label>
         <label>Data Final: <input type="date" id="dataFinal"></label>
-        <label>Clube: <select id="clubeSelect"></select></label>
+        <label>Clube:
+            <select id="clubeSelect"></select>
+        </label>
         <button onclick="aplicarFiltros()">Aplicar</button>
     </div>
 
     <div class="cards">
-        <div class="card"><h2>FTD</h2><p id="ftdTotal">0</p></div>
-        <div class="card"><h2>Depósitos</h2><p id="depositosTotal">0</p></div>
-        <div class="card"><h2>GGR</h2><p id="ggrTotal">0</p></div>
+        <div class="card"><h2>FTD</h2><p id="ftdTotal">R$ 0,00</p></div>
+        <div class="card"><h2>Depósitos</h2><p id="depositosTotal">R$ 0,00</p></div>
+        <div class="card"><h2>GGR</h2><p id="ggrTotal">R$ 0,00</p></div>
         <div class="card"><h2>Clubes Ativos</h2><p id="clubesAtivos">0</p></div>
     </div>
 
