@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,9 +12,9 @@
     <h1>Dashboard Clubes</h1>
 
     <div class="filtros">
-        <label>Data Inicial: <input type="date" id="dataInicio"></label>
-        <label>Data Final: <input type="date" id="dataFim"></label>
-        <label>Clube:
+        <label>Data Inicial: <input type="date" id="dataInicial"></label>
+        <label>Data Final: <input type="date" id="dataFinal"></label>
+        <label>Clube: 
             <select id="clubeSelect"></select>
         </label>
         <button onclick="aplicarFiltros()">Aplicar</button>
@@ -24,16 +24,22 @@
         <div class="card"><h2>FTD</h2><p id="ftdTotal">0</p></div>
         <div class="card"><h2>Depósitos</h2><p id="depositosTotal">0</p></div>
         <div class="card"><h2>GGR</h2><p id="ggrTotal">0</p></div>
+        <div class="card"><h2>Clubes Ativos</h2><p id="clubesAtivos">0</p></div>
     </div>
 
-    <div class="grafico-container">
-        <canvas id="graficoDiario"></canvas>
+    <div class="graficos">
+        <canvas id="graficoGGR"></canvas>
+        <canvas id="graficoFTD"></canvas>
+        <canvas id="graficoDepositos"></canvas>
     </div>
 
     <h2>Top 10 Clubes Ativos</h2>
-    <table id="top10Table">
+    <table id="top10">
         <thead>
-            <tr><th>Clube</th><th>GGR</th></tr>
+            <tr>
+                <th>Clube</th>
+                <th>GGR</th>
+            </tr>
         </thead>
         <tbody></tbody>
     </table>
