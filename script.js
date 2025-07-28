@@ -1,120 +1,113 @@
-const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugg-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?output=csv";
-let dados = [];
-let chart;
-
-document.addEventListener("DOMContentLoaded", () => {
-    carregarDados();
-});
+const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+let dadosOriginais = [];
 
 function carregarDados() {
-    Papa.parse(URL_CSV, {
+    Papa.parse(sheetURL, {
         download: true,
         header: true,
         complete: function(results) {
-            dados = results.data;
-            preencherSelectClubes();
-            atualizarDashboard(dados);
+            dadosOriginais = results.data;
+            preencherClubes();
+            atualizarDashboard(dadosOriginais);
         }
     });
 }
 
-function preencherSelectClubes() {
-    const clubes = [...new Set(dados.map(linha => linha["Usuário - Nome de usuário do principal"]))];
+function preencherClubes() {
+    const clubes = [...new Set(dadosOriginais.map(linha => linha["Usuário - Nome de usuário do principal"]))];
     const select = document.getElementById("clubeSelect");
-    select.innerHTML = "<option value=''>Todos</option>";
+    select.innerHTML = `<option value="">Todos</option>`;
     clubes.forEach(clube => {
-        if (clube) {
-            const opt = document.createElement("option");
-            opt.value = clube;
-            opt.textContent = clube;
-            select.appendChild(opt);
-        }
+        select.innerHTML += `<option value="${clube}">${clube}</option>`;
     });
 }
 
 function aplicarFiltros() {
-    const dataInicio = document.getElementById("dataInicio").value;
-    const dataFim = document.getElementById("dataFim").value;
+    const dataInicial = document.getElementById("dataInicial").value;
+    const dataFinal = document.getElementById("dataFinal").value;
     const clube = document.getElementById("clubeSelect").value;
 
-    let filtrado = dados.filter(linha => {
-        let passa = true;
-        if (dataInicio) passa = passa && (new Date(linha["DATA"]) >= new Date(dataInicio));
-        if (dataFim) passa = passa && (new Date(linha["DATA"]) <= new Date(dataFim));
-        if (clube) passa = passa && (linha["Usuário - Nome de usuário do principal"] === clube);
-        return passa;
+    let filtrados = dadosOriginais.filter(linha => {
+        let data = new Date(linha["DATA"]);
+        let condData = (!dataInicial || data >= new Date(dataInicial)) && (!dataFinal || data <= new Date(dataFinal));
+        let condClube = (!clube || linha["Usuário - Nome de usuário do principal"] === clube);
+        return condData && condClube;
     });
 
-    atualizarDashboard(filtrado);
+    atualizarDashboard(filtrados);
 }
 
-function atualizarDashboard(dadosFiltrados) {
-    const totalFTD = dadosFiltrados.reduce((sum, l) => sum + parseFloat(l["Usuário - FTD-Montante"] || 0), 0);
-    const totalDepositos = dadosFiltrados.reduce((sum, l) => sum + parseFloat(l["Usuário - Depósitos"] || 0), 0);
-    const totalGGR = dadosFiltrados.reduce((sum, l) => sum + parseFloat(l["Cálculo - GGR"] || 0), 0);
+function atualizarDashboard(dados) {
+    let ftd = 0, depositos = 0, ggr = 0;
+    let clubesAtivos = new Set();
+    let topClubes = {};
 
-    document.getElementById("ftdTotal").textContent = totalFTD.toFixed(2);
-    document.getElementById("depositosTotal").textContent = totalDepositos.toFixed(2);
-    document.getElementById("ggrTotal").textContent = totalGGR.toFixed(2);
+    dados.forEach(linha => {
+        const f = parseFloat(linha["Usuário - FTD-Montante"]) || 0;
+        const d = parseFloat(linha["Usuário - Depósitos"]) || 0;
+        const g = parseFloat(linha["Cálculo - GGR"]) || 0;
 
-    atualizarGraficoDiario(dadosFiltrados);
-    atualizarTop10Clubes(dadosFiltrados);
-}
+        ftd += f;
+        depositos += d;
+        ggr += g;
 
-function atualizarGraficoDiario(dadosFiltrados) {
-    const agrupadoPorDia = {};
-    dadosFiltrados.forEach(l => {
-        const dia = l["DATA"];
-        if (!agrupadoPorDia[dia]) agrupadoPorDia[dia] = { ggr: 0 };
-        agrupadoPorDia[dia].ggr += parseFloat(l["Cálculo - GGR"] || 0);
+        if (g !== 0) clubesAtivos.add(linha["Usuário - Nome de usuário do principal"]);
+
+        topClubes[linha["Usuário - Nome de usuário do principal"]] = 
+            (topClubes[linha["Usuário - Nome de usuário do principal"]] || 0) + g;
     });
 
-    const labels = Object.keys(agrupadoPorDia).sort();
-    const valores = labels.map(dia => agrupadoPorDia[dia].ggr);
+    document.getElementById("ftdTotal").textContent = ftd.toFixed(2);
+    document.getElementById("depositosTotal").textContent = depositos.toFixed(2);
+    document.getElementById("ggrTotal").textContent = ggr.toFixed(2);
+    document.getElementById("clubesAtivos").textContent = clubesAtivos.size;
 
-    const ctx = document.getElementById("graficoDiario").getContext("2d");
-    if (chart) chart.destroy();
-    chart = new Chart(ctx, {
-        type: "line",
+    atualizarTop10(topClubes);
+    atualizarGraficos(dados);
+}
+
+function atualizarTop10(topClubes) {
+    const sorted = Object.entries(topClubes).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const tbody = document.querySelector("#top10 tbody");
+    tbody.innerHTML = "";
+    sorted.forEach(([clube, valor]) => {
+        tbody.innerHTML += `<tr><td>${clube}</td><td>${valor.toFixed(2)}</td></tr>`;
+    });
+}
+
+function atualizarGraficos(dados) {
+    const porDia = {};
+    dados.forEach(linha => {
+        const dia = linha["DATA"];
+        if (!porDia[dia]) porDia[dia] = { ggr: 0, ftd: 0, depositos: 0 };
+        porDia[dia].ggr += parseFloat(linha["Cálculo - GGR"]) || 0;
+        porDia[dia].ftd += parseFloat(linha["Usuário - FTD-Montante"]) || 0;
+        porDia[dia].depositos += parseFloat(linha["Usuário - Depósitos"]) || 0;
+    });
+
+    const dias = Object.keys(porDia).sort();
+    const ggr = dias.map(d => porDia[d].ggr);
+    const ftd = dias.map(d => porDia[d].ftd);
+    const depositos = dias.map(d => porDia[d].depositos);
+
+    renderChart("graficoGGR", "GGR por Dia", dias, ggr, "green");
+    renderChart("graficoFTD", "FTD por Dia", dias, ftd, "yellow");
+    renderChart("graficoDepositos", "Depósitos por Dia", dias, depositos, "blue");
+}
+
+function renderChart(id, label, labels, data, color) {
+    new Chart(document.getElementById(id), {
+        type: 'line',
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: "GGR por Dia",
-                data: valores,
-                borderColor: "#0f0",
-                backgroundColor: "rgba(0,255,0,0.2)",
-                tension: 0.3
+                label,
+                data,
+                borderColor: color,
+                fill: false
             }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { labels: { color: "#fff" } } },
-            scales: {
-                x: { ticks: { color: "#fff" } },
-                y: { ticks: { color: "#fff" } }
-            }
         }
     });
 }
 
-function atualizarTop10Clubes(dadosFiltrados) {
-    const clubesMap = {};
-    dadosFiltrados.forEach(linha => {
-        const clube = linha["Usuário - Nome de usuário do principal"];
-        const ggr = parseFloat(linha["Cálculo - GGR"] || 0);
-        if (!clubesMap[clube]) clubesMap[clube] = 0;
-        clubesMap[clube] += ggr;
-    });
-
-    const top10 = Object.entries(clubesMap)
-        .map(([clube, ggr]) => ({ clube, ggr }))
-        .sort((a, b) => b.ggr - a.ggr)
-        .slice(0, 10);
-
-    const tbody = document.querySelector("#top10Table tbody");
-    tbody.innerHTML = "";
-    top10.forEach(item => {
-        const row = `<tr><td>${item.clube}</td><td>${item.ggr.toFixed(2)}</td></tr>`;
-        tbody.insertAdjacentHTML("beforeend", row);
-    });
-}
+carregarDados();
