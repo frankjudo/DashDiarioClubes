@@ -8,60 +8,67 @@ body {
 }
 
 h1 {
-    margin: 20px 0;
-    color: #0f0;
+    margin: 10px 0;
+    font-size: 28px;
 }
 
 .filtros {
-    margin: 20px 0;
+    margin: 10px 0 20px 0;
+    font-size: 14px;
 }
 
 .cards {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    margin: 20px auto;
-    max-width: 1000px;
+    margin: 10px auto 20px auto;
+    max-width: 800px;
 }
 
 .card {
     background: #222;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #0f0;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px #0f0;
     font-weight: bold;
-    font-size: 18px;
-    width: 180px;
-    margin: 10px;
+    font-size: 16px;
+    width: 150px;
 }
 
 .graficos {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
-    max-width: 1200px;
-    margin: 30px auto;
+    gap: 15px;
+    max-width: 900px;
+    margin: 10px auto 20px auto;
 }
 
 .grafico-container {
     background: #222;
-    padding: 10px;
-    border-radius: 8px;
+    padding: 8px;
+    border-radius: 6px;
 }
 
 table {
-    margin: 20px auto;
+    margin: 10px auto 20px auto;
     border-collapse: collapse;
     width: 60%;
     color: #0f0;
+    font-size: 14px;
 }
 
 th, td {
     border: 1px solid #0f0;
-    padding: 8px;
+    padding: 4px 6px;
     text-align: center;
 }
 
 th {
     background: #222;
+    font-weight: bold;
+}
+
+h2 {
+    margin: 10px 0 5px 0;
+    font-size: 18px;
 }
