@@ -1,4 +1,4 @@
-const csvUrl = "SEU_LINK_CSV_AQUI";
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 
 document.addEventListener("DOMContentLoaded", carregarDados);
 
@@ -87,9 +87,9 @@ function criarGrafico(id, labels, values, label, color) {
 }
 
 function atualizarRankings() {
-    atualizarTabela("rankingDepositos", ordenarPor("depositos"));
-    atualizarTabela("rankingFTD", ordenarPor("ftd"));
-    atualizarTabela("rankingGGR", ordenarPor("ggr"));
+    atualizarTabela("rankingDepositos", ordenarPor("depositos"), "depositos");
+    atualizarTabela("rankingFTD", ordenarPor("ftd"), "ftd");
+    atualizarTabela("rankingGGR", ordenarPor("ggr"), "ggr");
 }
 
 function ordenarPor(campo) {
@@ -103,19 +103,10 @@ function ordenarPor(campo) {
     return Object.values(clubes).sort((a, b) => b[campo] - a[campo]).slice(0, 10);
 }
 
-function atualizarTabela(id, ranking) {
+function atualizarTabela(id, ranking, campo) {
     const tabela = document.getElementById(id);
-    let colunas = "";
-    if (id === "rankingDepositos") colunas = "<tr><th>Clube</th><th>Depósitos</th></tr>";
-    if (id === "rankingFTD") colunas = "<tr><th>Clube</th><th>FTD</th></tr>";
-    if (id === "rankingGGR") colunas = "<tr><th>Clube</th><th>GGR</th></tr>";
-
-    let linhas = ranking.map(r => {
-        if (id === "rankingDepositos") return `<tr><td>${r.clube}</td><td>${formatarMoeda(r.depositos)}</td></tr>`;
-        if (id === "rankingFTD") return `<tr><td>${r.clube}</td><td>${formatarMoeda(r.ftd)}</td></tr>`;
-        if (id === "rankingGGR") return `<tr><td>${r.clube}</td><td>${formatarMoeda(r.ggr)}</td></tr>`;
-    }).join("");
-
+    let colunas = `<tr><th>Clube</th><th>${campo.toUpperCase()}</th></tr>`;
+    let linhas = ranking.map(r => `<tr><td>${r.clube}</td><td>${formatarMoeda(r[campo])}</td></tr>`).join("");
     tabela.innerHTML = colunas + linhas;
 }
 
