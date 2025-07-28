@@ -1,108 +1,87 @@
-// =================== MOCKS =====================
-const dadosMockDefault = {
-    totais: { ftd: 68132.67, depositos: 1503306.21, ggr: 307609.7 },
-    graficoGGR: [65000, 70000, 85000, 100000, 130000, 150000],
-    graficoFTD: [4000, 8000, 9000, 11000, 13000],
-    graficoDepositos: [35000, 50000, 70000, 90000, 120000],
-    topGGR: [
-        ["usuario1@email.com", 35000],
-        ["usuario2@email.com", 28000],
-        ["usuario3@email.com", 15000]
-    ],
-    topFTD: [
-        ["usuario5@email.com", 25000],
-        ["usuario2@email.com", 12000],
-        ["usuario1@email.com", 6000]
-    ],
-    topDepositos: [
-        ["usuario7@email.com", 50000],
-        ["usuario8@email.com", 35000],
-        ["usuario9@email.com", 22000]
-    ]
-};
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 
-// Dados quando aplicamos filtro (exemplo diferente)
-const dadosMockFiltrado = {
-    totais: { ftd: 40000.00, depositos: 800000.00, ggr: 150000.00 },
-    graficoGGR: [20000, 30000, 50000, 80000, 150000],
-    graficoFTD: [2000, 4000, 6000, 10000, 14000],
-    graficoDepositos: [10000, 25000, 50000, 70000, 80000],
-    topGGR: [
-        ["filtro1@email.com", 50000],
-        ["filtro2@email.com", 30000],
-        ["filtro3@email.com", 25000]
-    ],
-    topFTD: [
-        ["filtro5@email.com", 20000],
-        ["filtro2@email.com", 12000],
-        ["filtro1@email.com", 8000]
-    ],
-    topDepositos: [
-        ["filtro7@email.com", 45000],
-        ["filtro8@email.com", 35000],
-        ["filtro9@email.com", 20000]
-    ]
-};
-
-// =================== ELEMENTOS =====================
-const ftdEl = document.getElementById('ftd');
-const depositosEl = document.getElementById('depositos');
-const ggrEl = document.getElementById('ggr');
-
-// =================== CHARTS =====================
-const chartGGR = new Chart(document.getElementById('graficoGGR'), {
-    type: 'line',
-    data: { labels: ["Dia 1","Dia 2","Dia 3","Dia 4","Dia 5","Dia 6"], datasets: [{label:'GGR', data:[], borderColor:'lime', fill:false}] }
-});
-const chartFTD = new Chart(document.getElementById('graficoFTD'), {
-    type: 'line',
-    data: { labels: ["Dia 1","Dia 2","Dia 3","Dia 4","Dia 5"], datasets: [{label:'FTD', data:[], borderColor:'lime', fill:false}] }
-});
-const chartDepositos = new Chart(document.getElementById('graficoDepositos'), {
-    type: 'line',
-    data: { labels: ["Dia 1","Dia 2","Dia 3","Dia 4","Dia 5"], datasets: [{label:'Depósitos', data:[], borderColor:'lime', fill:false}] }
-});
-
-// =================== FUNÇÕES =====================
-function renderTabela(id, dados) {
-    let html = "<tr><th>Usuário</th><th>Valor</th></tr>";
-    dados.forEach(linha => { html += `<tr><td>${linha[0]}</td><td>R$ ${linha[1].toLocaleString()}</td></tr>`; });
-    document.getElementById(id).innerHTML = html;
+async function carregarDados() {
+    Papa.parse(SHEET_CSV_URL, {
+        download: true,
+        header: true,
+        complete: function(results) {
+            const data = results.data;
+            processarDados(data);
+        },
+        error: function(err) {
+            alert("Erro ao carregar dados do Google Sheets");
+            console.error(err);
+        }
+    });
 }
 
-function atualizarDashboard(dados) {
-    ftdEl.innerText = `R$ ${dados.totais.ftd.toLocaleString()}`;
-    depositosEl.innerText = `R$ ${dados.totais.depositos.toLocaleString()}`;
-    ggrEl.innerText = `R$ ${dados.totais.ggr.toLocaleString()}`;
+function processarDados(dados) {
+    let totalGGR = 0;
+    let totalFTD = 0;
+    let totalDepositos = 0;
+    let ativosPorMes = {};
+    let ggrPorMes = {};
+    let ftdPorMes = {};
+    let depositosPorMes = {};
 
-    chartGGR.data.datasets[0].data = dados.graficoGGR;
-    chartFTD.data.datasets[0].data = dados.graficoFTD;
-    chartDepositos.data.datasets[0].data = dados.graficoDepositos;
-    chartGGR.update();
-    chartFTD.update();
-    chartDepositos.update();
+    dados.forEach(row => {
+        const data = new Date(row["DATA"]);
+        if (isNaN(data)) return;
 
-    renderTabela('topGGR', dados.topGGR);
-    renderTabela('topFTD', dados.topFTD);
-    renderTabela('topDepositos', dados.topDepositos);
+        const mesAno = data.toLocaleString("pt-BR", { month: 'long', year: 'numeric' }).toUpperCase();
+        const ggr = parseFloat(row["Cálculo - GGR"]) || 0;
+        const ftd = parseFloat(row["Usuário - FTD-Montante"]) || 0;
+        const deposito = parseFloat(row["Usuário - Depósitos"]) || 0;
+
+        totalGGR += ggr;
+        totalFTD += ftd;
+        totalDepositos += deposito;
+
+        ggrPorMes[mesAno] = (ggrPorMes[mesAno] || 0) + ggr;
+        ftdPorMes[mesAno] = (ftdPorMes[mesAno] || 0) + ftd;
+        depositosPorMes[mesAno] = (depositosPorMes[mesAno] || 0) + deposito;
+
+        if (ggr !== 0) {
+            ativosPorMes[mesAno] = (ativosPorMes[mesAno] || 0) + 1;
+        }
+    });
+
+    document.getElementById("ggr-total").innerText = formatarMoeda(totalGGR);
+    document.getElementById("ftd-total").innerText = formatarMoeda(totalFTD);
+    document.getElementById("depositos-total").innerText = formatarMoeda(totalDepositos);
+
+    const ultimoMes = Object.keys(ativosPorMes).slice(-1)[0] || 0;
+    document.getElementById("clubes-ativos").innerText = ativosPorMes[ultimoMes] || 0;
+
+    criarGraficos(ggrPorMes, ftdPorMes, depositosPorMes, ativosPorMes);
 }
 
-// Inicializa com mock padrão
-atualizarDashboard(dadosMockDefault);
-
-// =================== FILTROS =====================
-function aplicarFiltros() {
-    const dataInicio = document.getElementById('dataInicio').value;
-    const dataFim = document.getElementById('dataFim').value;
-    const email = document.getElementById('emailUsuario').value;
-
-    console.log(`Filtro aplicado: ${dataInicio} até ${dataFim}, usuário: ${email}`);
-    atualizarDashboard(dadosMockFiltrado);
+function formatarMoeda(valor) {
+    return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function limparFiltros() {
-    document.getElementById('dataInicio').value = "";
-    document.getElementById('dataFim').value = "";
-    document.getElementById('emailUsuario').value = "";
-    atualizarDashboard(dadosMockDefault);
+function criarGraficos(ggrPorMes, ftdPorMes, depositosPorMes, ativosPorMes) {
+    const labels = Object.keys(ggrPorMes);
+
+    new Chart(document.getElementById("ggrChart"), {
+        type: 'line',
+        data: { labels, datasets: [{ label: "GGR Total", data: Object.values(ggrPorMes), borderColor: "blue", fill: true }] }
+    });
+
+    new Chart(document.getElementById("ftdChart"), {
+        type: 'line',
+        data: { labels, datasets: [{ label: "FTD Total", data: Object.values(ftdPorMes), borderColor: "green", fill: true }] }
+    });
+
+    new Chart(document.getElementById("depositosChart"), {
+        type: 'line',
+        data: { labels, datasets: [{ label: "Depósitos Totais", data: Object.values(depositosPorMes), borderColor: "orange", fill: true }] }
+    });
+
+    new Chart(document.getElementById("ativosChart"), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: "Clubes Ativos", data: Object.values(ativosPorMes), backgroundColor: "cyan" }] }
+    });
 }
+
+carregarDados();
