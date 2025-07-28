@@ -1,116 +1,126 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 
-let dadosFiltrados = [];
+let dadosProcessados = [];
 
-document.getElementById("btnFiltrar").addEventListener("click", aplicarFiltros);
-
-Papa.parse(CSV_URL, {
-    download: true,
-    header: false,
-    complete: function(results) {
-        processarDados(results.data);
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    carregarDados();
+    document.getElementById("filtroData").addEventListener("change", filtrarDados);
+    document.getElementById("filtroClube").addEventListener("change", filtrarDados);
 });
 
-function processarDados(data) {
-    let clubesSet = new Set();
+function carregarDados() {
+    Papa.parse(CSV_URL, {
+        download: true,
+        header: false,
+        complete: function(results) {
+            console.log("Dados brutos CSV:", results.data);
+            let linhas = results.data.filter(l => l.length > 1);
 
-    dadosFiltrados = data.slice(1).map(linha => {
-        const dataStr = linha[0]; // Coluna A
-        const clube = linha[2]; // Coluna C
-        const ftd = parseFloat(linha[5]) || 0; // Coluna F
-        const depositos = parseFloat(linha[6]) || 0; // Coluna G
-        const ggr = parseFloat(linha[27]) || 0; // Coluna AB (27)
+            // Normalização pelos índices fixos
+            dadosProcessados = linhas.slice(1).map(row => ({
+                data: row[0],      // Coluna A
+                clube: row[2],     // Coluna C
+                ftd: parseFloat(row[5] || 0),   // Coluna F
+                depositos: parseFloat(row[6] || 0), // Coluna G
+                ggr: parseFloat(row[27] || 0)   // Coluna AB
+            }));
 
-        clubesSet.add(clube);
-        return { dataStr, clube, ftd, depositos, ggr };
+            console.log("Dados normalizados:", dadosProcessados);
+            preencherFiltros();
+            atualizarDashboard(dadosProcessados);
+        }
     });
-
-    popularFiltroClubes([...clubesSet]);
-    atualizarDashboard(dadosFiltrados);
 }
 
-function popularFiltroClubes(clubes) {
+function preencherFiltros() {
+    const clubesUnicos = [...new Set(dadosProcessados.map(d => d.clube))];
     const select = document.getElementById("filtroClube");
-    select.innerHTML = "<option value=''>Todos</option>";
-    clubes.forEach(clube => {
-        select.innerHTML += `<option value="${clube}">${clube}</option>`;
-    });
+    select.innerHTML = `<option value="">Todos</option>` + 
+        clubesUnicos.map(clube => `<option value="${clube}">${clube}</option>`).join("");
 }
 
-function aplicarFiltros() {
-    const inicio = document.getElementById("dataInicio").value;
-    const fim = document.getElementById("dataFim").value;
-    const clubeSelecionado = document.getElementById("filtroClube").value;
+function filtrarDados() {
+    const filtroClube = document.getElementById("filtroClube").value;
+    const filtroData = document.getElementById("filtroData").value;
 
-    let filtrados = dadosFiltrados.filter(item => {
-        let ok = true;
-        if (inicio && item.dataStr < inicio) ok = false;
-        if (fim && item.dataStr > fim) ok = false;
-        if (clubeSelecionado && item.clube !== clubeSelecionado) ok = false;
-        return ok;
-    });
+    let filtrado = dadosProcessados;
 
-    atualizarDashboard(filtrados);
+    if (filtroClube) {
+        filtrado = filtrado.filter(d => d.clube === filtroClube);
+    }
+    if (filtroData) {
+        filtrado = filtrado.filter(d => d.data === filtroData);
+    }
+
+    console.log("Dados filtrados:", filtrado);
+    atualizarDashboard(filtrado);
 }
 
 function atualizarDashboard(dados) {
-    let totalFTD = 0, totalDepositos = 0, totalGGR = 0;
-    let porClube = {};
+    const totalFTD = dados.reduce((sum, d) => sum + d.ftd, 0);
+    const totalDepositos = dados.reduce((sum, d) => sum + d.depositos, 0);
+    const totalGGR = dados.reduce((sum, d) => sum + d.ggr, 0);
 
-    dados.forEach(d => {
-        totalFTD += d.ftd;
-        totalDepositos += d.depositos;
-        totalGGR += d.ggr;
+    document.getElementById("totalFTD").textContent = `R$ ${totalFTD.toLocaleString("pt-BR")}`;
+    document.getElementById("totalDepositos").textContent = `R$ ${totalDepositos.toLocaleString("pt-BR")}`;
+    document.getElementById("totalGGR").textContent = `R$ ${totalGGR.toLocaleString("pt-BR")}`;
 
-        if (!porClube[d.clube]) porClube[d.clube] = 0;
-        porClube[d.clube] += d.depositos;
+    const top10 = [...dados]
+        .sort((a, b) => b.depositos - a.depositos)
+        .slice(0, 10);
+
+    let html = `
+        <tr>
+            <th>Clube</th>
+            <th>FTD</th>
+            <th>Depósitos</th>
+            <th>GGR</th>
+        </tr>`;
+    top10.forEach(row => {
+        html += `
+        <tr>
+            <td>${row.clube}</td>
+            <td>R$ ${row.ftd.toLocaleString("pt-BR")}</td>
+            <td>R$ ${row.depositos.toLocaleString("pt-BR")}</td>
+            <td>R$ ${row.ggr.toLocaleString("pt-BR")}</td>
+        </tr>`;
     });
+    document.getElementById("ranking").innerHTML = html;
 
-    document.getElementById("cardFTD").innerText = `FTD: R$ ${totalFTD.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
-    document.getElementById("cardDepositos").innerText = `Depósitos: R$ ${totalDepositos.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
-    document.getElementById("cardGGR").innerText = `GGR: R$ ${totalGGR.toLocaleString("pt-BR", {minimumFractionDigits:2})}`;
-
-    atualizarTop10(porClube);
     atualizarGraficos(dados);
 }
 
-function atualizarTop10(porClube) {
-    let top10 = Object.entries(porClube).sort((a,b) => b[1]-a[1]).slice(0,10);
-    let tbody = document.querySelector("#tabelaTop10 tbody");
-    tbody.innerHTML = "";
-    top10.forEach(([clube, valor]) => {
-        tbody.innerHTML += `<tr><td>${clube}</td><td>R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}</td></tr>`;
-    });
+function atualizarGraficos(dados) {
+    const datas = [...new Set(dados.map(d => d.data))].sort();
+    const ggrPorDia = datas.map(data => 
+        dados.filter(d => d.data === data).reduce((sum, d) => sum + d.ggr, 0)
+    );
+    const ftdPorDia = datas.map(data => 
+        dados.filter(d => d.data === data).reduce((sum, d) => sum + d.ftd, 0)
+    );
+    const depositosPorDia = datas.map(data => 
+        dados.filter(d => d.data === data).reduce((sum, d) => sum + d.depositos, 0)
+    );
+
+    criarGrafico("graficoGGR", "GGR Diário", datas, ggrPorDia);
+    criarGrafico("graficoFTD", "FTD Diário", datas, ftdPorDia);
+    criarGrafico("graficoDepositos", "Depósitos Diários", datas, depositosPorDia);
 }
 
-let chartFTD, chartDepositos, chartGGR;
-
-function atualizarGraficos(dados) {
-    let porData = {};
-    dados.forEach(d => {
-        if (!porData[d.dataStr]) porData[d.dataStr] = { ftd:0, depositos:0, ggr:0 };
-        porData[d.dataStr].ftd += d.ftd;
-        porData[d.dataStr].depositos += d.depositos;
-        porData[d.dataStr].ggr += d.ggr;
-    });
-
-    let labels = Object.keys(porData).sort();
-    let ftd = labels.map(l => porData[l].ftd);
-    let depositos = labels.map(l => porData[l].depositos);
-    let ggr = labels.map(l => porData[l].ggr);
-
-    const cfg = (ctx, label, data) => ({
+function criarGrafico(elementId, label, labels, data) {
+    const ctx = document.getElementById(elementId).getContext('2d');
+    new Chart(ctx, {
         type: 'line',
-        data: { labels, datasets: [{ label, data, borderColor: '#0f0', backgroundColor: '#0f0', fill: false }] },
-        options: { responsive: true, plugins: { legend: { labels: { color: "#0f0" } } }, scales: { x: { ticks: { color: "#0f0" } }, y: { ticks: { color: "#0f0" } } } }
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: data,
+                borderColor: 'rgba(0,255,0,1)',
+                backgroundColor: 'rgba(0,255,0,0.1)',
+                fill: true
+            }]
+        },
+        options: { responsive: true }
     });
-
-    if (chartFTD) chartFTD.destroy();
-    if (chartDepositos) chartDepositos.destroy();
-    if (chartGGR) chartGGR.destroy();
-
-    chartFTD = new Chart(document.getElementById("graficoFTD"), cfg("graficoFTD", "FTD", ftd));
-    chartDepositos = new Chart(document.getElementById("graficoDepositos"), cfg("graficoDepositos", "Depósitos", depositos));
-    chartGGR = new Chart(document.getElementById("graficoGGR"), cfg("graficoGGR", "GGR", ggr));
 }

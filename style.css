@@ -7,13 +7,13 @@ body {
     text-align: center;
 }
 
-h1, h2 {
-    color: #0f0;
+h1 {
     margin: 20px 0;
+    color: #0f0;
 }
 
 .filtros {
-    margin-bottom: 20px;
+    margin: 20px 0;
 }
 
 .cards {
@@ -27,7 +27,7 @@ h1, h2 {
 .card {
     background: #222;
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 8px;
     width: 180px;
     margin: 10px;
     box-shadow: 0 0 10px #0f0;
@@ -47,6 +47,8 @@ h1, h2 {
     background: #222;
     padding: 10px;
     border-radius: 8px;
+    margin: 10px;
+    max-width: 400px;
 }
 
 canvas {
