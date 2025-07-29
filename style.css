@@ -1,26 +1,71 @@
 body {
+    font-family: Arial, sans-serif;
     background: #111;
     color: #fff;
-    font-family: Arial, sans-serif;
-    text-align: center;
     margin: 0;
     padding: 0;
+    text-align: center;
 }
-
-h1 { color: #00ff66; margin: 20px 0; }
-
-.cards { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin: 20px; }
-.card { background: #222; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #00ff66; width: 250px; }
-
-.graficos { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin: 20px; }
-.grafico-container { width: 300px; height: 200px; background: #222; padding: 10px; border-radius: 10px; }
-
-.tabelas { display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; margin: 20px; }
-.tabela-container { background: #222; padding: 10px; border-radius: 10px; box-shadow: 0 0 10px #00ff66; width: 300px; }
-table { width: 100%; border-collapse: collapse; color: #fff; }
-th, td { border: 1px solid #00ff66; padding: 5px; }
-
-@media(max-width:768px){
-    .cards, .graficos, .tabelas { flex-direction: column; align-items: center; }
-    .card, .grafico-container, .tabela-container { width: 90%; }
+h1 {
+    color: #00ff66;
+    margin-top: 20px;
+}
+.ultima-atualizacao, .tempo-processamento {
+    margin: 5px;
+    font-size: 14px;
+}
+.cards {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 20px auto;
+}
+.card {
+    background: #222;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px rgba(0,255,100,0.4);
+    width: 250px;
+}
+.graficos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px auto;
+}
+.grafico-container {
+    width: 300px;
+    height: 200px;
+    background: #1a1a1a;
+    border-radius: 10px;
+}
+.tabelas {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 50px;
+}
+.tabela-container {
+    background: #1a1a1a;
+    padding: 10px;
+    border-radius: 10px;
+    width: 350px;
+    box-shadow: 0px 0px 15px rgba(0,255,100,0.4);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 8px;
+    border-bottom: 1px solid #0f0;
+}
+@media (max-width: 768px) {
+    .cards, .graficos, .tabelas {
+        flex-direction: column;
+        align-items: center;
+    }
 }
