@@ -1,1 +1,207 @@
-let dadosCSV=[],chartGGR,chartFTD,chartDepositos;function carregarCSV(){console.log("Iniciando carregamento do CSV...");let e=performance.now();Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv",{download:!0,header:!1,complete:function(t){console.log("CSV recebido com sucesso");let o=normalizarDados(t.data);console.log("Dados normalizados:",o.length,"linhas"),dadosCSV=o,preencherFiltros(),atualizarDashboard(o);let r=performance.now()-e;document.getElementById("tempoProcessamento").innerText=`Tempo de processamento: ${r.toFixed(2)} ms`,document.getElementById("loading").style.display="none"}})}function normalizarDados(e){let t=[];return e.slice(1).forEach((e=>{if(e.length>=27){let o=e[0],r=e[2],a=parseFloat(e[5].replace(/[^0-9.-]+/g,""))||0,n=parseFloat(e[6].replace(/[^0-9.-]+/g,""))||0,l=parseFloat(e[26].replace(/[^0-9.-]+/g,""))||0;t.push({data:o,clube:r,ftd:a,depositos:n,ggr:l})}})),t}function preencherFiltros(){console.log("Preenchendo filtros de clubes...");let e=[...new Set(dadosCSV.map((e=>e.clube)))],t=document.getElementById("clubeSelect");t.innerHTML='<option value="Todos">Todos</option>',e.forEach((e=>{let o=document.createElement("option");o.value=e,o.textContent=e,t.appendChild(o)}))}function aplicarFiltros(){console.log("Aplicando filtros...");let e=document.getElementById("dataFiltro").value,t=document.getElementById("clubeSelect").value,o=dadosCSV.filter((o=>{let r=!e||o.data===e,a="Todos"===t||o.clube===t;return r&&a}));atualizarDashboard(o)}function atualizarDashboard(e){console.log("Atualizando dashboard com",e.length,"linhas");let t=e.reduce(((e,t)=>(e.ftd+=t.ftd,e.depositos+=t.depositos,e.ggr+=t.ggr,e)),{ftd:0,depositos:0,ggr:0});document.getElementById("totalFTD").innerText=`R$ ${t.ftd.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,document.getElementById("totalDepositos").innerText=`R$ ${t.depositos.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,document.getElementById("totalGGR").innerText=`R$ ${t.ggr.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,atualizarGraficos(e),atualizarRankings(e)}function atualizarGraficos(e){console.log("Atualizando gráficos...");let t=e.map((e=>e.data)),o=e.map((e=>e.ggr)),r=e.map((e=>e.ftd)),a=e.map((e=>e.depositos));chartGGR&&chartGGR.destroy(),chartFTD&&chartFTD.destroy(),chartDepositos&&chartDepositos.destroy(),chartGGR=new Chart(document.getElementById("graficoGGR"),{type:"line",data:{labels:t,datasets:[{label:"GGR Diário",data:o,borderColor:"lime",fill:!1}]}}),chartFTD=new Chart(document.getElementById("graficoFTD"),{type:"line",data:{labels:t,datasets:[{label:"FTD Diário",data:r,borderColor:"yellow",fill:!1}]}}),chartDepositos=new Chart(document.getElementById("graficoDepositos"),{type:"line",data:{labels:t,datasets:[{label:"Depósitos Diários",data:a,borderColor:"blue",fill:!1}]}})}function atualizarRankings(e){console.log("Atualizando rankings...");let t=agruparPorClube(e);atualizarTabela("rankingDepositos",ordenarTop(t,"depositos"),["Clube","Depósitos"]),atualizarTabela("rankingFTD",ordenarTop(t,"ftd"),["Clube","FTD"]),atualizarTabela("rankingGGR",ordenarTop(t,"ggr"),["Clube","GGR"])}function agruparPorClube(e){let t={};return e.forEach((e=>{t[e.clube]||(t[e.clube]={clube:e.clube,ftd:0,depositos:0,ggr:0}),t[e.clube].ftd+=e.ftd,t[e.clube].depositos+=e.depositos,t[e.clube].ggr+=e.ggr})),Object.values(t)}function ordenarTop(e,t){return[...e].sort(((e,o)=>o[t]-e[t])).slice(0,10)}function atualizarTabela(e,t,o){let r=document.getElementById(e);r.innerHTML=`<tr>${o.map((e=>`<th>${e.toUpperCase()}</th>`)).join("")}</tr>`;t.forEach((e=>{r.innerHTML+=`<tr><td>${e.clube}</td><td>R$ ${e[o[1].toLowerCase()].toLocaleString("pt-BR",{minimumFractionDigits:2})}</td></tr>`}))}window.onload=()=>{document.getElementById("ultimaAtualizacao").innerText=`Última atualização: ${new Date().toLocaleString()}`,carregarCSV()};
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+
+let dadosCSV = [];
+let graficoGGR, graficoFTD, graficoDepositos;
+
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Iniciando carregamento do CSV...");
+    document.getElementById("statusCarregando").textContent = "Carregando dados...";
+    carregarDados();
+
+    document.getElementById("aplicarBtn").addEventListener("click", aplicarFiltros);
+});
+
+// ------------------ CARREGAR CSV --------------------
+function carregarDados() {
+    const inicio = performance.now();
+
+    Papa.parse(CSV_URL, {
+        download: true,
+        delimiter: ",",
+        complete: (result) => {
+            console.log("CSV recebido com sucesso");
+            console.log(`PapaParse finalizado ${result.data.length} linhas`);
+
+            dadosCSV = normalizarDados(result.data);
+            console.log("Dados normalizados:", dadosCSV);
+
+            preencherFiltros(dadosCSV);
+            atualizarDashboard(dadosCSV);
+
+            const fim = performance.now();
+            document.getElementById("ultimaAtualizacao").textContent =
+                `Última atualização: ${new Date().toLocaleString()} | Tempo de processamento: ${(fim - inicio).toFixed(2)} ms`;
+
+            document.getElementById("statusCarregando").textContent = "";
+        }
+    });
+}
+
+// ------------------ NORMALIZAÇÃO --------------------
+function normalizarDados(linhas) {
+    let dados = [];
+    for (let i = 1; i < linhas.length; i++) {
+        const row = linhas[i];
+        if (!row || row.length < 27) continue;
+
+        let data = row[0];
+        let clube = row[2];
+        let ftd = parseFloat(row[5].replace(/[^\d.-]/g, "")) || 0;
+        let depositos = parseFloat(row[6].replace(/[^\d.-]/g, "")) || 0;
+        let ggr = parseFloat(row[26].replace(/[^\d.-]/g, "")) || 0;
+
+        dados.push({ data, clube, ftd, depositos, ggr });
+    }
+    return dados;
+}
+
+// ------------------ FILTROS --------------------
+function preencherFiltros(dados) {
+    console.log("Preenchendo filtros de clubes...");
+    const select = document.getElementById("clubeSelect");
+    select.innerHTML = `<option value="Todos">Todos</option>`;
+
+    const clubesUnicos = [...new Set(dados.map(d => d.clube).filter(c => c))];
+    clubesUnicos.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+    });
+}
+
+// ------------------ APLICAR FILTROS --------------------
+function aplicarFiltros() {
+    console.log("Aplicando filtros...");
+    const dataFiltro = document.getElementById("dataFiltro").value;
+    const clubeFiltro = document.getElementById("clubeSelect").value;
+
+    let filtrados = [...dadosCSV];
+    if (dataFiltro) {
+        filtrados = filtrados.filter(d => formatarDataISO(d.data) === dataFiltro);
+    }
+    if (clubeFiltro && clubeFiltro !== "Todos") {
+        filtrados = filtrados.filter(d => d.clube === clubeFiltro);
+    }
+
+    console.log(`Atualizando dashboard com ${filtrados.length} linhas`);
+    atualizarDashboard(filtrados);
+}
+
+// ------------------ ATUALIZAR DASHBOARD --------------------
+function atualizarDashboard(dados) {
+    if (!dados.length) {
+        document.getElementById("totalFTD").textContent = "R$ 0,00";
+        document.getElementById("totalDepositos").textContent = "R$ 0,00";
+        document.getElementById("totalGGR").textContent = "R$ 0,00";
+        return;
+    }
+
+    const totalFTD = dados.reduce((a, b) => a + b.ftd, 0);
+    const totalDepositos = dados.reduce((a, b) => a + b.depositos, 0);
+    const totalGGR = dados.reduce((a, b) => a + b.ggr, 0);
+
+    document.getElementById("totalFTD").textContent = formatarMoeda(totalFTD);
+    document.getElementById("totalDepositos").textContent = formatarMoeda(totalDepositos);
+    document.getElementById("totalGGR").textContent = formatarMoeda(totalGGR);
+
+    atualizarGraficos(dados);
+    atualizarRankings(dados);
+}
+
+// ------------------ ATUALIZAR GRÁFICOS --------------------
+function atualizarGraficos(dados) {
+    console.log("Atualizando gráficos...");
+
+    const agrupado = agruparPorData(dados);
+    const labels = Object.keys(agrupado);
+    const valoresGGR = labels.map(l => agrupado[l].ggr);
+    const valoresFTD = labels.map(l => agrupado[l].ftd);
+    const valoresDepositos = labels.map(l => agrupado[l].depositos);
+
+    if (graficoGGR) graficoGGR.destroy();
+    if (graficoFTD) graficoFTD.destroy();
+    if (graficoDepositos) graficoDepositos.destroy();
+
+    graficoGGR = criarGrafico("graficoGGR", labels, valoresGGR, "GGR Diário", "green");
+    graficoFTD = criarGrafico("graficoFTD", labels, valoresFTD, "FTD Diário", "yellow");
+    graficoDepositos = criarGrafico("graficoDepositos", labels, valoresDepositos, "Depósitos Diários", "blue");
+}
+
+// ------------------ ATUALIZAR RANKINGS --------------------
+function atualizarRankings(dados) {
+    console.log("Atualizando rankings...");
+    const rankingDepositos = agruparPorClube(dados).sort((a, b) => b.depositos - a.depositos).slice(0, 10);
+    const rankingFTD = agruparPorClube(dados).sort((a, b) => b.ftd - a.ftd).slice(0, 10);
+    const rankingGGR = agruparPorClube(dados).sort((a, b) => b.ggr - a.ggr).slice(0, 10);
+
+    preencherTabela("rankingDepositos", rankingDepositos, ["clube", "depositos"]);
+    preencherTabela("rankingFTD", rankingFTD, ["clube", "ftd"]);
+    preencherTabela("rankingGGR", rankingGGR, ["clube", "ggr"]);
+}
+
+// ------------------ FUNÇÕES AUXILIARES --------------------
+function agruparPorData(dados) {
+    const agrupado = {};
+    dados.forEach(d => {
+        if (!agrupado[d.data]) agrupado[d.data] = { ggr: 0, ftd: 0, depositos: 0 };
+        agrupado[d.data].ggr += d.ggr;
+        agrupado[d.data].ftd += d.ftd;
+        agrupado[d.data].depositos += d.depositos;
+    });
+    return agrupado;
+}
+
+function agruparPorClube(dados) {
+    const map = {};
+    dados.forEach(d => {
+        if (!map[d.clube]) map[d.clube] = { clube: d.clube, ggr: 0, ftd: 0, depositos: 0 };
+        map[d.clube].ggr += d.ggr;
+        map[d.clube].ftd += d.ftd;
+        map[d.clube].depositos += d.depositos;
+    });
+    return Object.values(map);
+}
+
+function criarGrafico(canvasId, labels, data, label, cor) {
+    return new Chart(document.getElementById(canvasId), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: data,
+                borderColor: cor,
+                fill: false,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: "#fff" } } },
+            scales: {
+                x: { ticks: { color: "#fff" } },
+                y: { ticks: { color: "#fff" } }
+            }
+        }
+    });
+}
+
+function preencherTabela(id, dados, colunas) {
+    const tabela = document.getElementById(id);
+    tabela.innerHTML = `<tr>${colunas.map(c => `<th>${c.toUpperCase()}</th>`).join("")}</tr>` +
+        dados.map(d => `<tr>${colunas.map(c => `<td>${c === "clube" ? d[c] : formatarMoeda(d[c])}</td>`).join("")}</tr>`).join("");
+}
+
+function formatarMoeda(valor) {
+    return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function formatarDataISO(data) {
+    // Converte data "27/07/2025" ou "2025-07-27" para ISO yyyy-mm-dd
+    const partes = data.split("/");
+    if (partes.length === 3) {
+        return `${partes[2]}-${partes[1].padStart(2, "0")}-${partes[0].padStart(2, "0")}`;
+    }
+    return data;
+}
