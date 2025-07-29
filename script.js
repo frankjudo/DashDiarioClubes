@@ -1,10 +1,17 @@
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 
-document.getElementById("aplicarFiltro").addEventListener("click", () => carregarDados());
+document.getElementById("aplicarFiltro").addEventListener("click", carregarDados);
 
 function parseNumber(value) {
     if (!value) return 0;
-    return Number(value.toString().replace(/R\$\s?/g, "").replace(/\./g, "").replace(",", "."));
+    return Number(
+        value
+            .toString()
+            .replace(/\s/g, '')        // remove espaços
+            .replace(/R\$/g, '')       // remove R$
+            .replace(/\./g, '')        // remove separador de milhar
+            .replace(/,/g, '.')        // vírgula -> ponto
+    ) || 0;
 }
 
 function carregarDados() {
