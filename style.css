@@ -8,12 +8,18 @@ body {
 }
 
 h1 {
-    margin: 20px 0;
-    color: #0f0;
+    margin: 20px 0 5px;
+    color: #00ff88;
+}
+
+#ultimaAtualizacao {
+    font-size: 14px;
+    color: #bbb;
+    margin-bottom: 20px;
 }
 
 .filtros {
-    margin: 20px 0;
+    margin-bottom: 20px;
 }
 
 .cards {
@@ -26,19 +32,19 @@ h1 {
 
 .card {
     background: #222;
+    border-radius: 8px;
     padding: 20px;
-    border-radius: 10px;
-    width: 200px;
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    width: 180px;
+    margin: 10px;
+    box-shadow: 0 0 10px #00ff88;
     font-weight: bold;
     font-size: 18px;
 }
 
 .graficos {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 30px;
-    flex-wrap: wrap;
     max-width: 1200px;
     margin: 30px auto;
 }
@@ -47,32 +53,38 @@ h1 {
     background: #222;
     padding: 10px;
     border-radius: 8px;
-    max-width: 350px;
 }
 
 .tabelas {
     display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin: 40px auto;
+    justify-content: space-around;
     flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.tabela-container {
+    background: #222;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #00ff88;
+    margin: 10px;
+    width: 30%;
 }
 
 table {
+    margin: 0 auto;
     border-collapse: collapse;
-    margin: 10px auto;
-    min-width: 300px;
-    color: #fff;
     width: 100%;
+    color: #fff;
 }
 
 th, td {
-    border: 1px solid #0f0;
+    border: 1px solid #00ff88;
     padding: 8px;
     text-align: center;
 }
 
 th {
-    background: #333;
-    color: #0f0;
+    background: #111;
+    color: #00ff88;
 }
