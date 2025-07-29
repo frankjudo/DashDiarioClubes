@@ -22,6 +22,7 @@ function carregarDados() {
         complete: function(results) {
             const rawData = results.data;
             console.log("Linhas recebidas:", rawData.length);
+            console.log("Primeira linha bruta do CSV:", rawData[0]);  // <-- DEBUG ADICIONADO
             const dataset = normalizarDados(rawData);
             atualizarDashboard(dataset);
             const fim = performance.now();
