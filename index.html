@@ -10,42 +10,28 @@
 </head>
 <body>
     <h1>Dashboard de Clubes</h1>
-    <p id="lastUpdate"></p>
-    <form id="filtros">
+    <p id="ultimaAtualizacao"></p>
+    <div class="filtros">
         <label>Data: <input type="date" id="dataFiltro"></label>
         <label>Clube: <select id="clubeSelect"></select></label>
-        <button type="submit">Aplicar</button>
-    </form>
-    <p id="processingTime"></p>
-
+        <button onclick="aplicarFiltros()">Aplicar</button>
+    </div>
+    <div class="tempo-processamento" id="tempoProcessamento"></div>
     <div class="cards">
         <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0,00</p></div>
         <div class="card"><h2>Depósitos</h2><p id="totalDepositos">R$ 0,00</p></div>
         <div class="card"><h2>GGR</h2><p id="totalGGR">R$ 0,00</p></div>
     </div>
-
     <div class="graficos">
         <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
         <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
         <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
     </div>
-
     <div class="tabelas">
-        <div class="tabela-container">
-            <h2>Top 10 Clubes - Depósitos</h2>
-            <table id="rankingDepositos"></table>
-        </div>
-        <div class="tabela-container">
-            <h2>Top 10 Clubes - FTD</h2>
-            <table id="rankingFTD"></table>
-        </div>
-        <div class="tabela-container">
-            <h2>Top 10 Clubes - GGR</h2>
-            <table id="rankingGGR"></table>
-        </div>
+        <table id="rankingDepositos"></table>
+        <table id="rankingFTD"></table>
+        <table id="rankingGGR"></table>
     </div>
-
-    <!-- Produção: carrega versão minificada -->
     <script src="script.min.js"></script>
 </body>
 </html>
