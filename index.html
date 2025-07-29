@@ -1,50 +1,49 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
     <h1>Dashboard de Clubes</h1>
-    <div class="ultima-atualizacao">
-        Última atualização: <span id="ultimaAtualizacao">--</span>
-    </div>
-    <div class="filtros">
-        <label>Data: <input type="date" id="dataFiltro"></label>
-        <label>Clube: <select id="clubeSelect"></select></label>
-        <button id="btnAplicar">Aplicar</button>
-    </div>
-    <div class="tempo-processamento">
-        Tempo de processamento: <span id="tempoProcessamento">--</span> ms
-    </div>
+    <p id="lastUpdate">Última atualização:</p>
+    <form id="filtro">
+        <label>Data: <input type="date" id="data"></label>
+        <label>Clube: <select id="clube"></select></label>
+        <button type="submit">Aplicar</button>
+    </form>
+    <p id="tempoProcessamento"></p>
+
     <div class="cards">
-        <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0</p></div>
-        <div class="card"><h2>Depósitos</h2><p id="totalDepositos">R$ 0</p></div>
-        <div class="card"><h2>GGR</h2><p id="totalGGR">R$ 0</p></div>
+        <div class="card"><h2>FTD</h2><p id="ftd">R$ 0,00</p></div>
+        <div class="card"><h2>Depósitos</h2><p id="depositos">R$ 0,00</p></div>
+        <div class="card"><h2>GGR</h2><p id="ggr">R$ 0,00</p></div>
     </div>
+
     <div class="graficos">
-        <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
+        <canvas id="graficoGGR"></canvas>
+        <canvas id="graficoFTD"></canvas>
+        <canvas id="graficoDepositos"></canvas>
     </div>
+
     <div class="tabelas">
-        <div class="tabela-container">
-            <h2>Top 10 Clubes - Depósitos</h2>
-            <table id="rankingDepositos"></table>
+        <div>
+            <h3>Top 10 Clubes - Depósitos</h3>
+            <table id="topDepositos"></table>
         </div>
-        <div class="tabela-container">
-            <h2>Top 10 Clubes - FTD</h2>
-            <table id="rankingFTD"></table>
+        <div>
+            <h3>Top 10 Clubes - FTD</h3>
+            <table id="topFTD"></table>
         </div>
-        <div class="tabela-container">
-            <h2>Top 10 Clubes - GGR</h2>
-            <table id="rankingGGR"></table>
+        <div>
+            <h3>Top 10 Clubes - GGR</h3>
+            <table id="topGGR"></table>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.min.js"></script>
 </body>
 </html>
