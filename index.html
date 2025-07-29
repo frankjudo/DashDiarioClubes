@@ -10,15 +10,16 @@
 </head>
 <body>
     <h1>Dashboard de Clubes</h1>
-    <p id="ultimaAtualizacao">Última atualização: -- | Tempo de processamento: --</p>
+    <p id="ultimaAtualizacao"></p>
+    <p id="tempoProcessamento"></p>
 
     <div class="filtros">
         <label>Data: <input type="date" id="dataFiltro"></label>
         <label>Clube: <select id="clubeSelect"></select></label>
-        <button onclick="aplicarFiltros()">Aplicar</button>
+        <button type="button" onclick="aplicarFiltros()">Aplicar</button>
     </div>
 
-    <p id="statusCarregamento" class="status"></p>
+    <div class="loading" id="loading">Carregando dados...</div>
 
     <div class="cards">
         <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0,00</p></div>
@@ -47,6 +48,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.min.js"></script>
 </body>
 </html>
