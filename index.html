@@ -10,13 +10,18 @@
 </head>
 <body>
     <h1>Dashboard de Clubes</h1>
-    <p id="ultimaAtualizacao">Última atualização: --</p>
+    <div class="update-info">
+        <span id="lastUpdate">Última atualização: --</span> 
+        | <span id="processTime">Tempo de processamento: -- ms</span>
+    </div>
 
     <div class="filtros">
         <label>Data: <input type="date" id="dataFiltro"></label>
         <label>Clube: <select id="clubeSelect"></select></label>
         <button onclick="aplicarFiltros()">Aplicar</button>
     </div>
+
+    <div class="loading" id="loading">Carregando dados...</div>
 
     <div class="cards">
         <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0,00</p></div>
@@ -31,15 +36,15 @@
     </div>
 
     <div class="tabelas">
-        <div>
+        <div class="table-container">
             <h2>Top 10 Clubes - Depósitos</h2>
             <table id="rankingDepositos"></table>
         </div>
-        <div>
+        <div class="table-container">
             <h2>Top 10 Clubes - FTD</h2>
             <table id="rankingFTD"></table>
         </div>
-        <div>
+        <div class="table-container">
             <h2>Top 10 Clubes - GGR</h2>
             <table id="rankingGGR"></table>
         </div>
