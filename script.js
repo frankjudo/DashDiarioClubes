@@ -8,6 +8,18 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnAplicar").addEventListener("click", aplicarFiltros);
 });
 
+// Função para converter valores brasileiros para float
+function parseValorBrasileiro(valor) {
+    if (valor === '' || valor === null || valor === undefined) return 0;
+    
+    // Remove pontos de milhar e substitui vírgula decimal por ponto
+    const stringLimpa = valor.toString()
+        .replace(/\./g, '')
+        .replace(',', '.');
+    
+    return parseFloat(stringLimpa) || 0;
+}
+
 function carregarDados() {
     console.log("Iniciando carregamento do CSV...");
     Papa.parse(CSV_URL, {
@@ -80,9 +92,10 @@ function aplicarFiltros() {
 }
 
 function atualizarDashboard(dados) {
-    const ftdTotal = dados.reduce((s, e) => s + (parseFloat(e["Usuário - FTD-Montante"]) || 0), 0);
-    const depTotal = dados.reduce((s, e) => s + (parseFloat(e["Usuário - Depósitos"]) || 0), 0);
-    const ggrTotal = dados.reduce((s, e) => s + (parseFloat(e["GGR"]) || 0), 0);
+    // Usar a função parseValorBrasileiro para converter os valores
+    const ftdTotal = dados.reduce((s, e) => s + parseValorBrasileiro(e["Usuário - FTD-Montante"]), 0);
+    const depTotal = dados.reduce((s, e) => s + parseValorBrasileiro(e["Usuário - Depósitos"]), 0);
+    const ggrTotal = dados.reduce((s, e) => s + parseValorBrasileiro(e["GGR"]), 0);
     
     // Atualizar UI
     document.getElementById("dashboardContent").innerHTML = `
@@ -155,9 +168,10 @@ function atualizarGraficos(dados) {
     // Agrupar por data
     const datas = [...new Set(dados.map(e => e.DATA))].sort();
     
+    // Usar parseValorBrasileiro para converter valores
     const somaPorData = (campo) => datas.map(d => 
         dados.filter(x => x.DATA === d)
-            .reduce((s, v) => s + (parseFloat(v[campo]) || 0), 0)
+            .reduce((s, v) => s + parseValorBrasileiro(v[campo]), 0)
     );
     
     const ggr = somaPorData("GGR");
@@ -239,9 +253,9 @@ function atualizarRankings(dados) {
         const dadosClube = dados.filter(e => e.CLUBE === clube);
         return {
             clube: clube,
-            ftd: dadosClube.reduce((s, e) => s + (parseFloat(e["Usuário - FTD-Montante"]) || 0), 0),
-            depositos: dadosClube.reduce((s, e) => s + (parseFloat(e["Usuário - Depósitos"]) || 0), 0),
-            ggr: dadosClube.reduce((s, e) => s + (parseFloat(e["GGR"]) || 0), 0)
+            ftd: dadosClube.reduce((s, e) => s + parseValorBrasileiro(e["Usuário - FTD-Montante"]), 0),
+            depositos: dadosClube.reduce((s, e) => s + parseValorBrasileiro(e["Usuário - Depósitos"]), 0),
+            ggr: dadosClube.reduce((s, e) => s + parseValorBrasileiro(e["GGR"]), 0)
         };
     });
     
