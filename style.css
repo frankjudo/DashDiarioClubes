@@ -1,71 +1,11 @@
-body {
-    background: #000;
-    color: white;
-    font-family: Arial, sans-serif;
-    text-align: center;
-}
-
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 10px;
-}
-
-h1 {
-    color: limegreen;
-}
-
-.cards {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    margin: 20px 0;
-}
-
-.card {
-    background: #111;
-    border: 2px solid limegreen;
-    border-radius: 8px;
-    padding: 20px;
-    width: 30%;
-    box-shadow: 0 0 10px limegreen;
-}
-
-.graficos {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    margin: 20px 0;
-}
-
-.graficos canvas {
-    width: 30%;
-    height: 250px;
-    background: #111;
-    border-radius: 8px;
-}
-
-.tabelas {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-}
-
-table {
-    width: 100%;
-    margin-top: 10px;
-    border-collapse: collapse;
-    color: white;
-}
-
-table th, table td {
-    border: 1px solid limegreen;
-    padding: 8px;
-}
-
-@media (max-width: 768px) {
-    .card, .graficos canvas {
-        width: 100%;
-        margin-bottom: 20px;
-    }
-}
+body {background:#000;color:white;font-family:Arial,sans-serif;text-align:center;}
+.container{max-width:1200px;margin:auto;padding:10px;}
+h1{color:limegreen;}
+.cards{display:flex;justify-content:space-around;flex-wrap:wrap;margin:20px 0;}
+.card{background:#111;border:2px solid limegreen;border-radius:8px;padding:20px;width:30%;box-shadow:0 0 10px limegreen;}
+.graficos{display:flex;flex-wrap:wrap;justify-content:space-around;margin:20px 0;}
+.graficos canvas{width:30%;height:250px;background:#111;border-radius:8px;}
+.tabelas{display:flex;flex-wrap:wrap;justify-content:space-around;}
+table{width:100%;margin-top:10px;border-collapse:collapse;color:white;}
+table th,table td{border:1px solid limegreen;padding:8px;}
+@media(max-width:768px){.card,.graficos canvas{width:100%;margin-bottom:20px;}}
