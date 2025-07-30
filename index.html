@@ -4,46 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <h1>Dashboard de Clubes</h1>
+    <h1 class="titulo">Dashboard de Clubes</h1>
     <div class="filtros">
         <label>Data: <input type="date" id="dataFiltro"></label>
-        <label>Clube: <select id="clubeFiltro"></select></label>
+        <label>Clube: 
+            <select id="clubeFiltro">
+                <option value="Todos">Todos</option>
+            </select>
+        </label>
         <button onclick="aplicarFiltro()">Aplicar</button>
     </div>
 
     <div class="cards">
-        <div class="card" id="cardFTD">FTD <p id="valorFTD">R$ 0,00</p></div>
-        <div class="card" id="cardDepositos">Depósitos <p id="valorDepositos">R$ 0,00</p></div>
-        <div class="card" id="cardGGR">GGR <p id="valorGGR">R$ 0,00</p></div>
+        <div class="card"><h3>FTD</h3><p id="valorFTD">R$ 0,00</p></div>
+        <div class="card"><h3>Depósitos</h3><p id="valorDepositos">R$ 0,00</p></div>
+        <div class="card"><h3>GGR</h3><p id="valorGGR">R$ 0,00</p></div>
     </div>
 
-    <div class="graficos">
-        <canvas id="graficoGGR"></canvas>
-        <canvas id="graficoFTD"></canvas>
-        <canvas id="graficoDepositos"></canvas>
+    <div class="charts-container">
+        <canvas id="chartGGR"></canvas>
+        <canvas id="chartFTD"></canvas>
+        <canvas id="chartDepositos"></canvas>
     </div>
 
-    <div class="tabelas">
-        <div>
-            <h3>Top 10 Clubes - Depósitos</h3>
-            <table id="tabelaDepositos"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        </div>
-        <div>
-            <h3>Top 10 Clubes - FTD</h3>
-            <table id="tabelaFTD"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        </div>
-        <div>
-            <h3>Top 10 Clubes - GGR</h3>
-            <table id="tabelaGGR"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        </div>
-    </div>
-
-    <p id="ultimaAtualizacao"></p>
+    <div id="tabelas-container"></div>
 
     <script src="script.js"></script>
 </body>
