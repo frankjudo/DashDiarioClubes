@@ -1,97 +1,57 @@
 body {
-    margin: 0;
+    font-family: Arial, sans-serif;
     background: #111;
     color: #fff;
-    font-family: Arial, sans-serif;
     text-align: center;
+    margin: 0;
 }
 
-.container {
-    padding: 20px;
-}
-
-h1 {
-    color: #00ff5f;
-    margin-bottom: 10px;
-    transition: transform 0.3s ease;
-}
-
-h1:hover {
-    transform: scale(1.05);
-}
-
-.info-bar {
-    margin: 10px 0;
-    font-size: 14px;
-}
-
-.filtros {
-    margin: 15px 0;
-}
-
-.filtros input, .filtros select, .filtros button {
-    padding: 5px;
-    margin-left: 5px;
-    border-radius: 5px;
-    border: none;
-}
+h1 { color: limegreen; margin: 20px 0; }
+.filtros { margin: 20px; }
 
 .cards {
     display: flex;
     justify-content: center;
+    gap: 20px;
     flex-wrap: wrap;
-    gap: 15px;
-    margin: 20px 0;
 }
-
 .card {
     background: #222;
-    padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    padding: 20px;
     width: 200px;
+    box-shadow: 0 0 10px limegreen;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
-.card.animated:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 25px rgba(0, 255, 0, 1);
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 20px limegreen;
 }
+.card h2 { margin: 0; }
 
 .graficos {
     display: flex;
-    flex-direction: column;
-    gap: 30px;
-    margin: 40px 0;
-}
-
-canvas {
-    background: #1a1a1a;
-    border-radius: 10px;
-    padding: 15px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-canvas:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
-}
-
-.rankings {
-    display: flex;
-    justify-content: space-around;
     flex-wrap: wrap;
-    gap: 20px;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 30px;
 }
+canvas { background: #222; padding: 10px; border-radius: 10px; }
 
+.top10 {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin: 40px auto;
+    width: 90%;
+}
 table {
-    width: 100%;
+    width: 300px;
     border-collapse: collapse;
-    color: #fff;
 }
-
-table th, table td {
-    border-bottom: 1px solid #00ff5f;
-    padding: 5px;
-    text-align: center;
+th, td {
+    border-bottom: 1px solid limegreen;
+    padding: 8px;
+    text-align: left;
 }
