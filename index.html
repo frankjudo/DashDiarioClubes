@@ -6,55 +6,40 @@
     <title>Dashboard de Clubes</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Dashboard de Clubes</h1>
-        <div class="info-bar">
-            <span id="ultimaAtualizacao">Última atualização: --</span>
-            <span id="tempoProcessamento">Tempo de processamento: --</span>
-        </div>
+        <header>
+            <h1>Dashboard de Clubes</h1>
+            <div class="info-bar">
+                <span id="ultimaAtualizacao">Última atualização: --</span>
+                <span id="tempoProcessamento">Tempo de processamento: --</span>
+            </div>
+        </header>
+        
         <div class="filtros">
-            <label for="dataFiltro">Data:</label>
-            <input type="date" id="dataFiltro">
-            <label for="clubeFiltro">Clube:</label>
-            <select id="clubeFiltro"><option value="Todos">Todos</option></select>
-            <button id="btnAplicar">Aplicar</button>
-        </div>
-        <div class="cards">
-            <div class="card" id="card-ftd">
-                <h2>FTD</h2>
-                <p id="valorFTD">R$ 0,00</p>
-            </div>
-            <div class="card" id="card-depositos">
-                <h2>Depósitos</h2>
-                <p id="valorDepositos">R$ 0,00</p>
-            </div>
-            <div class="card" id="card-ggr">
-                <h2>GGR</h2>
-                <p id="valorGGR">R$ 0,00</p>
-            </div>
-        </div>
-        <div class="graficos">
-            <canvas id="graficoGGR"></canvas>
-            <canvas id="graficoFTD"></canvas>
-            <canvas id="graficoDepositos"></canvas>
-        </div>
-        <div class="rankings">
             <div>
-                <h3>Top 10 Clubes - Depósitos</h3>
-                <table id="topDepositos"></table>
+                <label for="dataFiltro">Data:</label>
+                <input type="date" id="dataFiltro">
             </div>
             <div>
-                <h3>Top 10 Clubes - FTD</h3>
-                <table id="topFTD"></table>
+                <label for="clubeFiltro">Clube:</label>
+                <select id="clubeFiltro">
+                    <option value="Todos">Todos</option>
+                </select>
             </div>
-            <div>
-                <h3>Top 10 Clubes - GGR</h3>
-                <table id="topGGR"></table>
+            <button id="btnAplicar">Aplicar Filtros</button>
+        </div>
+        
+        <div id="dashboardContent">
+            <div class="loader">
+                <div class="loader-spinner"></div>
+                <p>Carregando dados...</p>
             </div>
         </div>
     </div>
-    <script src="script.min.js"></script>
+
+    <script src="script.js"></script> <!-- Alterado para script.js -->
 </body>
 </html>
