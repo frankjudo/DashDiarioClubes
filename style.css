@@ -1,11 +1,94 @@
-body {background:#000;color:white;font-family:Arial,sans-serif;text-align:center;}
-.container{max-width:1200px;margin:auto;padding:10px;}
-h1{color:limegreen;}
-.cards{display:flex;justify-content:space-around;flex-wrap:wrap;margin:20px 0;}
-.card{background:#111;border:2px solid limegreen;border-radius:8px;padding:20px;width:30%;box-shadow:0 0 10px limegreen;}
-.graficos{display:flex;flex-wrap:wrap;justify-content:space-around;margin:20px 0;}
-.graficos canvas{width:30%;height:250px;background:#111;border-radius:8px;}
-.tabelas{display:flex;flex-wrap:wrap;justify-content:space-around;}
-table{width:100%;margin-top:10px;border-collapse:collapse;color:white;}
-table th,table td{border:1px solid limegreen;padding:8px;}
-@media(max-width:768px){.card,.graficos canvas{width:100%;margin-bottom:20px;}}
+body {
+    background: #000;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 10px;
+}
+
+h1 {
+    color: limegreen;
+    margin-bottom: 10px;
+}
+
+.filtros {
+    margin: 15px 0;
+    font-size: 16px;
+}
+
+.cards {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.card {
+    background: #111;
+    border: 2px solid limegreen;
+    border-radius: 8px;
+    padding: 20px;
+    width: 30%;
+    min-width: 200px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 10px limegreen;
+}
+
+.graficos {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.graficos canvas {
+    background: #111;
+    border-radius: 8px;
+    width: 32%;
+    height: 250px;
+    box-shadow: 0 0 10px limegreen;
+    padding: 10px;
+}
+
+.tabelas {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 30px;
+    gap: 20px;
+}
+
+.tabelas div {
+    width: 32%;
+    min-width: 280px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+}
+
+table th, table td {
+    border: 1px solid limegreen;
+    padding: 8px;
+    text-align: center;
+}
+
+table th {
+    background: #222;
+    font-weight: bold;
+}
+
+@media (max-width: 900px) {
+    .graficos canvas, .tabelas div, .card {
+        width: 100%;
+    }
+}
