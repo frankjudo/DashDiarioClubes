@@ -1,118 +1,121 @@
-console.log("Rodando versão DEBUG");
-const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
-
-let dados = [];
+let dadosOriginais = [];
+let chartGGR, chartFTD, chartDepositos;
 
 document.addEventListener("DOMContentLoaded", () => {
-    carregarDados();
+    carregarCSV();
+    document.getElementById('aplicarFiltro').addEventListener('click', aplicarFiltro);
 });
 
-function carregarDados() {
-    console.log("Iniciando carregamento do CSV...");
-    Papa.parse(URL_CSV, {
+function carregarCSV() {
+    console.log("Carregando CSV...");
+    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv", {
         download: true,
         header: true,
-        complete: function(results) {
-            dados = results.data;
-            console.log("Linhas recebidas:", dados.length);
-            atualizarDashboard(dados);
+        complete: (results) => {
+            dadosOriginais = normalizarDados(results.data);
+            atualizarDashboard(dadosOriginais);
+            atualizarGraficos(dadosOriginais);
+            atualizarTabelas(dadosOriginais);
+            popularFiltroClubes(dadosOriginais);
         }
     });
+}
+
+function normalizarDados(dados) {
+    return dados.map(linha => ({
+        data: linha["DATA"],
+        clube: linha["Usuário - Nome de usuário"],
+        ftd: parseFloat(linha["Usuário - FTD-Montante"].replace(",", ".")) || 0,
+        depositos: parseFloat(linha["Usuário - Depósitos"].replace(",", ".")) || 0,
+        ggr: parseFloat(linha["Cálculo - GGR"].replace(",", ".")) || 0
+    }));
+}
+
+function popularFiltroClubes(dados) {
+    const clubes = [...new Set(dados.map(d => d.clube))];
+    const select = document.getElementById('filtroClube');
+    clubes.forEach(clube => {
+        let opt = document.createElement('option');
+        opt.value = clube;
+        opt.textContent = clube;
+        select.appendChild(opt);
+    });
+}
+
+function aplicarFiltro() {
+    const data = document.getElementById('filtroData').value;
+    const clube = document.getElementById('filtroClube').value;
+
+    let filtrados = dadosOriginais;
+
+    if (data) filtrados = filtrados.filter(d => d.data === data);
+    if (clube !== "Todos") filtrados = filtrados.filter(d => d.clube === clube);
+
+    atualizarDashboard(filtrados);
+    atualizarGraficos(filtrados);
+    atualizarTabelas(filtrados);
 }
 
 function atualizarDashboard(dados) {
-    console.log("Normalizando dados...");
-    let totalFTD = 0, totalDepositos = 0, totalGGR = 0;
+    const ftdTotal = dados.reduce((a, b) => a + b.ftd, 0);
+    const depTotal = dados.reduce((a, b) => a + b.depositos, 0);
+    const ggrTotal = dados.reduce((a, b) => a + b.ggr, 0);
 
-    dados.forEach(linha => {
-        totalFTD += parseFloat(linha["Usuário - FTD-Montante"] || 0);
-        totalDepositos += parseFloat(linha["Usuário - Depósitos"] || 0);
-        totalGGR += parseFloat(linha["Cálculo - GGR"] || 0);
-    });
-
-    document.getElementById("ftdValor").innerText = formatarMoeda(totalFTD);
-    document.getElementById("depositosValor").innerText = formatarMoeda(totalDepositos);
-    document.getElementById("ggrValor").innerText = formatarMoeda(totalGGR);
-
-    montarGraficos(dados);
-    montarTabelas(dados);
+    document.getElementById("ftdValor").textContent = formatarMoeda(ftdTotal);
+    document.getElementById("depositosValor").textContent = formatarMoeda(depTotal);
+    document.getElementById("ggrValor").textContent = formatarMoeda(ggrTotal);
 }
 
-function montarGraficos(dados) {
-    console.log("Montando gráficos...");
-    let datas = [...new Set(dados.map(l => l.DATA))];
+function atualizarGraficos(dados) {
+    const labels = [...new Set(dados.map(d => d.data))];
+    const ggr = labels.map(data => somaDia(dados, data, "ggr"));
+    const ftd = labels.map(data => somaDia(dados, data, "ftd"));
+    const depositos = labels.map(data => somaDia(dados, data, "depositos"));
 
-    let ggrDiario = datas.map(d => somaCampo(dados, "Cálculo - GGR", d));
-    let ftdDiario = datas.map(d => somaCampo(dados, "Usuário - FTD-Montante", d));
-    let depDiario = datas.map(d => somaCampo(dados, "Usuário - Depósitos", d));
+    if (chartGGR) chartGGR.destroy();
+    if (chartFTD) chartFTD.destroy();
+    if (chartDepositos) chartDepositos.destroy();
 
-    criarGrafico("graficoGGR", datas, ggrDiario, "GGR", "green");
-    criarGrafico("graficoFTD", datas, ftdDiario, "FTD", "yellow");
-    criarGrafico("graficoDepositos", datas, depDiario, "Depósitos", "blue");
+    chartGGR = criarGrafico('graficoGGR', 'GGR', labels, ggr, 'lime');
+    chartFTD = criarGrafico('graficoFTD', 'FTD', labels, ftd, 'yellow');
+    chartDepositos = criarGrafico('graficoDepositos', 'Depósitos', labels, depositos, 'blue');
 }
 
-function criarGrafico(id, labels, dados, label, cor) {
-    new Chart(document.getElementById(id), {
+function criarGrafico(canvasId, label, labels, data, color) {
+    return new Chart(document.getElementById(canvasId).getContext('2d'), {
         type: 'line',
         data: {
-            labels: labels,
-            datasets: [{
-                label: label,
-                data: dados,
-                borderColor: cor,
-                fill: false,
-                tension: 0.3
-            }]
+            labels,
+            datasets: [{ label, data, borderColor: color, fill: false }]
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { labels: { color: cor } }
-            },
-            scales: {
-                x: { ticks: { color: '#0f0' } },
-                y: { ticks: { color: '#0f0' } }
-            }
-        }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
-function montarTabelas(dados) {
-    console.log("Montando tabelas...");
-    montarTabela("tabelaDepositos", agrupar("Usuário - Nome de usuário", "Usuário - Depósitos", dados));
-    montarTabela("tabelaFTD", agrupar("Usuário - Nome de usuário", "Usuário - FTD-Montante", dados));
-    montarTabela("tabelaGGR", agrupar("Usuário - Nome de usuário", "Cálculo - GGR", dados));
+function somaDia(dados, data, campo) {
+    return dados.filter(d => d.data === data).reduce((a, b) => a + b[campo], 0);
 }
 
-function agrupar(campoChave, campoValor, dados) {
-    const mapa = {};
-    dados.forEach(l => {
-        const chave = l[campoChave];
-        const valor = parseFloat(l[campoValor] || 0);
-        mapa[chave] = (mapa[chave] || 0) + valor;
-    });
-    return Object.entries(mapa)
-        .map(([clube, valor]) => ({ clube, valor }))
-        .sort((a, b) => b.valor - a.valor)
-        .slice(0, 10);
+function atualizarTabelas(dados) {
+    montarTabela(dados, 'depositos', 'tabelaDepositos');
+    montarTabela(dados, 'ftd', 'tabelaFTD');
+    montarTabela(dados, 'ggr', 'tabelaGGR');
 }
 
-function montarTabela(id, dados) {
-    const tabela = document.getElementById(id);
-    tabela.innerHTML = "<tr><th>Clube</th><th>Valor</th></tr>";
-    dados.forEach(linha => {
-        tabela.innerHTML += `<tr><td>${linha.clube}</td><td>${formatarMoeda(linha.valor)}</td></tr>`;
-    });
-}
+function montarTabela(dados, campo, tabelaId) {
+    const top = Object.values(dados.reduce((acc, d) => {
+        acc[d.clube] = acc[d.clube] || { clube: d.clube, valor: 0 };
+        acc[d.clube].valor += d[campo];
+        return acc;
+    }, {}))
+    .sort((a, b) => b.valor - a.valor)
+    .slice(0, 10);
 
-function somaCampo(dados, campo, data) {
-    return dados.filter(l => l.DATA === data).reduce((soma, l) => soma + parseFloat(l[campo] || 0), 0);
+    let html = "<tr><th>Clube</th><th>Valor</th></tr>";
+    top.forEach(l => html += `<tr><td>${l.clube}</td><td>${formatarMoeda(l.valor)}</td></tr>`);
+    document.getElementById(tabelaId).innerHTML = html;
 }
 
 function formatarMoeda(valor) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-function aplicarFiltro() {
-    console.log("Filtro aplicado (demo).");
 }
