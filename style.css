@@ -7,76 +7,99 @@ body {
     padding: 0;
 }
 
-.titulo {
-    color: #0f0;
-    margin: 20px 0;
+h1 {
+    color: #00ff00;
+    margin-top: 20px;
 }
 
 .filtros {
-    margin: 10px;
+    margin: 10px 0;
 }
 
 .cards {
     display: flex;
     justify-content: center;
     gap: 20px;
-    margin: 20px 0;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .card {
-    padding: 20px;
-    border: 2px solid #0f0;
+    background: #222;
     border-radius: 10px;
-    box-shadow: 0 0 10px #0f0;
+    box-shadow: 0 0 10px #00ff00;
+    padding: 20px;
     width: 200px;
-    transition: transform 0.2s ease-in-out;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 20px #0f0;
+    box-shadow: 0 0 20px #00ff00;
 }
 
 .graficos {
     display: flex;
     justify-content: space-around;
-    margin: 20px;
+    flex-wrap: wrap;
+    margin: 10px auto;
+    width: 90%;
+    gap: 20px;
 }
 
 .graficos canvas {
-    width: 30%;
+    width: 32% !important;
+    height: 220px !important;  /* REDUZIDO PARA CABER NA MESMA PÁGINA */
     background: #222;
     border-radius: 10px;
     box-shadow: 0 0 10px #0f0;
     padding: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.graficos canvas:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 20px #0f0;
 }
 
 .tabelas {
     display: flex;
     justify-content: space-around;
-    margin: 20px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tabela-container {
+    width: 32%;
+    background: #222;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #0f0;
+    padding: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tabela-container:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 20px #0f0;
 }
 
 table {
-    width: 300px;
+    width: 100%;
     border-collapse: collapse;
-    margin: 10px;
-    box-shadow: 0 0 10px #0f0;
+    color: #fff;
 }
 
-table tr {
-    transition: background 0.2s;
-}
-
-table tr:hover {
-    background: rgba(0, 255, 0, 0.2);
-}
-
-th, td {
+table th, table td {
     padding: 8px;
-    border: 1px solid #0f0;
+    border-bottom: 1px solid #444;
+    text-align: left;
 }
 
-h3 {
+table th {
     color: #0f0;
+    font-weight: bold;
 }
