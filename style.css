@@ -18,7 +18,6 @@ h1 { margin: 20px 0; }
     max-width: 1200px;
     margin: 0 auto 20px auto;
 }
-
 .card {
     background: #1a1a1a;
     padding: 20px;
@@ -32,7 +31,7 @@ h1 { margin: 20px 0; }
 
 .graficos {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     max-width: 1200px;
     margin: 0 auto;
@@ -42,21 +41,18 @@ h1 { margin: 20px 0; }
     padding: 10px;
     border-radius: 8px;
 }
-
-canvas { height: 240px !important; }
+canvas { height: 220px !important; }
 
 .tabelas-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     max-width: 1200px;
     margin: 30px auto;
 }
-
 table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0 auto;
     background: #1a1a1a;
     box-shadow: 0 0 5px #0f0;
 }
