@@ -2,63 +2,78 @@ body {
     background: #000;
     color: #0f0;
     font-family: Arial, sans-serif;
+    text-align: center;
     margin: 0;
     padding: 0;
-    text-align: center;
 }
 
-.titulo { margin: 20px 0; color: #00ff00; }
+h1 {
+    margin-top: 20px;
+    color: lime;
+}
 
-.filtros { margin-bottom: 20px; }
+.filtros {
+    margin: 20px auto;
+}
 
-.kpi-container {
+.kpis {
     display: flex;
     justify-content: center;
+    gap: 15px;
     flex-wrap: wrap;
-    gap: 20px;
     margin-bottom: 20px;
 }
+
 .kpi-card {
     background: #111;
-    border: 2px solid #00ff00;
-    border-radius: 8px;
-    width: 200px;
+    border: 2px solid lime;
+    border-radius: 10px;
     padding: 15px;
-    box-shadow: 0 0 10px #00ff00;
-    transition: transform 0.2s;
+    width: 180px;
+    box-shadow: 0 0 15px lime;
 }
-.kpi-card:hover { transform: scale(1.05); }
 
-.graficos-container {
+.graficos {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     padding: 20px;
 }
-.grafico-item {
-    background: #111;
-    border: 1px solid #00ff00;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 0 5px #00ff00;
-}
-.grafico-item canvas { height: 220px !important; }
 
-.tabelas-container {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin: 30px;
-    flex-wrap: wrap;
+.graficos canvas {
+    background: #111;
+    border-radius: 10px;
+    box-shadow: 0 0 10px lime;
+    padding: 10px;
 }
+
+.tabelas {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    padding: 20px;
+}
+
 table {
     border-collapse: collapse;
+    margin-top: 10px;
+    box-shadow: 0 0 10px lime;
+    width: 300px;
+}
+
+table th, table td {
+    border: 1px solid lime;
+    padding: 8px;
+}
+
+table thead {
     background: #111;
-    box-shadow: 0 0 5px #00ff00;
+    font-weight: bold;
 }
-th, td {
-    border: 1px solid #00ff00;
-    padding: 5px 10px;
+
+table tbody tr:hover {
+    background: lime;
+    color: black;
+    cursor: pointer;
 }
-th { background: #00ff00; color: #000; }
-tr:hover { background: #003300; }
