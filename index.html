@@ -5,61 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
     <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <h1>Dashboard de Clubes</h1>
-    <div class="filtros">
-        <label for="data">Data:</label>
-        <input type="text" id="data" placeholder="dd/mm/aaaa">
-        <label for="clube">Clube:</label>
-        <select id="clube">
-            <option value="Todos">Todos</option>
-        </select>
-        <button id="aplicarFiltro">Aplicar</button>
-    </div>
-
-    <div class="cards">
-        <div class="card"><h2>FTD</h2><p id="ftdTotal">R$ 0,00</p></div>
-        <div class="card"><h2>Depósitos</h2><p id="depositosTotal">R$ 0,00</p></div>
-        <div class="card"><h2>GGR</h2><p id="ggrTotal">R$ 0,00</p></div>
-        <div class="card"><h2>Sportsbook GGR</h2><p id="sportsbookGgrTotal">R$ 0,00</p></div>
-        <div class="card"><h2>Cassino GGR</h2><p id="cassinoGgrTotal">R$ 0,00</p></div>
-    </div>
-
-    <div class="graficos">
-        <canvas id="graficoGGR"></canvas>
-        <canvas id="graficoDepositos"></canvas>
-        <canvas id="graficoFTD"></canvas>
-        <canvas id="graficoSportsbook"></canvas>
-        <canvas id="graficoCassino"></canvas>
-    </div>
-
-    <div class="tabelas">
-        <div class="tabela">
-            <h3>Top 10 Clubes - Depósitos</h3>
-            <table id="topDepositos">
-                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-        <div class="tabela">
-            <h3>Top 10 Clubes - FTD</h3>
-            <table id="topFTD">
-                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-        <div class="tabela">
-            <h3>Top 10 Clubes - GGR</h3>
-            <table id="topGGR">
-                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Dashboard de Clubes</h1>
+        <div class="filters">
+            <label for="dataFiltro">Data:</label>
+            <input type="text" id="dataFiltro" placeholder="dd/mm/aaaa">
+            <label for="clubeFiltro">Clube:</label>
+            <select id="clubeFiltro">
+                <option value="Todos">Todos</option>
+            </select>
+            <button id="aplicarFiltro">Aplicar</button>
+        </div>
+    </header>
+
+    <section class="kpis">
+        <div class="kpi-card"><h2>FTD</h2><p id="ftdValor">R$ 0,00</p></div>
+        <div class="kpi-card"><h2>Depósitos</h2><p id="depositosValor">R$ 0,00</p></div>
+        <div class="kpi-card"><h2>GGR</h2><p id="ggrValor">R$ 0,00</p></div>
+        <div class="kpi-card"><h2>Sportsbook GGR</h2><p id="sportsGgrValor">R$ 0,00</p></div>
+        <div class="kpi-card"><h2>Cassino GGR</h2><p id="cassinoGgrValor">R$ 0,00</p></div>
+    </section>
+
+    <section class="charts">
+        <div class="chart-box"><canvas id="ggrChart"></canvas></div>
+        <div class="chart-box"><canvas id="depositosChart"></canvas></div>
+        <div class="chart-box"><canvas id="ftdChart"></canvas></div>
+        <div class="chart-box"><canvas id="sportsGgrChart"></canvas></div>
+        <div class="chart-box"><canvas id="cassinoGgrChart"></canvas></div>
+    </section>
+
+    <section class="tables">
+        <div class="table-box">
+            <h3>Top 10 Clubes - Depósitos</h3>
+            <table id="tabelaDepositos">
+                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="table-box">
+            <h3>Top 10 Clubes - FTD</h3>
+            <table id="tabelaFtd">
+                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="table-box">
+            <h3>Top 10 Clubes - GGR</h3>
+            <table id="tabelaGgr">
+                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer>
+        <p>Última atualização automática</p>
+    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
