@@ -7,73 +7,67 @@ body {
     padding: 0;
 }
 
-h1 {
-    margin-top: 20px;
-    color: lime;
-}
+h1 { margin-top: 20px; }
 
-.filtros {
-    margin: 20px auto;
-}
+.filters { margin: 20px 0; }
 
 .kpis {
     display: flex;
     justify-content: center;
-    gap: 15px;
     flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 20px;
 }
 
 .kpi-card {
     background: #111;
-    border: 2px solid lime;
-    border-radius: 10px;
-    padding: 15px;
-    width: 180px;
-    box-shadow: 0 0 15px lime;
+    border: 2px solid #0f0;
+    padding: 10px;
+    border-radius: 8px;
+    width: 200px;
+    box-shadow: 0 0 10px #0f0;
 }
 
-.graficos {
+.charts {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
-    padding: 20px;
+    width: 95%;
+    margin: auto;
 }
 
-.graficos canvas {
-    background: #111;
-    border-radius: 10px;
-    box-shadow: 0 0 10px lime;
-    padding: 10px;
+canvas { 
+    background: #111; 
+    border-radius: 8px;
+    box-shadow: 0 0 10px #0f0;
 }
 
-.tabelas {
+.tables {
     display: flex;
     justify-content: space-around;
-    flex-wrap: wrap;
     margin-top: 20px;
-    padding: 20px;
+    flex-wrap: wrap;
 }
 
-table {
-    border-collapse: collapse;
+table { 
+    border-collapse: collapse; 
+    width: 300px; 
     margin-top: 10px;
-    box-shadow: 0 0 10px lime;
-    width: 300px;
+    box-shadow: 0 0 10px #0f0;
 }
 
-table th, table td {
-    border: 1px solid lime;
-    padding: 8px;
+th, td { 
+    border: 1px solid #0f0; 
+    padding: 5px; 
 }
 
-table thead {
-    background: #111;
-    font-weight: bold;
+#error-message {
+    background: #ff0000;
+    color: #fff;
+    padding: 10px;
+    margin: 10px auto;
+    width: 50%;
+    border-radius: 5px;
 }
 
-table tbody tr:hover {
-    background: lime;
-    color: black;
-    cursor: pointer;
-}
+.hidden { display: none; }
