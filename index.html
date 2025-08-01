@@ -1,52 +1,56 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
     <h1>Dashboard de Clubes</h1>
 
     <div class="filtros">
-        <label>Data: <input type="date" id="filtroData"></label>
-        <label>Clube:
-            <select id="filtroClube">
-                <option value="Todos">Todos</option>
-            </select>
-        </label>
-        <button id="aplicarFiltro">Aplicar</button>
+        <label>Data: <input type="date" id="dataFiltro"></label>
+        <label>Clube: <select id="clubeSelect"></select></label>
+        <button onclick="aplicarFiltros()">Aplicar</button>
     </div>
 
     <div class="cards">
-        <div class="card"><h3>FTD</h3><p id="ftdValor">R$ 0,00</p></div>
-        <div class="card"><h3>Depósitos</h3><p id="depositosValor">R$ 0,00</p></div>
-        <div class="card"><h3>GGR</h3><p id="ggrValor">R$ 0,00</p></div>
+        <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0,00</p></div>
+        <div class="card"><h2>Depósitos</h2><p id="totalDepositos">R$ 0,00</p></div>
+        <div class="card"><h2>GGR</h2><p id="totalGGR">R$ 0,00</p></div>
+        <div class="card"><h2>Retenção</h2><p id="taxaRetencao">0%</p></div>
     </div>
 
     <div class="graficos">
-        <canvas id="graficoGGR"></canvas>
-        <canvas id="graficoFTD"></canvas>
-        <canvas id="graficoDepositos"></canvas>
+        <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoRetencao"></canvas></div>
     </div>
 
-    <div class="tabelas">
-        <div>
-            <h3>Top 10 Clubes - Depósitos</h3>
-            <table id="tabelaDepositos"></table>
+    <div class="tabelas-container">
+        <div class="tabela-box">
+            <h2>Top 10 Clubes - Depósitos</h2>
+            <table id="rankingDepositos"></table>
         </div>
-        <div>
-            <h3>Top 10 Clubes - FTD</h3>
-            <table id="tabelaFTD"></table>
+        <div class="tabela-box">
+            <h2>Top 10 Clubes - FTD</h2>
+            <table id="rankingFTD"></table>
         </div>
-        <div>
-            <h3>Top 10 Clubes - GGR</h3>
-            <table id="tabelaGGR"></table>
+        <div class="tabela-box">
+            <h2>Top 10 Clubes - GGR</h2>
+            <table id="rankingGGR"></table>
+        </div>
+        <div class="tabela-box">
+            <h2>Top 10 Clubes - Retenção</h2>
+            <table id="rankingRetencao"></table>
         </div>
     </div>
+
+    <p class="atualizacao">Última atualização: <span id="ultimaAtualizacao"></span></p>
 
     <script src="script.js"></script>
 </body>

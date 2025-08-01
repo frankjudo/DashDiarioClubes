@@ -1,121 +1,120 @@
-let dadosOriginais = [];
-let chartGGR, chartFTD, chartDepositos;
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 
-document.addEventListener("DOMContentLoaded", () => {
-    carregarCSV();
-    document.getElementById('aplicarFiltro').addEventListener('click', aplicarFiltro);
-});
+let dadosNormalizados = [];
+let charts = {};
 
-function carregarCSV() {
-    console.log("Carregando CSV...");
-    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv", {
+document.addEventListener("DOMContentLoaded", carregarDados);
+
+function carregarDados() {
+    console.log("Iniciando carregamento do CSV...");
+    Papa.parse(CSV_URL, {
         download: true,
         header: true,
-        complete: (results) => {
-            dadosOriginais = normalizarDados(results.data);
-            atualizarDashboard(dadosOriginais);
-            atualizarGraficos(dadosOriginais);
-            atualizarTabelas(dadosOriginais);
-            popularFiltroClubes(dadosOriginais);
+        complete: (res) => {
+            console.log("Linhas recebidas:", res.data.length);
+            console.log("Primeira linha recebida:", res.data[0]);
+            normalizarDados(res.data);
         }
     });
 }
 
-function normalizarDados(dados) {
-    return dados.map(linha => ({
+function normalizarDados(data) {
+    dadosNormalizados = data.filter(linha => linha["DATA"]).map(linha => ({
         data: linha["DATA"],
         clube: linha["Usuário - Nome de usuário"],
         ftd: parseFloat(linha["Usuário - FTD-Montante"].replace(",", ".")) || 0,
         depositos: parseFloat(linha["Usuário - Depósitos"].replace(",", ".")) || 0,
-        ggr: parseFloat(linha["Cálculo - GGR"].replace(",", ".")) || 0
+        ggr: parseFloat(linha["Cálculo - GGR"].replace(",", ".")) || 0,
+        contagemDeposito: parseInt(linha["Usuário - Contagem de depósito"]) || 0
     }));
+
+    console.log("Primeiras 5 linhas normalizadas:", dadosNormalizados.slice(0, 5));
+    atualizarDashboard();
 }
 
-function popularFiltroClubes(dados) {
-    const clubes = [...new Set(dados.map(d => d.clube))];
-    const select = document.getElementById('filtroClube');
-    clubes.forEach(clube => {
-        let opt = document.createElement('option');
-        opt.value = clube;
-        opt.textContent = clube;
-        select.appendChild(opt);
+function atualizarDashboard() {
+    const dataFiltro = document.getElementById("dataFiltro").value;
+    const clubeFiltro = document.getElementById("clubeSelect").value;
+
+    const filtrados = dadosNormalizados.filter(item => {
+        return (!dataFiltro || item.data === dataFiltro) && (!clubeFiltro || item.clube === clubeFiltro);
     });
+
+    let totalFTD = filtrados.reduce((sum, r) => sum + r.ftd, 0);
+    let totalDepositos = filtrados.reduce((sum, r) => sum + r.depositos, 0);
+    let totalGGR = filtrados.reduce((sum, r) => sum + r.ggr, 0);
+    let taxaRetencao = calcularTaxaRetencao(filtrados);
+
+    document.getElementById("totalFTD").innerText = `R$ ${totalFTD.toLocaleString("pt-BR")}`;
+    document.getElementById("totalDepositos").innerText = `R$ ${totalDepositos.toLocaleString("pt-BR")}`;
+    document.getElementById("totalGGR").innerText = `R$ ${totalGGR.toLocaleString("pt-BR")}`;
+    document.getElementById("taxaRetencao").innerText = `${taxaRetencao.toFixed(1)}%`;
+
+    montarGraficos(filtrados);
+    montarTabelas(filtrados);
+    document.getElementById("ultimaAtualizacao").innerText = new Date().toLocaleString();
 }
 
-function aplicarFiltro() {
-    const data = document.getElementById('filtroData').value;
-    const clube = document.getElementById('filtroClube').value;
-
-    let filtrados = dadosOriginais;
-
-    if (data) filtrados = filtrados.filter(d => d.data === data);
-    if (clube !== "Todos") filtrados = filtrados.filter(d => d.clube === clube);
-
-    atualizarDashboard(filtrados);
-    atualizarGraficos(filtrados);
-    atualizarTabelas(filtrados);
+function calcularTaxaRetencao(dados) {
+    if (!dados.length) return 0;
+    let totalUsuarios = dados.length;
+    let retidos = dados.filter(r => r.contagemDeposito > 1).length;
+    return (retidos / totalUsuarios) * 100;
 }
 
-function atualizarDashboard(dados) {
-    const ftdTotal = dados.reduce((a, b) => a + b.ftd, 0);
-    const depTotal = dados.reduce((a, b) => a + b.depositos, 0);
-    const ggrTotal = dados.reduce((a, b) => a + b.ggr, 0);
+function montarGraficos(dados) {
+    if (charts.ggr) charts.ggr.destroy();
+    if (charts.ftd) charts.ftd.destroy();
+    if (charts.depositos) charts.depositos.destroy();
+    if (charts.retencao) charts.retencao.destroy();
 
-    document.getElementById("ftdValor").textContent = formatarMoeda(ftdTotal);
-    document.getElementById("depositosValor").textContent = formatarMoeda(depTotal);
-    document.getElementById("ggrValor").textContent = formatarMoeda(ggrTotal);
+    const dias = [...new Set(dados.map(r => r.data))].sort();
+    const ggrPorDia = dias.map(d => dados.filter(r => r.data === d).reduce((s, r) => s + r.ggr, 0));
+    const ftdPorDia = dias.map(d => dados.filter(r => r.data === d).reduce((s, r) => s + r.ftd, 0));
+    const depPorDia = dias.map(d => dados.filter(r => r.data === d).reduce((s, r) => s + r.depositos, 0));
+
+    charts.ggr = criarGrafico("graficoGGR", "GGR por Dia", dias, ggrPorDia);
+    charts.ftd = criarGrafico("graficoFTD", "FTD por Dia", dias, ftdPorDia);
+    charts.depositos = criarGrafico("graficoDepositos", "Depósitos por Dia", dias, depPorDia);
+    charts.retencao = criarGrafico("graficoRetencao", "Retenção (%)", ["Clube"], [calcularTaxaRetencao(dados)]);
 }
 
-function atualizarGraficos(dados) {
-    const labels = [...new Set(dados.map(d => d.data))];
-    const ggr = labels.map(data => somaDia(dados, data, "ggr"));
-    const ftd = labels.map(data => somaDia(dados, data, "ftd"));
-    const depositos = labels.map(data => somaDia(dados, data, "depositos"));
-
-    if (chartGGR) chartGGR.destroy();
-    if (chartFTD) chartFTD.destroy();
-    if (chartDepositos) chartDepositos.destroy();
-
-    chartGGR = criarGrafico('graficoGGR', 'GGR', labels, ggr, 'lime');
-    chartFTD = criarGrafico('graficoFTD', 'FTD', labels, ftd, 'yellow');
-    chartDepositos = criarGrafico('graficoDepositos', 'Depósitos', labels, depositos, 'blue');
-}
-
-function criarGrafico(canvasId, label, labels, data, color) {
-    return new Chart(document.getElementById(canvasId).getContext('2d'), {
+function criarGrafico(id, label, labels, valores) {
+    return new Chart(document.getElementById(id), {
         type: 'line',
-        data: {
-            labels,
-            datasets: [{ label, data, borderColor: color, fill: false }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
+        data: { labels: labels, datasets: [{ label: label, data: valores, borderColor: "#0f0", fill: false }] },
+        options: { responsive: true, plugins: { legend: { display: true } } }
     });
 }
 
-function somaDia(dados, data, campo) {
-    return dados.filter(d => d.data === data).reduce((a, b) => a + b[campo], 0);
+function montarTabelas(dados) {
+    preencherRanking("rankingDepositos", "depositos", dados);
+    preencherRanking("rankingFTD", "ftd", dados);
+    preencherRanking("rankingGGR", "ggr", dados);
+    preencherRankingRetencao("rankingRetencao", dados);
 }
 
-function atualizarTabelas(dados) {
-    montarTabela(dados, 'depositos', 'tabelaDepositos');
-    montarTabela(dados, 'ftd', 'tabelaFTD');
-    montarTabela(dados, 'ggr', 'tabelaGGR');
+function preencherRanking(id, campo, dados) {
+    const clubes = {};
+    dados.forEach(r => clubes[r.clube] = (clubes[r.clube] || 0) + r[campo]);
+    const ranking = Object.entries(clubes).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    document.getElementById(id).innerHTML = `<tr><th>Clube</th><th>${campo}</th></tr>` +
+        ranking.map(r => `<tr><td>${r[0]}</td><td>${r[1].toLocaleString("pt-BR")}</td></tr>`).join("");
 }
 
-function montarTabela(dados, campo, tabelaId) {
-    const top = Object.values(dados.reduce((acc, d) => {
-        acc[d.clube] = acc[d.clube] || { clube: d.clube, valor: 0 };
-        acc[d.clube].valor += d[campo];
-        return acc;
-    }, {}))
-    .sort((a, b) => b.valor - a.valor)
-    .slice(0, 10);
-
-    let html = "<tr><th>Clube</th><th>Valor</th></tr>";
-    top.forEach(l => html += `<tr><td>${l.clube}</td><td>${formatarMoeda(l.valor)}</td></tr>`);
-    document.getElementById(tabelaId).innerHTML = html;
+function preencherRankingRetencao(id, dados) {
+    const clubes = {};
+    dados.forEach(r => {
+        if (!clubes[r.clube]) clubes[r.clube] = { total: 0, retidos: 0 };
+        clubes[r.clube].total++;
+        if (r.contagemDeposito > 1) clubes[r.clube].retidos++;
+    });
+    const ranking = Object.entries(clubes)
+        .map(([clube, stats]) => ({ clube, taxa: (stats.retidos / stats.total) * 100 }))
+        .sort((a, b) => b.taxa - a.taxa)
+        .slice(0, 10);
+    document.getElementById(id).innerHTML = `<tr><th>Clube</th><th>Retenção (%)</th></tr>` +
+        ranking.map(r => `<tr><td>${r.clube}</td><td>${r.taxa.toFixed(1)}%</td></tr>`).join("");
 }
 
-function formatarMoeda(valor) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
+function aplicarFiltros() { atualizarDashboard(); }
