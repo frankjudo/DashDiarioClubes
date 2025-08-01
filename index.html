@@ -4,129 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #000;
-            color: #00ff00;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            text-align: center;
-            margin-top: 20px;
-            color: #00ff00;
-        }
-        .filtros {
-            text-align: center;
-            margin: 20px;
-        }
-        .kpis {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .kpi {
-            background: #111;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            width: 180px;
-            box-shadow: 0 0 10px #00ff00;
-        }
-        .graficos {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
-        .grafico-container {
-            background: #111;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 0 10px #00ff00;
-        }
-        .tabelas {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            box-shadow: 0 0 10px #00ff00;
-        }
-        table, th, td {
-            border: 1px solid #00ff00;
-        }
-        th, td {
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background: #111;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background: #222;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
     <h1>Dashboard de Clubes</h1>
     <div class="filtros">
-        Data: <input type="text" id="dataFiltro" placeholder="dd/mm/aaaa">
-        Clube: 
-        <select id="clubeFiltro">
-            <option value="Todos">Todos</option>
-        </select>
-        <button onclick="aplicarFiltro()">Aplicar</button>
+        <label>Data: <input type="date" id="dataFiltro"></label>
+        <label>Clube: <select id="clubeSelect"></select></label>
+        <button id="aplicarFiltro">Aplicar</button>
     </div>
-
-    <div class="kpis">
-        <div class="kpi"><h2>FTD</h2><p id="ftd">R$ 0,00</p></div>
-        <div class="kpi"><h2>Depósitos</h2><p id="depositos">R$ 0,00</p></div>
-        <div class="kpi"><h2>GGR</h2><p id="ggr">R$ 0,00</p></div>
-        <div class="kpi"><h2>Sportsbook GGR</h2><p id="sportsbookGGR">R$ 0,00</p></div>
-        <div class="kpi"><h2>Cassino GGR</h2><p id="cassinoGGR">R$ 0,00</p></div>
+    
+    <div class="cards">
+        <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0,00</p></div>
+        <div class="card"><h2>Depósitos</h2><p id="totalDepositos">R$ 0,00</p></div>
+        <div class="card"><h2>GGR</h2><p id="totalGGR">R$ 0,00</p></div>
     </div>
 
     <div class="graficos">
         <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
         <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoSportsbook"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoCassino"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoSportsGGR"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoCassinoGGR"></canvas></div>
     </div>
 
     <div class="tabelas">
         <div>
-            <h3>Top 10 Clubes - Depósitos</h3>
-            <table id="tabelaDepositos">
-                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <h2>Top 10 Clubes - Depósitos</h2>
+            <table id="rankingDepositos"></table>
         </div>
         <div>
-            <h3>Top 10 Clubes - FTD</h3>
-            <table id="tabelaFTD">
-                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <h2>Top 10 Clubes - FTD</h2>
+            <table id="rankingFTD"></table>
         </div>
         <div>
-            <h3>Top 10 Clubes - GGR</h3>
-            <table id="tabelaGGR">
-                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <h2>Top 10 Clubes - GGR</h2>
+            <table id="rankingGGR"></table>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <footer id="ultimaAtualizacao">Última atualização: --</footer>
+
     <script src="script.js"></script>
 </body>
 </html>
