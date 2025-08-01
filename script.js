@@ -1,123 +1,132 @@
 console.log("Rodando versão DEBUG");
 
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+// === CONFIGURAÇÃO ===
+const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 
-let rawData = [];
-let charts = {};
+// === CARREGAMENTO DO CSV ===
+console.log("Iniciando carregamento do CSV...");
 
-function formatCurrency(value) {
-    return "R$ " + (value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-}
+Papa.parse(DATA_URL, {
+    download: true,
+    header: true,
+    complete: function (results) {
+        console.log(`Linhas recebidas: ${results.data.length}`);
+        processarDados(results.data);
+    },
+    error: function (error) {
+        console.error("Erro ao carregar CSV:", error);
+        alert("Erro ao carregar dados: verifique a conexão ou o link.");
+    }
+});
 
-function carregarDados() {
-    console.log("Iniciando carregamento do CSV...");
-    Papa.parse(csvUrl, {
-        download: true,
-        header: true,
-        complete: function(results) {
-            if (!results.data || results.data.length === 0) {
-                console.error("Nenhum dado recebido do CSV.");
-                return;
-            }
-            console.log(`Linhas recebidas: ${results.data.length}`);
-            rawData = results.data;
-            processarDados();
-        },
-        error: function(err) {
-            console.error("Erro ao carregar CSV: ", err);
-        }
-    });
-}
-
-function processarDados() {
+// === PROCESSAR DADOS ===
+function processarDados(dados) {
     console.log("Processando dados...");
-    // Normaliza valores numéricos
-    rawData.forEach(row => {
-        row["Usuário - Depósitos"] = parseFloat((row["Usuário - Depósitos"] || "0").replace(/\./g, '').replace(',', '.')) || 0;
+
+    dados.forEach(row => {
+        // Converter campos monetários
+        let ggrRaw = row["GGR"] && row["GGR"].trim() !== "" ? row["GGR"] : row["Cálculo - GGR"];
+        if (!row["GGR"] || row["GGR"].trim() === "") {
+            console.warn("GGR vazio, usando Cálculo - GGR:", ggrRaw);
+        }
+        row["GGR"] = parseFloat((ggrRaw || "0").replace(/\./g, '').replace(',', '.')) || 0;
         row["Usuário - FTD-Montante"] = parseFloat((row["Usuário - FTD-Montante"] || "0").replace(/\./g, '').replace(',', '.')) || 0;
-        row["GGR"] = parseFloat((row["GGR"] || "0").replace(/\./g, '').replace(',', '.')) || 0;
+        row["Usuário - Depósitos"] = parseFloat((row["Usuário - Depósitos"] || "0").replace(/\./g, '').replace(',', '.')) || 0;
         row["Sportsbook - GGR"] = parseFloat((row["Sportsbook - GGR"] || "0").replace(/\./g, '').replace(',', '.')) || 0;
         row["Cassino - GGR"] = parseFloat((row["Cassino - GGR"] || "0").replace(/\./g, '').replace(',', '.')) || 0;
     });
 
-    atualizarDashboard();
+    atualizarDashboard(dados);
+    montarGraficos(dados);
+    montarTabelas(dados);
 }
 
-function atualizarDashboard() {
+// === ATUALIZA KPIs ===
+function atualizarDashboard(dados) {
     console.log("Atualizando dashboard...");
-    let totalFTD = 0, totalDepositos = 0, totalGGR = 0, totalSportsGGR = 0, totalCassinoGGR = 0;
+    const totalFTD = dados.reduce((sum, r) => sum + r["Usuário - FTD-Montante"], 0);
+    const totalDepositos = dados.reduce((sum, r) => sum + r["Usuário - Depósitos"], 0);
+    const totalGGR = dados.reduce((sum, r) => sum + r["GGR"], 0);
+    const totalSportsGGR = dados.reduce((sum, r) => sum + r["Sportsbook - GGR"], 0);
+    const totalCassinoGGR = dados.reduce((sum, r) => sum + r["Cassino - GGR"], 0);
 
-    rawData.forEach(r => {
-        totalFTD += r["Usuário - FTD-Montante"];
-        totalDepositos += r["Usuário - Depósitos"];
-        totalGGR += r["GGR"];
-        totalSportsGGR += r["Sportsbook - GGR"];
-        totalCassinoGGR += r["Cassino - GGR"];
-    });
-
-    document.getElementById("ftdValue").innerText = formatCurrency(totalFTD);
-    document.getElementById("depositosValue").innerText = formatCurrency(totalDepositos);
-    document.getElementById("ggrValue").innerText = formatCurrency(totalGGR);
-    document.getElementById("sportsGgrValue").innerText = formatCurrency(totalSportsGGR);
-    document.getElementById("cassinoGgrValue").innerText = formatCurrency(totalCassinoGGR);
-
-    montarGraficos();
-    montarTabelas();
+    document.getElementById("ftdTotal").textContent = formatarMoeda(totalFTD);
+    document.getElementById("depositosTotal").textContent = formatarMoeda(totalDepositos);
+    document.getElementById("ggrTotal").textContent = formatarMoeda(totalGGR);
+    document.getElementById("sportsGgrTotal").textContent = formatarMoeda(totalSportsGGR);
+    document.getElementById("cassinoGgrTotal").textContent = formatarMoeda(totalCassinoGGR);
 }
 
-function montarGraficos() {
+// === FORMATA MOEDA ===
+function formatarMoeda(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// === GRÁFICOS ===
+function montarGraficos(dados) {
     console.log("Montando gráficos...");
-    const labels = [...new Set(rawData.map(r => r["DATA"]))];
+    const porData = {};
 
-    const valoresPorDia = (campo) => labels.map(d => {
-        return rawData.filter(r => r["DATA"] === d).reduce((s, r) => s + (r[campo] || 0), 0);
+    dados.forEach(row => {
+        const data = row["DATA"];
+        if (!porData[data]) porData[data] = { GGR: 0, FTD: 0, Depositos: 0, Sports: 0, Cassino: 0 };
+        porData[data].GGR += row["GGR"];
+        porData[data].FTD += row["Usuário - FTD-Montante"];
+        porData[data].Depositos += row["Usuário - Depósitos"];
+        porData[data].Sports += row["Sportsbook - GGR"];
+        porData[data].Cassino += row["Cassino - GGR"];
     });
 
-    criarGrafico("chartGGR", "GGR", labels, valoresPorDia("GGR"), "green");
-    criarGrafico("chartDepositos", "Depósitos", labels, valoresPorDia("Usuário - Depósitos"), "blue");
-    criarGrafico("chartFTD", "FTD", labels, valoresPorDia("Usuário - FTD-Montante"), "yellow");
-    criarGrafico("chartSportsGGR", "Sportsbook GGR", labels, valoresPorDia("Sportsbook - GGR"), "orange");
-    criarGrafico("chartCassinoGGR", "Cassino GGR", labels, valoresPorDia("Cassino - GGR"), "purple");
+    const labels = Object.keys(porData).sort();
+    const ggrData = labels.map(l => porData[l].GGR);
+    const ftdData = labels.map(l => porData[l].FTD);
+    const depData = labels.map(l => porData[l].Depositos);
+    const sportsData = labels.map(l => porData[l].Sports);
+    const cassinoData = labels.map(l => porData[l].Cassino);
+
+    criarGrafico("graficoGGR", labels, ggrData, "GGR", "lime");
+    criarGrafico("graficoDepositos", labels, depData, "Depósitos", "blue");
+    criarGrafico("graficoFTD", labels, ftdData, "FTD", "yellow");
+    criarGrafico("graficoSportsGGR", labels, sportsData, "Sportsbook GGR", "orange");
+    criarGrafico("graficoCassinoGGR", labels, cassinoData, "Cassino GGR", "purple");
 }
 
-function criarGrafico(id, label, labels, data, color) {
-    if (charts[id]) charts[id].destroy();
-    charts[id] = new Chart(document.getElementById(id), {
+function criarGrafico(canvasId, labels, data, label, color) {
+    new Chart(document.getElementById(canvasId).getContext("2d"), {
         type: 'line',
-        data: { labels, datasets: [{ label, data, borderColor: color, fill: false, tension: 0.3 }] },
-        options: { responsive: true, plugins: { legend: { labels: { color: '#0f0' } } }, scales: { x: { ticks: { color: '#0f0' } }, y: { ticks: { color: '#0f0' } } } }
+        data: { labels: labels, datasets: [{ label, data, borderColor: color, fill: false }] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#0f0' } } },
+            scales: {
+                x: { ticks: { color: '#0f0' } },
+                y: { ticks: { color: '#0f0' } }
+            }
+        }
     });
 }
 
-function montarTabelas() {
+// === TABELAS ===
+function montarTabelas(dados) {
     console.log("Montando tabelas...");
-    const clubes = {};
-
-    rawData.forEach(r => {
-        const clube = r["Usuário - Nome de usuário"] || "Desconhecido";
-        if (!clubes[clube]) clubes[clube] = { Depositos: 0, FTD: 0, GGR: 0 };
-        clubes[clube].Depositos += r["Usuário - Depósitos"];
-        clubes[clube].FTD += r["Usuário - FTD-Montante"];
-        clubes[clube].GGR += r["GGR"];
-    });
-
-    const topDepositos = Object.entries(clubes).sort((a, b) => b[1].Depositos - a[1].Depositos).slice(0, 10);
-    const topFTD = Object.entries(clubes).sort((a, b) => b[1].FTD - a[1].FTD).slice(0, 10);
-    const topGGR = Object.entries(clubes).sort((a, b) => b[1].GGR - a[1].GGR).slice(0, 10);
-
-    preencherTabela("topDepositos", topDepositos, "Depositos");
-    preencherTabela("topFTD", topFTD, "FTD");
-    preencherTabela("topGGR", topGGR, "GGR");
+    montarTabelaTop10(dados, "Usuário - Depósitos", "tabelaDepositos");
+    montarTabelaTop10(dados, "Usuário - FTD-Montante", "tabelaFTD");
+    montarTabelaTop10(dados, "GGR", "tabelaGGR");
 }
 
-function preencherTabela(id, data, campo) {
-    const tbody = document.querySelector(`#${id} tbody`);
-    tbody.innerHTML = "";
-    data.forEach(([clube, valores]) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${clube}</td><td>${formatCurrency(valores[campo])}</td>`;
-        tbody.appendChild(tr);
+function montarTabelaTop10(dados, coluna, tabelaId) {
+    const somaPorClube = {};
+    dados.forEach(row => {
+        const clube = row["Usuário - Nome de usuário"];
+        somaPorClube[clube] = (somaPorClube[clube] || 0) + row[coluna];
     });
-}
+    const top10 = Object.entries(somaPorClube).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
-carregarDados();
+    let html = "<tr><th>Clube</th><th>Valor</th></tr>";
+    top10.forEach(([clube, valor]) => {
+        html += `<tr><td>${clube}</td><td>${formatarMoeda(valor)}</td></tr>`;
+    });
+
+    document.getElementById(tabelaId).innerHTML = html;
+}
