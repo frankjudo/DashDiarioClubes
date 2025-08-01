@@ -1,62 +1,57 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
-    <h1>Dashboard de Clubes</h1>
+    <header>
+        <h1>Dashboard de Clubes</h1>
+        <div class="filtros">
+            <label for="dataFiltro">Data:</label>
+            <input type="date" id="dataFiltro">
+            <label for="clubeSelect">Clube:</label>
+            <select id="clubeSelect">
+                <option value="Todos">Todos</option>
+            </select>
+            <button id="btnAplicar">Aplicar</button>
+        </div>
+    </header>
 
-    <div class="filtros">
-        <label>Data: <input type="date" id="dataFiltro"></label>
-        <label>Clube: <select id="clubeSelect"></select></label>
-        <button onclick="aplicarFiltros()">Aplicar</button>
-    </div>
+    <section id="kpis" class="kpi-container">
+        <div class="kpi-card" id="kpiFTD">FTD<br><span class="valor">R$ 0,00</span></div>
+        <div class="kpi-card" id="kpiDepositos">Depósitos<br><span class="valor">R$ 0,00</span></div>
+        <div class="kpi-card" id="kpiGGR">GGR<br><span class="valor">R$ 0,00</span></div>
+        <div class="kpi-card" id="kpiSportsbookGGR">Sportsbook GGR<br><span class="valor">R$ 0,00</span></div>
+        <div class="kpi-card" id="kpiCassinoGGR">Cassino GGR<br><span class="valor">R$ 0,00</span></div>
+    </section>
 
-    <div class="cards">
-        <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0,00</p></div>
-        <div class="card"><h2>Depósitos</h2><p id="totalDepositos">R$ 0,00</p></div>
-        <div class="card"><h2>GGR</h2><p id="totalGGR">R$ 0,00</p></div>
-        <div class="card"><h2>Sportsbook GGR</h2><p id="totalSportsGGR">R$ 0,00</p></div>
-        <div class="card"><h2>Cassino GGR</h2><p id="totalCasinoGGR">R$ 0,00</p></div>
-    </div>
+    <section id="graficos" class="grafico-container">
+        <canvas id="graficoGGR"></canvas>
+        <canvas id="graficoDepositos"></canvas>
+        <canvas id="graficoFTD"></canvas>
+        <canvas id="graficoSportsbookGGR"></canvas>
+        <canvas id="graficoCassinoGGR"></canvas>
+    </section>
 
-    <div class="graficos">
-        <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoSportsGGR"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoCasinoGGR"></canvas></div>
-    </div>
-
-    <div class="tabelas-container">
-        <div class="tabela-box">
+    <section id="top10" class="tabelas-container">
+        <div>
             <h2>Top 10 Clubes - Depósitos</h2>
-            <table id="rankingDepositos"></table>
+            <table id="topDepositos"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
         </div>
-        <div class="tabela-box">
+        <div>
             <h2>Top 10 Clubes - FTD</h2>
-            <table id="rankingFTD"></table>
+            <table id="topFTD"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
         </div>
-        <div class="tabela-box">
+        <div>
             <h2>Top 10 Clubes - GGR</h2>
-            <table id="rankingGGR"></table>
+            <table id="topGGR"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
         </div>
-        <div class="tabela-box">
-            <h2>Top 10 Clubes - Sportsbook GGR</h2>
-            <table id="rankingSportsGGR"></table>
-        </div>
-        <div class="tabela-box">
-            <h2>Top 10 Clubes - Cassino GGR</h2>
-            <table id="rankingCasinoGGR"></table>
-        </div>
-    </div>
-
-    <p class="atualizacao">Última atualização: <span id="ultimaAtualizacao"></span></p>
+    </section>
 
     <script src="script.js"></script>
 </body>
