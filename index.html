@@ -4,55 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>Dashboard de Clubes</h1>
-        <div class="filtros">
-            <label for="data">Data:</label>
-            <input type="text" id="data" placeholder="dd/mm/aaaa">
-            <label for="clube">Clube:</label>
-            <select id="clube">
-                <option value="Todos">Todos</option>
-            </select>
-            <button id="aplicar">Aplicar</button>
-        </div>
-    </header>
+    <h1>Dashboard de Clubes</h1>
+    <div class="filtros">
+        <label for="data">Data:</label>
+        <input type="text" id="data" placeholder="dd/mm/aaaa">
+        <label for="clube">Clube:</label>
+        <select id="clube">
+            <option value="Todos">Todos</option>
+        </select>
+        <button id="aplicarFiltro">Aplicar</button>
+    </div>
 
-    <section class="cards">
-        <div class="card"><h2>FTD</h2><p id="valor-ftd">R$ 0,00</p></div>
-        <div class="card"><h2>Depósitos</h2><p id="valor-depositos">R$ 0,00</p></div>
-        <div class="card"><h2>GGR</h2><p id="valor-ggr">R$ 0,00</p></div>
-        <div class="card"><h2>Sportsbook GGR</h2><p id="valor-sportsbook-ggr">R$ 0,00</p></div>
-        <div class="card"><h2>Cassino GGR</h2><p id="valor-cassino-ggr">R$ 0,00</p></div>
-    </section>
+    <div class="cards">
+        <div class="card"><h2>FTD</h2><p id="ftdTotal">R$ 0,00</p></div>
+        <div class="card"><h2>Depósitos</h2><p id="depositosTotal">R$ 0,00</p></div>
+        <div class="card"><h2>GGR</h2><p id="ggrTotal">R$ 0,00</p></div>
+        <div class="card"><h2>Sportsbook GGR</h2><p id="sportsbookGgrTotal">R$ 0,00</p></div>
+        <div class="card"><h2>Cassino GGR</h2><p id="cassinoGgrTotal">R$ 0,00</p></div>
+    </div>
 
-    <section class="graficos">
-        <div class="grafico-container"><canvas id="grafico-ggr"></canvas></div>
-        <div class="grafico-container"><canvas id="grafico-depositos"></canvas></div>
-        <div class="grafico-container"><canvas id="grafico-ftd"></canvas></div>
-        <div class="grafico-container"><canvas id="grafico-sportsbook-ggr"></canvas></div>
-        <div class="grafico-container"><canvas id="grafico-cassino-ggr"></canvas></div>
-    </section>
+    <div class="graficos">
+        <canvas id="graficoGGR"></canvas>
+        <canvas id="graficoDepositos"></canvas>
+        <canvas id="graficoFTD"></canvas>
+        <canvas id="graficoSportsbook"></canvas>
+        <canvas id="graficoCassino"></canvas>
+    </div>
 
-    <section class="tabelas">
-        <div class="tabela-container">
+    <div class="tabelas">
+        <div class="tabela">
             <h3>Top 10 Clubes - Depósitos</h3>
-            <table id="tabela-depositos"></table>
+            <table id="topDepositos">
+                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
-        <div class="tabela-container">
+        <div class="tabela">
             <h3>Top 10 Clubes - FTD</h3>
-            <table id="tabela-ftd"></table>
+            <table id="topFTD">
+                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
-        <div class="tabela-container">
+        <div class="tabela">
             <h3>Top 10 Clubes - GGR</h3>
-            <table id="tabela-ggr"></table>
+            <table id="topGGR">
+                <thead><tr><th>Clube</th><th>Valor</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
-    </section>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
