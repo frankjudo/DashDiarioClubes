@@ -4,51 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <h1>Dashboard de Clubes</h1>
-        <div class="filtros">
-            <label>Data: <input type="date" id="filtroData"></label>
-            <label>Clube: <select id="filtroClube"><option value="Todos">Todos</option></select></label>
-            <button id="btnFiltrar">Aplicar</button>
-        </div>
-
-        <div class="kpis">
-            <div class="kpi-card" id="kpi-ftd"><h2>FTD</h2><p id="valor-ftd">R$ 0,00</p></div>
-            <div class="kpi-card" id="kpi-depositos"><h2>Depósitos</h2><p id="valor-depositos">R$ 0,00</p></div>
-            <div class="kpi-card" id="kpi-ggr"><h2>GGR</h2><p id="valor-ggr">R$ 0,00</p></div>
-            <div class="kpi-card" id="kpi-sportsbook"><h2>Sportsbook GGR</h2><p id="valor-sportsbook">R$ 0,00</p></div>
-            <div class="kpi-card" id="kpi-cassino"><h2>Cassino GGR</h2><p id="valor-cassino">R$ 0,00</p></div>
-        </div>
-
-        <div class="charts">
-            <canvas id="graficoGGR"></canvas>
-            <canvas id="graficoDepositos"></canvas>
-            <canvas id="graficoFTD"></canvas>
-            <canvas id="graficoSportsbook"></canvas>
-            <canvas id="graficoCassino"></canvas>
-        </div>
-
-        <div class="tables">
-            <div class="table-card">
-                <h3>Top 10 Clubes - Depósitos</h3>
-                <table id="tabelaDepositos"></table>
-            </div>
-            <div class="table-card">
-                <h3>Top 10 Clubes - FTD</h3>
-                <table id="tabelaFTD"></table>
-            </div>
-            <div class="table-card">
-                <h3>Top 10 Clubes - GGR</h3>
-                <table id="tabelaGGR"></table>
-            </div>
-        </div>
-        <footer>Última atualização: <span id="ultimaAtualizacao"></span></footer>
+    <h1>Dashboard de Clubes</h1>
+    <div class="filtros">
+        Data: <input type="date" id="filtroData">
+        Clube:
+        <select id="filtroClube"></select>
+        <button onclick="aplicarFiltros()">Aplicar</button>
     </div>
-    <script src="script.js"></script>
+
+    <div class="cards">
+        <div class="card"><h2>FTD</h2><p id="ftdTotal">R$ 0,00</p></div>
+        <div class="card"><h2>Depósitos</h2><p id="depositosTotal">R$ 0,00</p></div>
+        <div class="card"><h2>GGR</h2><p id="ggrTotal">R$ 0,00</p></div>
+        <div class="card"><h2>Sportsbook GGR</h2><p id="sportsGgrTotal">R$ 0,00</p></div>
+        <div class="card"><h2>Cassino GGR</h2><p id="cassinoGgrTotal">R$ 0,00</p></div>
+    </div>
+
+    <div class="graficos">
+        <canvas id="graficoGGR"></canvas>
+        <canvas id="graficoFTD"></canvas>
+        <canvas id="graficoDepositos"></canvas>
+        <canvas id="graficoSports"></canvas>
+        <canvas id="graficoCassino"></canvas>
+    </div>
+
+    <div class="tabelas">
+        <div>
+            <h3>Top 10 Clubes - Depósitos</h3>
+            <table id="tabelaDepositos"></table>
+        </div>
+        <div>
+            <h3>Top 10 Clubes - FTD</h3>
+            <table id="tabelaFTD"></table>
+        </div>
+        <div>
+            <h3>Top 10 Clubes - GGR</h3>
+            <table id="tabelaGGR"></table>
+        </div>
+        <div>
+            <h3>Top 10 Clubes - Sportsbook GGR</h3>
+            <table id="tabelaSports"></table>
+        </div>
+        <div>
+            <h3>Top 10 Clubes - Cassino GGR</h3>
+            <table id="tabelaCassino"></table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./script.js"></script>
 </body>
 </html>
