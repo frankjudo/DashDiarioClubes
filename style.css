@@ -1,92 +1,35 @@
 body {
+    background: #000;
+    color: #0f0;
     font-family: Arial, sans-serif;
-    background: #111;
-    color: #fff;
     margin: 0;
     padding: 0;
-    text-align: center;
 }
-
-h1 {
-    margin: 20px 0;
-    color: #0f0;
-}
-
-.filtros {
-    margin: 20px 0;
-}
-
-.cards {
+h1 { text-align: center; color: #00ff00; }
+.filtros { text-align: center; margin-bottom: 20px; }
+.kpis {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     flex-wrap: wrap;
-    margin: 20px auto;
-    max-width: 1000px;
+    gap: 15px;
 }
-
-.card {
-    background: #222;
+.kpi-card {
+    background: #111;
     padding: 15px;
-    border-radius: 8px;
-    width: 180px;
-    margin: 10px;
-    box-shadow: 0 0 10px #0f0;
-    font-weight: bold;
-    font-size: 18px;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-.card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px #00ff80;
-}
-
-.graficos {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
-    max-width: 1200px;
-    margin: 30px auto;
-}
-
-.grafico-container {
-    background: #222;
-    padding: 10px;
-    border-radius: 8px;
-    height: 300px;
-    box-shadow: 0 0 10px #0f0;
-}
-
-canvas {
-    width: 100% !important;
-    height: 250px !important;
-}
-
-.tabelas {
-    display: flex;
-    justify-content: space-around;
-    margin: 30px auto;
-    flex-wrap: wrap;
-}
-
-table {
-    margin: 20px auto;
-    border-collapse: collapse;
-    width: 300px;
-    color: #fff;
-    background: #222;
-    box-shadow: 0 0 10px #0f0;
-    border-radius: 8px;
-}
-
-th, td {
-    border: 1px solid #0f0;
-    padding: 8px;
+    width: 200px;
     text-align: center;
+    border: 2px solid #0f0;
+    box-shadow: 0 0 15px #0f0;
+    border-radius: 8px;
 }
-th {
-    background: #333;
+.charts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 20px;
+    padding: 20px;
 }
-tr:hover {
-    background: #1a1a1a;
-    box-shadow: inset 0 0 10px #00ff80;
-}
+canvas { background: #111; border-radius: 8px; padding: 10px; box-shadow: 0 0 10px #0f0; }
+.tables { display: flex; justify-content: space-around; margin-top: 20px; flex-wrap: wrap; gap: 20px; }
+table { border-collapse: collapse; width: 300px; }
+td, th { border: 1px solid #0f0; padding: 5px; text-align: left; }
+footer { text-align: center; margin: 20px; font-size: 12px; }

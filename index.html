@@ -4,52 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <h1>Dashboard de Clubes</h1>
-    <div class="filtros">
-        <label>Data início: <input type="date" id="dataInicio"></label>
-        <label>Data fim: <input type="date" id="dataFim"></label>
-        <label>Clube: <select id="clubeSelect"></select></label>
-        <button id="aplicarFiltro">Aplicar</button>
-    </div>
-    
-    <div class="cards">
-        <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0,00</p></div>
-        <div class="card"><h2>Depósitos</h2><p id="totalDepositos">R$ 0,00</p></div>
-        <div class="card"><h2>GGR</h2><p id="totalGGR">R$ 0,00</p></div>
-        <div class="card"><h2>Sportsbook GGR</h2><p id="totalSportsGGR">R$ 0,00</p></div>
-        <div class="card"><h2>Cassino GGR</h2><p id="totalCassinoGGR">R$ 0,00</p></div>
-    </div>
-
-    <div class="graficos">
-        <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoSportsGGR"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoCassinoGGR"></canvas></div>
-    </div>
-
-    <div class="tabelas">
-        <div>
-            <h2>Top 10 Clubes - Depósitos</h2>
-            <table id="rankingDepositos"></table>
+    <div class="dashboard-container">
+        <h1>Dashboard de Clubes</h1>
+        <div class="filtros">
+            <label>Data: <input type="date" id="filtroData"></label>
+            <label>Clube: <select id="filtroClube"><option value="Todos">Todos</option></select></label>
+            <button id="btnFiltrar">Aplicar</button>
         </div>
-        <div>
-            <h2>Top 10 Clubes - FTD</h2>
-            <table id="rankingFTD"></table>
+
+        <div class="kpis">
+            <div class="kpi-card" id="kpi-ftd"><h2>FTD</h2><p id="valor-ftd">R$ 0,00</p></div>
+            <div class="kpi-card" id="kpi-depositos"><h2>Depósitos</h2><p id="valor-depositos">R$ 0,00</p></div>
+            <div class="kpi-card" id="kpi-ggr"><h2>GGR</h2><p id="valor-ggr">R$ 0,00</p></div>
+            <div class="kpi-card" id="kpi-sportsbook"><h2>Sportsbook GGR</h2><p id="valor-sportsbook">R$ 0,00</p></div>
+            <div class="kpi-card" id="kpi-cassino"><h2>Cassino GGR</h2><p id="valor-cassino">R$ 0,00</p></div>
         </div>
-        <div>
-            <h2>Top 10 Clubes - GGR</h2>
-            <table id="rankingGGR"></table>
+
+        <div class="charts">
+            <canvas id="graficoGGR"></canvas>
+            <canvas id="graficoDepositos"></canvas>
+            <canvas id="graficoFTD"></canvas>
+            <canvas id="graficoSportsbook"></canvas>
+            <canvas id="graficoCassino"></canvas>
         </div>
+
+        <div class="tables">
+            <div class="table-card">
+                <h3>Top 10 Clubes - Depósitos</h3>
+                <table id="tabelaDepositos"></table>
+            </div>
+            <div class="table-card">
+                <h3>Top 10 Clubes - FTD</h3>
+                <table id="tabelaFTD"></table>
+            </div>
+            <div class="table-card">
+                <h3>Top 10 Clubes - GGR</h3>
+                <table id="tabelaGGR"></table>
+            </div>
+        </div>
+        <footer>Última atualização: <span id="ultimaAtualizacao"></span></footer>
     </div>
-
-    <footer id="ultimaAtualizacao">Última atualização: --</footer>
-
     <script src="script.js"></script>
 </body>
 </html>
