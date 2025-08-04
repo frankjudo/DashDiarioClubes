@@ -14,7 +14,7 @@
         .card { padding: 15px; border: 2px solid lime; border-radius: 8px; width: 180px; background: #111; box-shadow: 0 0 10px lime; }
         .charts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 0 20px; }
         .chart-box { border: 2px solid lime; background: #111; box-shadow: 0 0 8px lime; padding: 8px; border-radius: 6px; }
-        .tables { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px; }
+        .tables { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         table, th, td { border: 1px solid lime; }
         th, td { padding: 4px; text-align: center; }
@@ -77,7 +77,7 @@ function carregarDados() {
 }
 
 function preencherClubes() {
-    const clubes = [...new Set(dadosCSV.map(r => r["Usuário - Depósitos"]))];
+    const clubes = [...new Set(dadosCSV.map(r => r["Usuário - Nome de usuário"]))];
     const select = document.getElementById("filtroClube");
     select.innerHTML = `<option value="">Todos</option>`;
     clubes.forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
@@ -88,7 +88,7 @@ function aplicarFiltro() {
     const clubeFiltro = document.getElementById("filtroClube").value;
 
     let filtrados = dadosCSV.filter(linha => {
-        return (!dataFiltro || linha["DATA"] === dataFiltro) && (!clubeFiltro || linha["Usuário - Depósitos"] === clubeFiltro);
+        return (!dataFiltro || linha["DATA"] === dataFiltro) && (!clubeFiltro || linha["Usuário - Nome de usuário"] === clubeFiltro);
     });
 
     console.log("Filtro aplicado:", { dataFiltro, clubeFiltro });
@@ -161,7 +161,7 @@ function montarTop10(dados) {
     const top = (campo) => {
         const clubes = {};
         dados.forEach(l => {
-            const clube = l["Usuário - Depósitos"] || "Sem Clube";
+            const clube = l["Usuário - Nome de usuário"] || "Sem Clube";
             clubes[clube] = (clubes[clube]||0) + parseFloat(l[campo]||0);
         });
         return Object.entries(clubes).sort((a,b)=>b[1]-a[1]).slice(0,10);
