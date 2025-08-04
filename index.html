@@ -13,12 +13,11 @@
         .filtros { display: flex; justify-content: center; gap: 10px; padding: 10px; background: #fff; flex-wrap: wrap; }
         .cards { display: flex; justify-content: space-around; flex-wrap: wrap; padding: 10px; background: #fff; }
         .card { background: #fafafa; padding: 15px; border-radius: 8px; text-align: center; width: 180px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s ease-in-out, background-color 0.5s; }
-        .card:hover { transform: scale(1.05); }
-        .card.fade-change { background-color: #d4ffd4; }
-        .card.negative-change { background-color: #ffd4d4; }
         .card i { font-size: 2em; margin-bottom: 5px; }
         .card h3 { margin: 0; font-size: 1em; color: #666; }
         .card p { font-size: 1.4em; font-weight: bold; margin: 5px 0 0; color: #222; transition: color 0.5s; }
+        .card.fade-change { background-color: #d4ffd4; }
+        .card.negative-change { background-color: #ffd4d4; }
         .graficos { display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 10px; padding: 10px; }
         .grafico-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); opacity: 1; transition: opacity 0.5s; }
         .fade-out { opacity: 0; }
@@ -74,6 +73,7 @@
     <script>
         const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
         let dados = [];
+        let charts = {};
 
         document.addEventListener("DOMContentLoaded", carregarDados);
 
@@ -100,17 +100,16 @@
             const data = document.getElementById("dataFiltro").value;
             const clube = document.getElementById("clubeFiltro").value;
             let filtrado = dados;
-
             if(data) filtrado = filtrado.filter(d => d.DATA === data);
             if(clube !== "Todos") filtrado = filtrado.filter(d => d["Usuário - Nome de usuário"] === clube);
 
             atualizarKPIs(filtrado);
             atualizarTop10(filtrado);
+            atualizarGraficos(filtrado);
         }
 
         function atualizarKPIs(dados) {
             const soma = campo => dados.reduce((acc, d) => acc + parseFloat(d[campo] || 0), 0);
-
             atualizarElemento("kpi-ftd", soma("Usuário - FTD-Montante"));
             atualizarElemento("kpi-depositos", soma("Usuário - Depósitos"));
             atualizarElemento("kpi-ggr", soma("Cálculo - GGR"));
@@ -125,20 +124,9 @@
             el.dataset.valor = valor;
             el.textContent = valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
             const card = el.closest(".card");
-
             if(valor > valorAnterior) card.classList.add("fade-change");
             else if(valor < valorAnterior) card.classList.add("negative-change");
-
             setTimeout(()=>card.classList.remove("fade-change","negative-change"),800);
-        }
-
-        function atualizarTop10(dados) {
-            preencherTabela("topDepositos", consolidar(dados,"Usuário - Depósitos"));
-            preencherTabela("topFTD", consolidar(dados,"Usuário - FTD-Montante"));
-            preencherTabela("topGGR", consolidar(dados,"Cálculo - GGR"));
-            preencherTabela("topSports", consolidar(dados,"Sportsbook - GGR"));
-            preencherTabela("topCassino", consolidar(dados,"Cassino - GGR"));
-            preencherTabela("topBonus", consolidar(dados,"Cálculo - bônus convertidos"));
         }
 
         function consolidar(dados, campo) {
@@ -158,6 +146,40 @@
                 tbody.appendChild(tr);
                 setTimeout(()=>tr.classList.remove("update-green","update-red"),800);
             });
+        }
+
+        function atualizarTop10(dados) {
+            preencherTabela("topDepositos", consolidar(dados,"Usuário - Depósitos"));
+            preencherTabela("topFTD", consolidar(dados,"Usuário - FTD-Montante"));
+            preencherTabela("topGGR", consolidar(dados,"Cálculo - GGR"));
+            preencherTabela("topSports", consolidar(dados,"Sportsbook - GGR"));
+            preencherTabela("topCassino", consolidar(dados,"Cassino - GGR"));
+            preencherTabela("topBonus", consolidar(dados,"Cálculo - bônus convertidos"));
+        }
+
+        function atualizarGraficos(dados) {
+            const dataUnica = [...new Set(dados.map(d => d.DATA))].sort();
+            const serie = campo => dataUnica.map(data => dados.filter(d => d.DATA === data)
+                .reduce((acc, d) => acc + parseFloat(d[campo] || 0), 0));
+
+            const graficos = {
+                graficoGGR: {label: "Cálculo - GGR", cor: "green", dados: serie("Cálculo - GGR")},
+                graficoDepositos: {label: "Usuário - Depósitos", cor: "blue", dados: serie("Usuário - Depósitos")},
+                graficoFTD: {label: "Usuário - FTD-Montante", cor: "gold", dados: serie("Usuário - FTD-Montante")},
+                graficoSports: {label: "Sportsbook - GGR", cor: "orange", dados: serie("Sportsbook - GGR")},
+                graficoCassino: {label: "Cassino - GGR", cor: "purple", dados: serie("Cassino - GGR")},
+                graficoBonus: {label: "Cálculo - bônus convertidos", cor: "pink", dados: serie("Cálculo - bônus convertidos")}
+            };
+
+            for(const id in graficos) {
+                const ctx = document.getElementById(id).getContext("2d");
+                if(charts[id]) charts[id].destroy();
+                charts[id] = new Chart(ctx, {
+                    type: "line",
+                    data: { labels: dataUnica, datasets: [{label: graficos[id].label, data: graficos[id].dados, borderColor: graficos[id].cor, fill: false}] },
+                    options: { responsive: true, plugins: { legend: {display: true} } }
+                });
+            }
         }
     </script>
 </body>
