@@ -2,169 +2,191 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Executivo</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"></script>
+    <title>Dashboard de Clubes</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { background:#000; color:#fff; font-family:Arial, sans-serif; margin:0; padding:0; }
-        h1 { text-align:center; color:lime; text-shadow:0 0 10px lime; margin:5px 0; }
-        .filtros { text-align:center; margin:5px 0; }
-        .cards { display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px; margin-bottom:8px; }
-        .card { border:2px solid lime; border-radius:8px; padding:8px 14px; text-align:center; min-width:130px; box-shadow:0 0 8px lime; }
-        .valor { font-size:1.4em; font-weight:bold; color:white; text-shadow:0 0 5px white; }
-
-        .container { display:grid; grid-template-rows:auto 20vh auto; gap:8px; padding:5px; }
-        .graficos { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:6px; }
-        canvas { background:#111; border:2px solid lime; border-radius:8px; padding:3px; height:120px; width:100%; opacity:0; transition:opacity 0.8s ease; box-shadow: 0 0 8px lime; }
-        canvas.loaded { opacity:1; }
-
-        .top10 { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:10px; padding:5px; }
-        table { width:100%; border-collapse:collapse; font-size:0.85em; background:#111; opacity:0; transition:opacity 0.8s ease; box-shadow:0 0 10px lime; }
-        table.loaded { opacity:1; }
-        th, td { border:1px solid lime; padding:4px; text-align:center; }
-        th { color:lime; background:#000; font-size:0.9em; }
-        td { color:white; font-size:0.85em; }
-        footer { text-align:right; color:lime; padding:4px; font-size:0.8em; }
+        body { background: #000; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        h1 { text-align: center; color: #00ff00; margin: 10px 0; }
+        .filters { text-align: center; margin-bottom: 10px; }
+        .cards { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 10px; }
+        .card { border: 2px solid #00ff00; border-radius: 8px; padding: 8px 20px; box-shadow: 0 0 10px #00ff00; text-align: center; min-width: 150px; }
+        .card h2 { font-size: 16px; margin: 0 0 5px; color: #00ff00; }
+        .card p { font-size: 18px; font-weight: bold; color: #fff; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 10px; }
+        .chart-box, .table-box { border: 1px solid #00ff00; border-radius: 8px; padding: 10px; background: #111; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; color: #fff; font-size: 12px; }
+        th, td { border: 1px solid #00ff00; padding: 4px; text-align: left; }
+        th { background: #00ff00; color: #000; text-align: center; }
+        .footer { text-align: right; font-size: 12px; color: #00ff00; margin: 5px 15px; }
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
     <h1>Dashboard de Clubes</h1>
-    <div class="filtros">
-        Data: <input type="date" id="dataFiltro">
-        Clube: <select id="clubeFiltro"></select>
-        <button onclick="aplicarFiltro()">Aplicar</button>
+    <div class="filters">
+        Data: <input type="date" id="filter-date"> 
+        Clube: <select id="filter-club"><option value="Todos">Todos</option></select>
+        <button onclick="applyFilters()">Aplicar</button>
     </div>
 
-    <div class="container">
-        <div class="cards">
-            <div class="card"><div>FTD</div><div class="valor" id="ftdValor">R$ 0,00</div></div>
-            <div class="card"><div>Depósitos</div><div class="valor" id="depositosValor">R$ 0,00</div></div>
-            <div class="card"><div>GGR</div><div class="valor" id="ggrValor">R$ 0,00</div></div>
-            <div class="card"><div>Sportsbook GGR</div><div class="valor" id="sportsValor">R$ 0,00</div></div>
-            <div class="card"><div>Cassino GGR</div><div class="valor" id="cassinoValor">R$ 0,00</div></div>
-        </div>
-
-        <div class="graficos">
-            <canvas id="grafGGR"></canvas>
-            <canvas id="grafDepositos"></canvas>
-            <canvas id="grafFTD"></canvas>
-            <canvas id="grafSports"></canvas>
-            <canvas id="grafCassino"></canvas>
-        </div>
-
-        <div class="top10">
-            <table id="topDepositos"><thead><tr><th>Top 10 Depósitos</th><th>Valor</th></tr></thead><tbody></tbody></table>
-            <table id="topFTD"><thead><tr><th>Top 10 FTD</th><th>Valor</th></tr></thead><tbody></tbody></table>
-            <table id="topGGR"><thead><tr><th>Top 10 GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
-            <table id="topSports"><thead><tr><th>Top 10 Sportsbook GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
-            <table id="topCassino"><thead><tr><th>Top 10 Cassino GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        </div>
+    <div class="cards">
+        <div class="card"><h2>FTD</h2><p id="ftd-value">R$ 0,00</p></div>
+        <div class="card"><h2>Depósitos</h2><p id="depositos-value">R$ 0,00</p></div>
+        <div class="card"><h2>GGR</h2><p id="ggr-value">R$ 0,00</p></div>
+        <div class="card"><h2>Sportsbook GGR</h2><p id="sportsbook-ggr-value">R$ 0,00</p></div>
+        <div class="card"><h2>Cassino GGR</h2><p id="cassino-ggr-value">R$ 0,00</p></div>
     </div>
-    <footer>Última atualização: <span id="atualizacao"></span></footer>
 
-<script>
-const urlCSV = "URL_DO_SEU_GOOGLE_SHEET_PUBLISHED";
+    <div class="grid">
+        <div class="chart-box"><canvas id="chartGGR"></canvas></div>
+        <div class="chart-box"><canvas id="chartDepositos"></canvas></div>
+        <div class="chart-box"><canvas id="chartFTD"></canvas></div>
+        <div class="chart-box"><canvas id="chartSportsbook"></canvas></div>
+        <div class="chart-box"><canvas id="chartCassino"></canvas></div>
+        <div class="table-box" id="top10-tables"></div>
+    </div>
 
-document.addEventListener('DOMContentLoaded', () => carregarDados());
+    <div class="footer" id="footer-update"></div>
 
-function carregarDados() {
-    Papa.parse(urlCSV, {
-        download: true,
-        header: true,
-        complete: function(results) {
-            atualizarDashboard(results.data);
+    <script>
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+        let allData = [];
+
+        const charts = {};
+        const ctxs = {
+            GGR: document.getElementById('chartGGR').getContext('2d'),
+            Depositos: document.getElementById('chartDepositos').getContext('2d'),
+            FTD: document.getElementById('chartFTD').getContext('2d'),
+            Sportsbook: document.getElementById('chartSportsbook').getContext('2d'),
+            Cassino: document.getElementById('chartCassino').getContext('2d')
+        };
+
+        async function loadCSV() {
+            return new Promise((resolve, reject) => {
+                Papa.parse(SHEET_CSV_URL, {
+                    download: true,
+                    header: true,
+                    complete: (results) => resolve(results.data),
+                    error: (error) => reject(error)
+                });
+            });
         }
-    });
-}
-function atualizarDashboard(dados) {
-    const dataFiltrada = filtrarPorDataEClube(dados);
 
-    animarValor('ftdValor', somaColuna(dataFiltrada, "Usuário - FTD-Montante"));
-    animarValor('depositosValor', somaColuna(dataFiltrada, "Usuário - Depósitos"));
-    animarValor('sportsValor', somaColuna(dataFiltrada, "Sportsbook - GGR"));
-    animarValor('cassinoValor', somaColuna(dataFiltrada, "Cassino - GGR"));
-    animarValor('ggrValor', somaColuna(dataFiltrada, "Cálculo - GGR"));
+        async function init() {
+            try {
+                allData = await loadCSV();
+                populateClubFilter();
+                updateDashboard(allData);
+                document.getElementById('footer-update').innerText = "Última atualização: " + new Date().toLocaleString();
+            } catch (e) {
+                alert("Erro ao carregar dados: " + e.message);
+            }
+        }
 
-    criarGrafico('grafGGR', 'GGR', agruparPorData(dataFiltrada,"Cálculo - GGR"), 'lime');
-    criarGrafico('grafDepositos', 'Depósitos', agruparPorData(dataFiltrada,"Usuário - Depósitos"), 'blue');
-    criarGrafico('grafFTD', 'FTD', agruparPorData(dataFiltrada,"Usuário - FTD-Montante"), 'yellow');
-    criarGrafico('grafSports', 'Sportsbook GGR', agruparPorData(dataFiltrada,"Sportsbook - GGR"), 'orange');
-    criarGrafico('grafCassino', 'Cassino GGR', agruparPorData(dataFiltrada,"Cassino - GGR"), 'purple');
+        function populateClubFilter() {
+            const select = document.getElementById('filter-club');
+            const clubes = [...new Set(allData.map(r => r["Usuário - Nome de usuário"]))];
+            clubes.forEach(clube => {
+                let opt = document.createElement("option");
+                opt.value = clube;
+                opt.innerText = clube;
+                select.appendChild(opt);
+            });
+        }
 
-    preencherTabela('topDepositos', top10PorClube(dataFiltrada,"Usuário - Depósitos"));
-    preencherTabela('topFTD', top10PorClube(dataFiltrada,"Usuário - FTD-Montante"));
-    preencherTabela('topGGR', top10PorClube(dataFiltrada,"Cálculo - GGR"));
-    preencherTabela('topSports', top10PorClube(dataFiltrada,"Sportsbook - GGR"));
-    preencherTabela('topCassino', top10PorClube(dataFiltrada,"Cassino - GGR"));
+        function applyFilters() {
+            const date = document.getElementById('filter-date').value;
+            const clube = document.getElementById('filter-club').value;
+            let filtered = allData;
+            if (date) filtered = filtered.filter(r => r["DATA"] === date);
+            if (clube !== "Todos") filtered = filtered.filter(r => r["Usuário - Nome de usuário"] === clube);
+            updateDashboard(filtered);
+        }
 
-    document.querySelectorAll('canvas').forEach(c => c.classList.add('loaded'));
-    document.querySelectorAll('table').forEach(t => t.classList.add('loaded'));
-    document.getElementById('atualizacao').innerText = new Date().toLocaleString();
-}
-function filtrarPorDataEClube(dados){
-    const dataSel = document.getElementById('dataFiltro').value;
-    const clubeSel = document.getElementById('clubeFiltro').value;
-    return dados.filter(row=>{
-        const condData = !dataSel || row['DATA']===dataSel;
-        const condClube = !clubeSel || clubeSel==="Todos" || row['Usuário - Nome de usuário']===clubeSel;
-        return condData && condClube;
-    });
-}
-function somaColuna(dados, coluna){
-    return dados.reduce((soma, row)=> soma + (parseFloat(row[coluna]||0)),0);
-}
-function agruparPorData(dados,coluna){
-    const mapa={};
-    dados.forEach(r=>{
-        const d=r["DATA"];
-        mapa[d]=(mapa[d]||0)+parseFloat(r[coluna]||0);
-    });
-    const labels=Object.keys(mapa).sort();
-    const valores=labels.map(l=>mapa[l]);
-    return {labels,valores};
-}
-function criarGrafico(id,label,dataset,cor){
-    const ctx=document.getElementById(id).getContext('2d');
-    new Chart(ctx,{
-        type:'line',
-        data:{labels:dataset.labels, datasets:[{label,data:dataset.valores, borderColor:cor, tension:0.4, fill:false}]},
-        options:{responsive:true,animation:{duration:800},plugins:{legend:{labels:{color:"white"}}},scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}}
-    });
-}
-function top10PorClube(dados,coluna){
-    const mapa={};
-    dados.forEach(r=>{
-        const clube=r["Usuário - Nome de usuário"];
-        mapa[clube]=(mapa[clube]||0)+parseFloat(r[coluna]||0);
-    });
-    return Object.entries(mapa).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([clube,valor])=>[clube,formatarMoeda(valor)]);
-}
-function preencherTabela(id,dados){
-    const tbody=document.querySelector(`#${id} tbody`);
-    tbody.innerHTML="";
-    dados.forEach(l=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${l[0]}</td><td>${l[1]}</td>`;
-        tbody.appendChild(tr);
-    });
-}
-function formatarMoeda(valor){
-    return valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-}
-function animarValor(id, valorFinal){
-    const elemento = document.getElementById(id);
-    const valorAtual = 0;
-    const duracao = 800;
-    const inicio = performance.now();
-    function animar(tempo){
-        const progresso = Math.min((tempo - inicio)/duracao, 1);
-        const valor = valorAtual + progresso * valorFinal;
-        elemento.innerText = valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-        if(progresso < 1) requestAnimationFrame(animar);
-    }
-    requestAnimationFrame(animar);
-}
-function aplicarFiltro(){ carregarDados(); }
-</script>
+        function updateDashboard(data) {
+            const sum = (key) => data.reduce((a, b) => a + (parseFloat(b[key].replace(',', '.')) || 0), 0);
+            document.getElementById('ftd-value').innerText = formatCurrency(sum("Usuário - FTD-Montante"));
+            document.getElementById('depositos-value').innerText = formatCurrency(sum("Usuário - Depósitos"));
+            document.getElementById('ggr-value').innerText = formatCurrency(sum("Cálculo - GGR"));
+            document.getElementById('sportsbook-ggr-value').innerText = formatCurrency(sum("Sportsbook - GGR"));
+            document.getElementById('cassino-ggr-value').innerText = formatCurrency(sum("Cassino - GGR"));
+            buildCharts(data);
+            buildTop10(data);
+        }
+
+        function buildCharts(data) {
+            const labels = [...new Set(data.map(d => d["DATA"]))].sort();
+            const datasetBuilder = (key, color) => ({
+                label: key,
+                data: labels.map(date => {
+                    return data.filter(d => d["DATA"] === date)
+                               .reduce((sum, d) => sum + (parseFloat(d[key].replace(',', '.')) || 0), 0);
+                }),
+                borderColor: color,
+                backgroundColor: color,
+                fill: false,
+                tension: 0.3
+            });
+
+            createOrUpdateChart('GGR', labels, [datasetBuilder("Cálculo - GGR", '#00ff00')]);
+            createOrUpdateChart('Depositos', labels, [datasetBuilder("Usuário - Depósitos", '#0000ff')]);
+            createOrUpdateChart('FTD', labels, [datasetBuilder("Usuário - FTD-Montante", '#ffff00')]);
+            createOrUpdateChart('Sportsbook', labels, [datasetBuilder("Sportsbook - GGR", '#ff8000')]);
+            createOrUpdateChart('Cassino', labels, [datasetBuilder("Cassino - GGR", '#ff00ff')]);
+        }
+
+        function createOrUpdateChart(name, labels, datasets) {
+            if (charts[name]) {
+                charts[name].data.labels = labels;
+                charts[name].data.datasets = datasets;
+                charts[name].update();
+            } else {
+                charts[name] = new Chart(ctxs[name], {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: { responsive: true, animation: { duration: 800 } }
+                });
+            }
+        }
+
+        function buildTop10(data) {
+            const metrics = [
+                { key: "Usuário - Depósitos", label: "Top 10 Depósitos" },
+                { key: "Usuário - FTD-Montante", label: "Top 10 FTD" },
+                { key: "Cálculo - GGR", label: "Top 10 GGR" },
+                { key: "Sportsbook - GGR", label: "Top 10 Sportsbook GGR" },
+                { key: "Cassino - GGR", label: "Top 10 Cassino GGR" }
+            ];
+            const container = document.getElementById('top10-tables');
+            container.innerHTML = '<div style="display:flex; gap:10px; justify-content:space-between;">' +
+                metrics.map(m => buildSingleTable(data, m.key, m.label)).join('') + '</div>';
+        }
+
+        function buildSingleTable(data, key, label) {
+            const aggregated = {};
+            data.forEach(r => {
+                const user = r["Usuário - Nome de usuário"] || "Sem Clube";
+                aggregated[user] = (aggregated[user] || 0) + (parseFloat(r[key].replace(',', '.')) || 0);
+            });
+            const sorted = Object.entries(aggregated).sort((a,b) => b[1]-a[1]).slice(0,10);
+            return `
+                <table class="fade-in">
+                    <thead><tr><th colspan="2">${label}</th></tr></thead>
+                    <tbody>
+                        ${sorted.map(([clube, valor]) => `<tr><td>${clube}</td><td>${formatCurrency(valor)}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function formatCurrency(val) {
+            return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        init();
+    </script>
 </body>
 </html>
