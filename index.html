@@ -6,19 +6,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { background:#000; color:#fff; font-family:Arial; margin:0; padding:0; }
-        h1 { text-align:center; color:lime; margin:5px; }
-        .filtros { text-align:center; margin:10px; }
-        .cards { display:flex; justify-content:space-around; margin:10px; flex-wrap:wrap; }
-        .card { border:2px solid lime; border-radius:8px; padding:10px 20px; text-align:center; min-width:140px; box-shadow:0 0 8px lime; margin:5px; }
-        .valor { font-size:1.2em; font-weight:bold; color:white; }
-        .graficos { display:grid; grid-template-columns:repeat(3, 1fr); grid-gap:8px; padding:10px; height:35vh; }
-        canvas { background:#111; border:2px solid lime; border-radius:8px; }
-        table { width:100%; border-collapse:collapse; font-size:0.8em; }
-        th,td { border:1px solid lime; padding:4px; text-align:center; }
-        th { color:lime; }
-        .top10 { display:grid; grid-template-columns: repeat(5, 1fr); grid-gap:5px; padding:10px; }
-        .top10 table { background:#111; }
+        body { background:#000; color:#fff; font-family:Arial, sans-serif; margin:0; padding:0; }
+        h1 { text-align:center; color:lime; margin:10px 0; }
+        .filtros { text-align:center; margin:5px 0; }
+        .cards { display:flex; justify-content:space-around; margin:5px; flex-wrap:wrap; }
+        .card { border:2px solid lime; border-radius:8px; padding:8px 16px; text-align:center; min-width:130px; box-shadow:0 0 8px lime; margin:3px; }
+        .valor { font-size:1.1em; font-weight:bold; color:white; }
+        .graficos { display:grid; grid-template-columns: repeat(3, 1fr); grid-gap:5px; padding:5px; height:30vh; }
+        canvas { background:#111; border:2px solid lime; border-radius:8px; padding:5px; }
+        .top10 { display:grid; grid-template-columns: repeat(5, 1fr); grid-gap:4px; padding:5px; }
+        table { width:100%; border-collapse:collapse; font-size:0.75em; background:#111; }
+        th, td { border:1px solid lime; padding:3px; text-align:center; }
+        th { color:lime; background:#000; }
         footer { text-align:right; color:lime; padding:5px; font-size:0.8em; }
     </style>
 </head>
@@ -56,7 +55,7 @@
     <footer>Última atualização: <span id="atualizacao"></span></footer>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+const SHEET_URL = "COLE_AQUI_O_LINK_PUBLICADO_CSV";
 let dadosCSV = [];
 let charts = {};
 
@@ -65,7 +64,6 @@ function carregarCSV() {
         download: true,
         header: true,
         complete: function(results) {
-            console.log("Cabeçalho CSV:", Object.keys(results.data[0]));
             dadosCSV = results.data.filter(l => l["DATA"]);
             popularFiltroClubes();
             aplicarFiltro();
@@ -82,7 +80,6 @@ function popularFiltroClubes() {
 function aplicarFiltro() {
     const dataFiltro = document.getElementById("dataFiltro").value;
     const clubeFiltro = document.getElementById("clubeFiltro").value;
-    console.log("Filtro aplicado:", {dataFiltro, clubeFiltro});
     let filtrado = dadosCSV;
     if (dataFiltro) filtrado = filtrado.filter(l => l["DATA"] === dataFiltro);
     if (clubeFiltro !== "Todos") filtrado = filtrado.filter(l => l["Usuário - Nome de usuário"] === clubeFiltro);
@@ -128,8 +125,13 @@ function criarChart(id, labels, data, label, color) {
     if (charts[id]) charts[id].destroy();
     charts[id] = new Chart(document.getElementById(id), {
         type:'line',
-        data:{labels, datasets:[{label, data, borderColor:color, fill:false}]},
-        options:{responsive:true, plugins:{legend:{labels:{color:'white'}}}, scales:{x:{ticks:{color:'white'}},y:{ticks:{color:'white'}}}}
+        data:{labels, datasets:[{label, data, borderColor:color, fill:false, tension:0.3}]},
+        options:{
+            responsive:true,
+            animation:{duration:1000, easing:'easeInOutQuad'},
+            plugins:{legend:{labels:{color:'white'}}},
+            scales:{x:{ticks:{color:'white'}},y:{ticks:{color:'white'}}}
+        }
     });
 }
 
