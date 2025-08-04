@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,99 +7,248 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-        header { background: white; padding: 10px; text-align: center; font-size: 24px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .filters { text-align: center; margin: 10px 0; }
-        .kpi-container { display: flex; justify-content: space-around; flex-wrap: wrap; margin: 20px; }
-        .kpi { background: white; padding: 10px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; width: 160px; }
-        .kpi h3 { margin: 0; font-size: 14px; color: #333; }
-        .kpi p { font-size: 18px; font-weight: bold; margin: 5px 0 0 0; color: #000; }
-        .charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px; }
-        .chart-box { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); height: 180px; }
-        .tables { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 5px; border-bottom: 1px solid #ddd; font-size: 12px; text-align: left; }
-        th { background: #f0f0f0; }
-        footer { text-align: center; font-size: 12px; margin: 20px 0; color: #666; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #fff;
+            padding: 10px;
+            text-align: center;
+            font-size: 1.6em;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .filtros {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .cards {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            padding: 10px;
+            background: #fff;
+            margin-bottom: 10px;
+        }
+        .card {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            width: 180px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+        .card:hover { transform: scale(1.05); }
+        .card h3 { margin: 0; font-size: 1em; color: #666; }
+        .card p { font-size: 1.4em; font-weight: bold; margin: 5px 0 0; color: #222; }
+
+        .graficos {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            padding: 10px;
+        }
+        .grafico-container {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: opacity 0.5s ease-in-out;
+            opacity: 1;
+        }
+        .fade-out { opacity: 0; }
+        .tabelas {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            padding: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.9em;
+            text-align: left;
+        }
+        th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+        tfoot td {
+            font-size: 0.8em;
+            color: #666;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
     <header>Dashboard de Clubes</header>
-    <div class="filters">
-        Data: <input type="date" id="dateFilter">
-        Clube: <select id="clubeFilter"><option value="Todos">Todos</option></select>
+
+    <div class="filtros">
+        <label>Data: <input type="date" id="dataFiltro"></label>
+        <label>Clube: 
+            <select id="clubeFiltro"></select>
+        </label>
         <button onclick="aplicarFiltro()">Aplicar</button>
     </div>
 
-    <div class="kpi-container">
-        <div class="kpi"><h3>FTD</h3><p id="kpi-ftd">R$ 0,00</p></div>
-        <div class="kpi"><h3>Depósitos</h3><p id="kpi-depositos">R$ 0,00</p></div>
-        <div class="kpi"><h3>GGR</h3><p id="kpi-ggr">R$ 0,00</p></div>
-        <div class="kpi"><h3>Sportsbook GGR</h3><p id="kpi-sportsbook">R$ 0,00</p></div>
-        <div class="kpi"><h3>Cassino GGR</h3><p id="kpi-cassino">R$ 0,00</p></div>
-        <div class="kpi"><h3>Bônus Convertidos</h3><p id="kpi-bonus">R$ 0,00</p></div>
+    <div class="cards">
+        <div class="card"><h3>FTD</h3><p id="kpi-ftd">R$ 0,00</p></div>
+        <div class="card"><h3>Depósitos</h3><p id="kpi-depositos">R$ 0,00</p></div>
+        <div class="card"><h3>GGR</h3><p id="kpi-ggr">R$ 0,00</p></div>
+        <div class="card"><h3>Sportsbook GGR</h3><p id="kpi-sports">R$ 0,00</p></div>
+        <div class="card"><h3>Cassino GGR</h3><p id="kpi-cassino">R$ 0,00</p></div>
+        <div class="card"><h3>Bônus Convertidos</h3><p id="kpi-bonus">R$ 0,00</p></div>
     </div>
 
-    <div class="charts">
-        <div class="chart-box"><canvas id="chartGGR"></canvas></div>
-        <div class="chart-box"><canvas id="chartDepositos"></canvas></div>
-        <div class="chart-box"><canvas id="chartFTD"></canvas></div>
-        <div class="chart-box"><canvas id="chartSportsbook"></canvas></div>
-        <div class="chart-box"><canvas id="chartCassino"></canvas></div>
-        <div class="chart-box"><canvas id="chartBonus"></canvas></div>
+    <div class="graficos">
+        <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoSports"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoCassino"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoBonus"></canvas></div>
     </div>
 
-    <div class="tables">
+    <div class="tabelas">
         <table id="topDepositos"><thead><tr><th>Top 10 Depósitos</th><th>Valor</th></tr></thead><tbody></tbody></table>
         <table id="topFTD"><thead><tr><th>Top 10 FTD</th><th>Valor</th></tr></thead><tbody></tbody></table>
         <table id="topGGR"><thead><tr><th>Top 10 GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topSportsbook"><thead><tr><th>Top 10 Sportsbook</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topSports"><thead><tr><th>Top 10 Sportsbook</th><th>Valor</th></tr></thead><tbody></tbody></table>
         <table id="topCassino"><thead><tr><th>Top 10 Cassino</th><th>Valor</th></tr></thead><tbody></tbody></table>
         <table id="topBonus"><thead><tr><th>Top 10 Bônus</th><th>Valor</th></tr></thead><tbody></tbody></table>
     </div>
 
-    <footer>Última atualização: <span id="lastUpdate"></span></footer>
+    <tfoot><tr><td colspan="2" id="atualizacao">Última atualização: -</td></tr></tfoot>
 
-    <script>
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
-        let allData = [];
+<script>
+const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 
-        function aplicarFiltro() {
-            const date = document.getElementById('dateFilter').value;
-            const clube = document.getElementById('clubeFilter').value;
-            console.log("Filtro aplicado", {date, clube});
-            processarDados(date, clube);
-        }
+let dados = [], charts = {};
 
-        function processarDados(dateFilter, clubeFilter) {
-            let data = allData;
-            if (dateFilter) data = data.filter(row => row["DATA"] === dateFilter);
-            if (clubeFilter !== "Todos") data = data.filter(row => row["Usuário - Nome de usuário"] === clubeFilter);
+Papa.parse(urlCSV, {
+    download: true,
+    header: true,
+    complete: function(results) {
+        dados = results.data;
+        popularClubes();
+        atualizarDashboard(dados);
+    }
+});
 
-            console.log("Dados filtrados", data);
-            // aqui entram as funções para recalcular KPIs, gráficos e tabelas...
-        }
+function popularClubes() {
+    let clubes = [...new Set(dados.map(d => d["Usuário - Nome de usuário"]))];
+    let select = document.getElementById("clubeFiltro");
+    select.innerHTML = '<option value="Todos">Todos</option>' + clubes.map(c => `<option value="${c}">${c}</option>`).join('');
+}
 
-        Papa.parse(SHEET_URL, {
-            download: true,
-            header: true,
-            complete: function(results) {
-                allData = results.data;
-                console.log("Dados carregados:", allData.length);
-                atualizarClubes();
-                processarDados(null, "Todos");
-            }
-        });
+function aplicarFiltro() {
+    const dataFiltro = document.getElementById("dataFiltro").value;
+    const clubeFiltro = document.getElementById("clubeFiltro").value;
+    let filtrado = dados;
 
-        function atualizarClubes() {
-            const clubes = [...new Set(allData.map(d => d["Usuário - Nome de usuário"]).filter(Boolean))];
-            const select = document.getElementById("clubeFilter");
-            clubes.forEach(c => {
-                const opt = document.createElement("option");
-                opt.value = c; opt.textContent = c;
-                select.appendChild(opt);
-            });
-        }
-    </script>
+    if (dataFiltro) filtrado = filtrado.filter(d => d.DATA === dataFiltro);
+    if (clubeFiltro !== "Todos") filtrado = filtrado.filter(d => d["Usuário - Nome de usuário"] === clubeFiltro);
+
+    atualizarDashboard(filtrado);
+}
+
+function atualizarDashboard(dadosFiltrados) {
+    fadeInOut(document.querySelectorAll('.grafico-container'));
+
+    const totalFTD = soma(dadosFiltrados, "Usuário - FTD-Montante");
+    const totalDepositos = soma(dadosFiltrados, "Usuário - Depósitos");
+    const totalGGR = soma(dadosFiltrados, "Cálculo - GGR");
+    const totalSports = soma(dadosFiltrados, "Sportsbook - GGR");
+    const totalCassino = soma(dadosFiltrados, "Cassino - GGR");
+    const totalBonus = soma(dadosFiltrados, "Cálculo - bônus convertidos");
+
+    document.getElementById("kpi-ftd").textContent = formatar(totalFTD);
+    document.getElementById("kpi-depositos").textContent = formatar(totalDepositos);
+    document.getElementById("kpi-ggr").textContent = formatar(totalGGR);
+    document.getElementById("kpi-sports").textContent = formatar(totalSports);
+    document.getElementById("kpi-cassino").textContent = formatar(totalCassino);
+    document.getElementById("kpi-bonus").textContent = formatar(totalBonus);
+
+    atualizarGrafico("graficoGGR", "Cálculo - GGR", dadosFiltrados, 'green');
+    atualizarGrafico("graficoDepositos", "Usuário - Depósitos", dadosFiltrados, 'blue');
+    atualizarGrafico("graficoFTD", "Usuário - FTD-Montante", dadosFiltrados, 'gold');
+    atualizarGrafico("graficoSports", "Sportsbook - GGR", dadosFiltrados, 'orange');
+    atualizarGrafico("graficoCassino", "Cassino - GGR", dadosFiltrados, 'purple');
+    atualizarGrafico("graficoBonus", "Cálculo - bônus convertidos", dadosFiltrados, 'pink');
+
+    atualizarTop10("topDepositos", "Usuário - Depósitos", dadosFiltrados);
+    atualizarTop10("topFTD", "Usuário - FTD-Montante", dadosFiltrados);
+    atualizarTop10("topGGR", "Cálculo - GGR", dadosFiltrados);
+    atualizarTop10("topSports", "Sportsbook - GGR", dadosFiltrados);
+    atualizarTop10("topCassino", "Cassino - GGR", dadosFiltrados);
+    atualizarTop10("topBonus", "Cálculo - bônus convertidos", dadosFiltrados);
+
+    document.getElementById("atualizacao").textContent = "Última atualização: " + new Date().toLocaleString();
+}
+
+function soma(dados, campo) {
+    return dados.reduce((acc, val) => acc + parseFloat(val[campo] || 0), 0);
+}
+
+function atualizarGrafico(id, campo, dados, cor) {
+    const ctx = document.getElementById(id).getContext('2d');
+    const labels = [...new Set(dados.map(d => d.DATA))];
+    const valores = labels.map(data => 
+        dados.filter(d => d.DATA === data)
+             .reduce((acc, v) => acc + parseFloat(v[campo] || 0), 0)
+    );
+
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ label: campo, data: valores, borderColor: cor, fill: false }] },
+        options: { responsive: true, plugins: { legend: { display: true } } }
+    });
+}
+
+function atualizarTop10(id, campo, dados) {
+    let tabela = document.querySelector(`#${id} tbody`);
+    let agrupado = {};
+
+    dados.forEach(d => {
+        let clube = d["Usuário - Nome de usuário"];
+        agrupado[clube] = (agrupado[clube] || 0) + parseFloat(d[campo] || 0);
+    });
+
+    let top10 = Object.entries(agrupado)
+        .sort((a,b) => b[1] - a[1])
+        .slice(0,10);
+
+    tabela.innerHTML = top10.map(l => `<tr><td>${l[0]}</td><td>${formatar(l[1])}</td></tr>`).join('');
+}
+
+function formatar(valor) {
+    return "R$ " + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+}
+
+function fadeInOut(elements) {
+    elements.forEach(el => {
+        el.classList.add("fade-out");
+        setTimeout(() => el.classList.remove("fade-out"), 500);
+    });
+}
+</script>
 </body>
 </html>
