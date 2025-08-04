@@ -13,8 +13,8 @@
         .cards { display: flex; justify-content: space-around; flex-wrap: wrap; padding: 10px; background: #fff; }
         .card { background: #fafafa; padding: 15px; border-radius: 8px; text-align: center; width: 180px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s ease-in-out; }
         .card:hover { transform: scale(1.05); }
+        .emoji { font-size: 2em; margin-bottom: 5px; }
         .card h3 { margin: 0; font-size: 1em; color: #666; }
-        .emoji { font-size: 1.5em; margin-bottom: 5px; }
         .card p { font-size: 1.4em; font-weight: bold; margin: 5px 0 0; color: #222; }
         .graficos { display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 10px; padding: 10px; }
         .grafico-container { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: opacity 0.5s ease-in-out; opacity: 1; }
@@ -43,8 +43,123 @@
         <div class="card"><div class="emoji">🎁</div><h3>Bônus Convertidos</h3><p id="kpi-bonus">R$ 0,00</p></div>
     </div>
 
-    <!-- GRAFICOS E TABELAS (mantidos iguais ao HTML anterior) -->
-    <!-- Basta colar aqui o mesmo script de gráficos e tabelas que enviei antes -->
+    <div class="graficos">
+        <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoSports"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoCassino"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoBonus"></canvas></div>
+    </div>
 
+    <div class="tabelas">
+        <table id="topDepositos"><thead><tr><th>Top 10 Depósitos</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topFTD"><thead><tr><th>Top 10 FTD</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topGGR"><thead><tr><th>Top 10 GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topSports"><thead><tr><th>Top 10 Sportsbook</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topCassino"><thead><tr><th>Top 10 Cassino</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topBonus"><thead><tr><th>Top 10 Bônus</th><th>Valor</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <script>
+        const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+        let dados = [];
+
+        let chartGGR, chartDepositos, chartFTD, chartSports, chartCassino, chartBonus;
+
+        document.addEventListener("DOMContentLoaded", carregarDados);
+
+        function carregarDados() {
+            Papa.parse(urlCSV, {
+                download: true,
+                header: true,
+                complete: function(result) {
+                    dados = result.data;
+                    preencherFiltroClubes();
+                    aplicarFiltro();
+                }
+            });
+        }
+
+        function preencherFiltroClubes() {
+            let clubes = [...new Set(dados.map(d => d["Usuário - Nome de usuário"]))];
+            let select = document.getElementById("clubeFiltro");
+            select.innerHTML = "<option value='Todos'>Todos</option>";
+            clubes.forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
+        }
+
+        function aplicarFiltro() {
+            const data = document.getElementById("dataFiltro").value;
+            const clube = document.getElementById("clubeFiltro").value;
+            let filtrado = dados;
+
+            if(data) filtrado = filtrado.filter(d => d.DATA === data);
+            if(clube !== "Todos") filtrado = filtrado.filter(d => d["Usuário - Nome de usuário"] === clube);
+
+            atualizarKPIs(filtrado);
+            atualizarGraficos(filtrado);
+            atualizarTop10(filtrado);
+        }
+
+        function atualizarKPIs(dados) {
+            const soma = campo => dados.reduce((acc, d) => acc + parseFloat(d[campo] || 0), 0);
+            document.getElementById("kpi-ftd").textContent = formatarMoeda(soma("Usuário - FTD-Montante"));
+            document.getElementById("kpi-depositos").textContent = formatarMoeda(soma("Usuário - Depósitos"));
+            document.getElementById("kpi-ggr").textContent = formatarMoeda(soma("Cálculo - GGR"));
+            document.getElementById("kpi-sports").textContent = formatarMoeda(soma("Sportsbook - GGR"));
+            document.getElementById("kpi-cassino").textContent = formatarMoeda(soma("Cassino - GGR"));
+            document.getElementById("kpi-bonus").textContent = formatarMoeda(soma("Cálculo - bônus convertidos"));
+        }
+
+        function atualizarGraficos(dados) {
+            const porData = campo => {
+                let mapa = {};
+                dados.forEach(d => mapa[d.DATA] = (mapa[d.DATA] || 0) + parseFloat(d[campo] || 0));
+                return {labels: Object.keys(mapa), valores: Object.values(mapa)};
+            };
+
+            criarOuAtualizar("graficoGGR", porData("Cálculo - GGR"), 'green', chart => chartGGR = chart);
+            criarOuAtualizar("graficoDepositos", porData("Usuário - Depósitos"), 'blue', chart => chartDepositos = chart);
+            criarOuAtualizar("graficoFTD", porData("Usuário - FTD-Montante"), 'gold', chart => chartFTD = chart);
+            criarOuAtualizar("graficoSports", porData("Sportsbook - GGR"), 'orange', chart => chartSports = chart);
+            criarOuAtualizar("graficoCassino", porData("Cassino - GGR"), 'purple', chart => chartCassino = chart);
+            criarOuAtualizar("graficoBonus", porData("Cálculo - bônus convertidos"), 'pink', chart => chartBonus = chart);
+        }
+
+        function criarOuAtualizar(id, dados, cor, setRef) {
+            const ctx = document.getElementById(id).getContext("2d");
+            const config = {
+                type: 'line',
+                data: {labels: dados.labels, datasets: [{label: id, data: dados.valores, borderColor: cor, fill: false}]},
+                options: {responsive: true, plugins: {legend: {display: true}}, animation: {duration: 500}}
+            };
+            if (!setRef.chart) setRef(new Chart(ctx, config));
+            else {
+                setRef.chart.data = config.data;
+                setRef.chart.update();
+            }
+        }
+
+        function atualizarTop10(dados) {
+            preencherTabela("topDepositos", ordenar(dados, "Usuário - Depósitos"));
+            preencherTabela("topFTD", ordenar(dados, "Usuário - FTD-Montante"));
+            preencherTabela("topGGR", ordenar(dados, "Cálculo - GGR"));
+            preencherTabela("topSports", ordenar(dados, "Sportsbook - GGR"));
+            preencherTabela("topCassino", ordenar(dados, "Cassino - GGR"));
+            preencherTabela("topBonus", ordenar(dados, "Cálculo - bônus convertidos"));
+        }
+
+        function ordenar(dados, campo) {
+            return [...dados].sort((a,b) => parseFloat(b[campo]||0)-parseFloat(a[campo]||0)).slice(0,10);
+        }
+
+        function preencherTabela(id, lista) {
+            let tbody = document.querySelector(`#${id} tbody`);
+            tbody.innerHTML = "";
+            lista.forEach(l => tbody.innerHTML += `<tr><td>${l["Usuário - Nome de usuário"]}</td><td>${formatarMoeda(l[id.includes("Depositos")?"Usuário - Depósitos":id.includes("FTD")?"Usuário - FTD-Montante":id.includes("Sports")?"Sportsbook - GGR":id.includes("Cassino")?"Cassino - GGR":id.includes("Bonus")?"Cálculo - bônus convertidos":"Cálculo - GGR"])}</td></tr>`);
+        }
+
+        function formatarMoeda(valor) { return valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+    </script>
 </body>
 </html>
