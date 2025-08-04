@@ -9,15 +9,15 @@
         body { background:#000; color:#fff; font-family:Arial; margin:0; padding:0; }
         h1 { text-align:center; color:lime; margin:5px; }
         .filtros { text-align:center; margin:10px; }
-        .cards { display:flex; justify-content:space-around; margin:10px; }
-        .card { border:2px solid lime; border-radius:8px; padding:10px 20px; text-align:center; min-width:150px; box-shadow:0 0 8px lime; }
+        .cards { display:flex; justify-content:space-around; margin:10px; flex-wrap:wrap; }
+        .card { border:2px solid lime; border-radius:8px; padding:10px 20px; text-align:center; min-width:140px; box-shadow:0 0 8px lime; margin:5px; }
         .valor { font-size:1.2em; font-weight:bold; color:white; }
-        .graficos { display:grid; grid-template-columns:1fr 1fr; grid-gap:10px; padding:10px; height:40vh; }
+        .graficos { display:grid; grid-template-columns:repeat(3, 1fr); grid-gap:8px; padding:10px; height:35vh; }
         canvas { background:#111; border:2px solid lime; border-radius:8px; }
-        table { width:100%; border-collapse:collapse; margin-top:5px; font-size:0.85em; }
+        table { width:100%; border-collapse:collapse; font-size:0.8em; }
         th,td { border:1px solid lime; padding:4px; text-align:center; }
         th { color:lime; }
-        .top10 { display:grid; grid-template-columns: repeat(5, 1fr); grid-gap:10px; padding:10px; }
+        .top10 { display:grid; grid-template-columns: repeat(5, 1fr); grid-gap:5px; padding:10px; }
         .top10 table { background:#111; }
         footer { text-align:right; color:lime; padding:5px; font-size:0.8em; }
     </style>
@@ -56,11 +56,12 @@
     <footer>Última atualização: <span id="atualizacao"></span></footer>
 
 <script>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 let dadosCSV = [];
 let charts = {};
 
 function carregarCSV() {
-    Papa.parse("dados.csv", {
+    Papa.parse(SHEET_URL, {
         download: true,
         header: true,
         complete: function(results) {
@@ -82,12 +83,9 @@ function aplicarFiltro() {
     const dataFiltro = document.getElementById("dataFiltro").value;
     const clubeFiltro = document.getElementById("clubeFiltro").value;
     console.log("Filtro aplicado:", {dataFiltro, clubeFiltro});
-
     let filtrado = dadosCSV;
     if (dataFiltro) filtrado = filtrado.filter(l => l["DATA"] === dataFiltro);
     if (clubeFiltro !== "Todos") filtrado = filtrado.filter(l => l["Usuário - Nome de usuário"] === clubeFiltro);
-
-    console.log("Registros filtrados:", filtrado.length);
     atualizarDashboard(filtrado);
 }
 
@@ -101,7 +99,6 @@ function atualizarDashboard(filtrado) {
     document.getElementById("ggrValor").textContent = formatarMoeda(somar(filtrado, "Cálculo - GGR"));
     document.getElementById("sportsValor").textContent = formatarMoeda(somar(filtrado, "Sportsbook - GGR"));
     document.getElementById("cassinoValor").textContent = formatarMoeda(somar(filtrado, "Cassino - GGR"));
-
     montarGraficos(filtrado);
     montarTop10(filtrado);
     document.getElementById("atualizacao").textContent = new Date().toLocaleString();
@@ -118,10 +115,8 @@ function montarGraficos(filtrado) {
         porData[d].sports += parseFloat(l["Sportsbook - GGR"]||0);
         porData[d].cassino += parseFloat(l["Cassino - GGR"]||0);
     });
-
     const labels = Object.keys(porData).sort();
     const dados = (campo) => labels.map(d => porData[d][campo]);
-
     criarChart("grafGGR", labels, dados("ggr"), "GGR", "lime");
     criarChart("grafDepositos", labels, dados("dep"), "Depósitos", "blue");
     criarChart("grafFTD", labels, dados("ftd"), "FTD", "yellow");
