@@ -1,180 +1,173 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #111; color: #fff; margin: 0; padding: 0; text-align: center; }
-        h1 { margin: 10px 0; color: #0f0; }
-        .filtros { margin: 5px 0; font-size: 14px; }
-        input, select, button { padding: 4px; margin: 2px; border-radius: 4px; border: none; }
-        .cards { display: flex; justify-content: space-around; flex-wrap: wrap; margin: 5px 0; }
-        .card { background: #222; border-radius: 8px; padding: 10px; width: 140px; box-shadow: 0 0 8px #0f0; margin: 5px; }
-        .card h2 { font-size: 14px; color: #0f0; margin-bottom: 5px; }
-        .card p { font-size: 18px; font-weight: bold; color: #fff; }
-        .graficos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 1000px; margin: auto; }
-        .grafico-container { background: #222; border-radius: 8px; padding: 5px; }
-        canvas { height: 150px !important; }
-        .tabelas-top10 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin: 10px auto; max-width: 1000px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; background: #222; border-radius: 4px; }
-        th, td { border: 1px solid #0f0; padding: 4px; text-align: center; }
-        th { background: #333; color: #0f0; font-size: 12px; }
-        td { color: #fff; }
-        tr:hover { background: #333; }
+        body { background-color: black; color: #0f0; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        h1 { text-align: center; margin: 10px 0; }
+        .filtros { text-align: center; margin-bottom: 10px; }
+        .cards { display: flex; justify-content: space-around; flex-wrap: wrap; margin: 10px; }
+        .card { border: 2px solid #0f0; border-radius: 10px; padding: 5px; text-align: center; width: 150px; background: rgba(0, 0, 0, 0.7); }
+        .valor { color: white; font-size: 18px; font-weight: bold; }
+        .graficos { display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 8px; padding: 10px; }
+        .grafico-container { border: 2px solid #0f0; border-radius: 10px; background: #111; padding: 5px; }
+        .tabelas { display: grid; grid-template-columns: repeat(5, 1fr); grid-gap: 5px; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; color: white; font-size: 11px; }
+        th, td { border: 1px solid #0f0; padding: 2px; text-align: center; }
+        th { background: #030; }
+        .footer { text-align: center; font-size: 12px; margin: 5px; }
     </style>
 </head>
 <body>
     <h1>Dashboard de Clubes</h1>
     <div class="filtros">
-        Data: <input type="date" id="dataFiltro">
-        Clube: <select id="clubeSelect"></select>
-        <button onclick="aplicarFiltros()">Aplicar</button>
+        Data: <input type="date" id="filtroData">
+        Clube: <select id="filtroClube"><option value="Todos">Todos</option></select>
+        <button onclick="aplicarFiltro()">Aplicar</button>
     </div>
 
     <div class="cards">
-        <div class="card"><h2>FTD</h2><p id="totalFTD">R$ 0,00</p></div>
-        <div class="card"><h2>Depósitos</h2><p id="totalDepositos">R$ 0,00</p></div>
-        <div class="card"><h2>GGR</h2><p id="totalGGR">R$ 0,00</p></div>
-        <div class="card"><h2>Sportsbook GGR</h2><p id="totalSportsGGR">R$ 0,00</p></div>
-        <div class="card"><h2>Cassino GGR</h2><p id="totalCassinoGGR">R$ 0,00</p></div>
+        <div class="card"><div>FTD</div><div id="ftd" class="valor">R$ 0,00</div></div>
+        <div class="card"><div>Depósitos</div><div id="depositos" class="valor">R$ 0,00</div></div>
+        <div class="card"><div>GGR</div><div id="ggr" class="valor">R$ 0,00</div></div>
+        <div class="card"><div>Sportsbook GGR</div><div id="sportsbookGgr" class="valor">R$ 0,00</div></div>
+        <div class="card"><div>Cassino GGR</div><div id="cassinoGgr" class="valor">R$ 0,00</div></div>
     </div>
 
     <div class="graficos">
-        <div class="grafico-container"><canvas id="graficoGGR"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoFTD"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoGgr"></canvas></div>
         <div class="grafico-container"><canvas id="graficoDepositos"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoSportsGGR"></canvas></div>
-        <div class="grafico-container"><canvas id="graficoCassinoGGR"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoFtd"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoSportsbook"></canvas></div>
+        <div class="grafico-container"><canvas id="graficoCassino"></canvas></div>
     </div>
 
-    <h2>Top 10 Clubes</h2>
-    <div class="tabelas-top10">
-        <table id="rankingDepositos"></table>
-        <table id="rankingFTD"></table>
-        <table id="rankingGGR"></table>
+    <div class="tabelas">
+        <table id="topDepositos"><thead><tr><th>Top 10 Depósitos</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topFtd"><thead><tr><th>Top 10 FTD</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topGgr"><thead><tr><th>Top 10 GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topSportsbook"><thead><tr><th>Top 10 Sportsbook GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topCassino"><thead><tr><th>Top 10 Cassino GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
     </div>
 
-    <script>
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
-        let dados = [];
-        let charts = {};
+    <div class="footer">Última atualização: <span id="ultimaAtualizacao"></span></div>
 
-        function carregarCSV() {
-            Papa.parse(csvUrl, {
-                download: true,
-                header: true,
-                complete: results => {
-                    dados = results.data;
-                    popularFiltroClubes();
-                    atualizarDashboard();
-                }
-            });
+<script>
+let dadosCSV = [];
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("ultimaAtualizacao").textContent = new Date().toLocaleString();
+    carregarDados();
+});
+
+function carregarDados() {
+    Papa.parse("dados.csv", {
+        download: true,
+        header: true,
+        complete: function(results) {
+            dadosCSV = results.data;
+            popularFiltroClubes();
+            processarDados(dadosCSV);
         }
+    });
+}
 
-        function popularFiltroClubes() {
-            let clubes = [...new Set(dados.map(l => l["Usuário - Nome de usuário"]))];
-            let select = document.getElementById("clubeSelect");
-            select.innerHTML = "<option value=''>Todos</option>";
-            clubes.forEach(clube => {
-                let opt = document.createElement("option");
-                opt.value = clube;
-                opt.innerText = clube;
-                select.appendChild(opt);
-            });
-        }
+function popularFiltroClubes() {
+    const clubes = [...new Set(dadosCSV.map(l => l["Usuário - Nome de usuário"]).filter(Boolean))];
+    const select = document.getElementById("filtroClube");
+    clubes.forEach(clube => {
+        const opt = document.createElement("option");
+        opt.value = clube;
+        opt.textContent = clube;
+        select.appendChild(opt);
+    });
+}
 
-        function aplicarFiltros() { atualizarDashboard(); }
+function aplicarFiltro() {
+    const dataFiltro = document.getElementById("filtroData").value;
+    const clubeFiltro = document.getElementById("filtroClube").value;
+    let filtrados = dadosCSV;
+    if (dataFiltro) filtrados = filtrados.filter(l => l["DATA"] === dataFiltro);
+    if (clubeFiltro !== "Todos") filtrados = filtrados.filter(l => l["Usuário - Nome de usuário"] === clubeFiltro);
+    processarDados(filtrados);
+}
 
-        function atualizarDashboard() {
-            let dataFiltro = document.getElementById("dataFiltro").value;
-            let clubeFiltro = document.getElementById("clubeSelect").value;
+function processarDados(dados) {
+    const soma = (campo) => dados.reduce((acc, l) => acc + parseFloat(l[campo] || 0), 0);
+    const ftd = soma("Usuário - FTD-Montante");
+    const depositos = soma("Usuário - Depósitos");
+    const sportsbook = soma("Sportsbook - GGR");
+    const cassino = soma("Cassino - GGR");
+    const ggr = soma("Cálculo - GGR");
 
-            let filtrados = dados.filter(l => {
-                return (!dataFiltro || l["DATA"] === dataFiltro) && (!clubeFiltro || l["Usuário - Nome de usuário"] === clubeFiltro);
-            });
+    atualizarCards(ftd, depositos, ggr, sportsbook, cassino);
+    desenharGraficos(dados);
+    preencherTop10(dados);
+}
 
-            let totalFTD=0, totalDep=0, totalGGR=0, totalSports=0, totalCassino=0;
-            let porData = {};
-            filtrados.forEach(l => {
-                let d = l["DATA"];
-                totalFTD += parseFloat(l["Usuário - FTD-Montante"]||0);
-                totalDep += parseFloat(l["Usuário - Depósitos"]||0);
-                totalGGR += parseFloat(l["Cálculo - GGR"]||0);
-                totalSports += parseFloat(l["Sportsbook - GGR"]||0);
-                totalCassino += parseFloat(l["Cassino - GGR"]||0);
-                if (!porData[d]) porData[d] = {FTD:0, Dep:0, GGR:0, Sports:0, Cassino:0};
-                porData[d].FTD += parseFloat(l["Usuário - FTD-Montante"]||0);
-                porData[d].Dep += parseFloat(l["Usuário - Depósitos"]||0);
-                porData[d].GGR += parseFloat(l["Cálculo - GGR"]||0);
-                porData[d].Sports += parseFloat(l["Sportsbook - GGR"]||0);
-                porData[d].Cassino += parseFloat(l["Cassino - GGR"]||0);
-            });
+function atualizarCards(ftd, depositos, ggr, sportsbook, cassino) {
+    document.getElementById("ftd").textContent = formatarMoeda(ftd);
+    document.getElementById("depositos").textContent = formatarMoeda(depositos);
+    document.getElementById("ggr").textContent = formatarMoeda(ggr);
+    document.getElementById("sportsbookGgr").textContent = formatarMoeda(sportsbook);
+    document.getElementById("cassinoGgr").textContent = formatarMoeda(cassino);
+}
 
-            document.getElementById("totalFTD").innerText = formatarMoeda(totalFTD);
-            document.getElementById("totalDepositos").innerText = formatarMoeda(totalDep);
-            document.getElementById("totalGGR").innerText = formatarMoeda(totalGGR);
-            document.getElementById("totalSportsGGR").innerText = formatarMoeda(totalSports);
-            document.getElementById("totalCassinoGGR").innerText = formatarMoeda(totalCassino);
+function desenharGraficos(dados) {
+    const porData = (campo) => {
+        const mapa = {};
+        dados.forEach(l => { 
+            const data = l["DATA"];
+            mapa[data] = (mapa[data] || 0) + parseFloat(l[campo] || 0);
+        });
+        return { labels: Object.keys(mapa), valores: Object.values(mapa) };
+    };
 
-            montarGraficos(porData);
-            montarTop10(filtrados);
-        }
+    const criarGrafico = (ctx, titulo, cor, dados) => new Chart(ctx, {
+        type: 'line',
+        data: { labels: dados.labels, datasets: [{ label: titulo, data: dados.valores, borderColor: cor, borderWidth: 2, fill: false }] },
+        options: { plugins: { legend: { labels: { color: 'white' } } }, scales: { x: { ticks: { color: 'white'}}, y: { ticks: { color: 'white'}}}}
+    });
 
-        function montarGraficos(porData) {
-            let labels = Object.keys(porData).sort();
-            let dataFTD = labels.map(d => porData[d].FTD);
-            let dataDep = labels.map(d => porData[d].Dep);
-            let dataGGR = labels.map(d => porData[d].GGR);
-            let dataSports = labels.map(d => porData[d].Sports);
-            let dataCassino = labels.map(d => porData[d].Cassino);
+    criarGrafico(document.getElementById("graficoGgr"), "GGR", "lime", porData("Cálculo - GGR"));
+    criarGrafico(document.getElementById("graficoDepositos"), "Depósitos", "blue", porData("Usuário - Depósitos"));
+    criarGrafico(document.getElementById("graficoFtd"), "FTD", "yellow", porData("Usuário - FTD-Montante"));
+    criarGrafico(document.getElementById("graficoSportsbook"), "Sportsbook GGR", "orange", porData("Sportsbook - GGR"));
+    criarGrafico(document.getElementById("graficoCassino"), "Cassino GGR", "purple", porData("Cassino - GGR"));
+}
 
-            criarGrafico("graficoFTD", "FTD", labels, dataFTD);
-            criarGrafico("graficoDepositos", "Depósitos", labels, dataDep);
-            criarGrafico("graficoGGR", "GGR", labels, dataGGR);
-            criarGrafico("graficoSportsGGR", "Sportsbook GGR", labels, dataSports);
-            criarGrafico("graficoCassinoGGR", "Cassino GGR", labels, dataCassino);
-        }
+function preencherTop10(dados) {
+    const porClube = (campo) => {
+        const mapa = {};
+        dados.forEach(l => { 
+            const clube = l["Usuário - Nome de usuário"] || "Sem Clube";
+            mapa[clube] = (mapa[clube] || 0) + parseFloat(l[campo] || 0);
+        });
+        return Object.entries(mapa).sort((a,b) => b[1]-a[1]).slice(0,10);
+    };
 
-        function criarGrafico(id, label, labels, data) {
-            if (charts[id]) charts[id].destroy();
-            charts[id] = new Chart(document.getElementById(id), {
-                type: 'line',
-                data: { labels, datasets: [{ label, data, borderColor: '#0f0', backgroundColor: '#0f02', tension: 0.3 }] },
-                options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } }, scales: { x: { ticks: { color: '#fff' } }, y: { ticks: { color: '#fff' } } } }
-            });
-        }
+    preencherTabela("topDepositos", porClube("Usuário - Depósitos"));
+    preencherTabela("topFtd", porClube("Usuário - FTD-Montante"));
+    preencherTabela("topGgr", porClube("Cálculo - GGR"));
+    preencherTabela("topSportsbook", porClube("Sportsbook - GGR"));
+    preencherTabela("topCassino", porClube("Cassino - GGR"));
+}
 
-        function montarTop10(filtrados) {
-            let porClube = {};
-            filtrados.forEach(l => {
-                let c = l["Usuário - Nome de usuário"];
-                if (!porClube[c]) porClube[c] = {FTD:0, Dep:0, GGR:0};
-                porClube[c].FTD += parseFloat(l["Usuário - FTD-Montante"]||0);
-                porClube[c].Dep += parseFloat(l["Usuário - Depósitos"]||0);
-                porClube[c].GGR += parseFloat(l["Cálculo - GGR"]||0);
-            });
-            let topDep = Object.entries(porClube).sort((a,b)=>b[1].Dep-a[1].Dep).slice(0,10);
-            let topFTD = Object.entries(porClube).sort((a,b)=>b[1].FTD-a[1].FTD).slice(0,10);
-            let topGGR = Object.entries(porClube).sort((a,b)=>b[1].GGR-a[1].GGR).slice(0,10);
+function preencherTabela(id, dados) {
+    const tbody = document.querySelector(`#${id} tbody`);
+    tbody.innerHTML = "";
+    dados.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row[0]}</td><td>${formatarMoeda(row[1])}</td>`;
+        tbody.appendChild(tr);
+    });
+}
 
-            renderTabela("rankingDepositos","Top 10 Depósitos",topDep,"Dep");
-            renderTabela("rankingFTD","Top 10 FTD",topFTD,"FTD");
-            renderTabela("rankingGGR","Top 10 GGR",topGGR,"GGR");
-        }
-
-        function renderTabela(id, titulo, dados, campo) {
-            let tabela = document.getElementById(id);
-            tabela.innerHTML = `<tr><th>${titulo}</th><th>Valor</th></tr>`;
-            dados.forEach(([clube, valores]) => {
-                tabela.innerHTML += `<tr><td>${clube}</td><td>${formatarMoeda(valores[campo])}</td></tr>`;
-            });
-        }
-
-        function formatarMoeda(v) { return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
-        window.onload = carregarCSV;
-    </script>
+function formatarMoeda(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+</script>
 </body>
 </html>
