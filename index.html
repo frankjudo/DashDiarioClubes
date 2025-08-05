@@ -9,26 +9,26 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f7fa; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
-        h2 { text-align: center; margin: 8px 0; }
-        .controls { text-align: center; margin-bottom: 5px; }
-        .controls button { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; color: white; margin: 0 2px; font-size: 14px; }
-        .btn-apply { background: #007bff; }
-        .btn-fullscreen { background: #28a745; }
-        .btn-export { background: #218838; }
-        .kpi-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 0 15px; }
-        .kpi { background: white; border-radius: 8px; padding: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 14px; transition: background 0.5s; height: 90px; display: flex; flex-direction: column; justify-content: center; }
-        .kpi i { font-size: 24px; margin-bottom: 3px; display: block; }
-        .kpi.positive { background: #e3f9e5; }
-        .kpi.negative { background: #ffe0e0; }
-        .main-content { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 8px 15px; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; overflow: hidden; }
+        h2 { text-align: center; margin: 10px 0; }
+        .controls { text-align: center; margin-bottom: 10px; }
+        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        .kpi { background: #e8f5e9; border-radius: 8px; padding: 12px; width: 170px; height: 75px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: background 0.5s; font-size: 14px; }
+        .kpi i { font-size: 22px; margin-bottom: 4px; display: block; }
+        .kpi.positive { background: #d4edda; }
+        .kpi.negative { background: #f8d7da; }
+        .main { display: flex; flex-direction: column; height: calc(100vh - 110px); padding: 0 8px; }
         .charts { flex: 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .chart-container { background: white; padding: 5px; border-radius: 8px; }
-        .tables { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 5px; overflow: hidden; }
-        th, td { padding: 4px; text-align: left; border-bottom: 1px solid #ddd; font-size: 12px; }
-        th { background: #f0f0f0; font-weight: bold; cursor: pointer; }
-        .footer { text-align: right; font-size: 12px; padding: 4px 15px; color: gray; }
+        .chart-container { background: white; padding: 5px; border-radius: 8px; height: 250px; }
+        .tables { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; font-size: 15px; } /* fonte aumentada */
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; height: 100%; }
+        th, td { padding: 5px 6px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f0f0f0; font-weight: bold; font-size: 14px; }
+        .footer { text-align: right; font-size: 12px; padding: 4px 10px; color: gray; }
+        button { margin: 0 5px; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-export { background: #28a745; color: white; }
+        .btn-apply { background: #007bff; color: white; }
+        .btn-fullscreen { background: #00b050; color: white; }
     </style>
 </head>
 <body>
@@ -37,7 +37,7 @@
         Data: <input type="date" id="filtroData">
         Clube: <select id="filtroClube"></select>
         <button class="btn-apply" onclick="aplicarFiltros()">Aplicar</button>
-        <button class="btn-fullscreen" onclick="toggleFullScreen()">Fullscreen</button>
+        <button class="btn-fullscreen" onclick="ativarFullscreen()">Fullscreen</button>
         <button class="btn-export" onclick="exportarCSV()"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
     </div>
 
@@ -50,7 +50,7 @@
         <div class="kpi" id="kpi-bonus"><i class="fa-solid fa-gift" style="color:green"></i><span class="valor">0</span><br>Bônus Convertidos</div>
     </div>
 
-    <div class="main-content">
+    <div class="main">
         <div class="charts">
             <div class="chart-container"><canvas id="chartGGR"></canvas></div>
             <div class="chart-container"><canvas id="chartDepositos"></canvas></div>
@@ -76,14 +76,6 @@
 const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 let dadosFiltrados = [];
 const charts = {};
-
-function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-    }
-}
 
 function criarGrafico(ctx, label, color) {
     return new Chart(ctx, {
@@ -160,20 +152,15 @@ function atualizarDashboard() {
         porData[d.DATA].bonus += parseFloat(d["Cálculo - bônus convertidos"])||0;
     });
     const labels = Object.keys(porData).sort();
-    charts.chartGGR.data.labels = labels;
-    charts.chartGGR.data.datasets[0].data = labels.map(l=>porData[l].ggr);
-    charts.chartDepositos.data.labels = labels;
-    charts.chartDepositos.data.datasets[0].data = labels.map(l=>porData[l].depositos);
-    charts.chartFTD.data.labels = labels;
-    charts.chartFTD.data.datasets[0].data = labels.map(l=>porData[l].ftd);
-    charts.chartSportsbook.data.labels = labels;
-    charts.chartSportsbook.data.datasets[0].data = labels.map(l=>porData[l].sportsbook);
-    charts.chartCassino.data.labels = labels;
-    charts.chartCassino.data.datasets[0].data = labels.map(l=>porData[l].cassino);
-    charts.chartBonus.data.labels = labels;
-    charts.chartBonus.data.datasets[0].data = labels.map(l=>porData[l].bonus);
+    charts.chartGGR.data.labels = labels; charts.chartGGR.data.datasets[0].data = labels.map(l=>porData[l].ggr);
+    charts.chartDepositos.data.labels = labels; charts.chartDepositos.data.datasets[0].data = labels.map(l=>porData[l].depositos);
+    charts.chartFTD.data.labels = labels; charts.chartFTD.data.datasets[0].data = labels.map(l=>porData[l].ftd);
+    charts.chartSportsbook.data.labels = labels; charts.chartSportsbook.data.datasets[0].data = labels.map(l=>porData[l].sportsbook);
+    charts.chartCassino.data.labels = labels; charts.chartCassino.data.datasets[0].data = labels.map(l=>porData[l].cassino);
+    charts.chartBonus.data.labels = labels; charts.chartBonus.data.datasets[0].data = labels.map(l=>porData[l].bonus);
 
-    Object.values(charts).forEach(chart=>chart.update());
+    charts.chartGGR.update(); charts.chartDepositos.update(); charts.chartFTD.update();
+    charts.chartSportsbook.update(); charts.chartCassino.update(); charts.chartBonus.update();
 
     preencherTabela("#topDepositos", dados, "Usuário - Depósitos");
     preencherTabela("#topFTD", dados, "Usuário - FTD-Montante");
@@ -205,6 +192,14 @@ function exportarCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+function ativarFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) elem.requestFullscreen();
+    else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
 }
 
 $(document).ready(function(){
