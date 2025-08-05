@@ -18,15 +18,15 @@
         .kpi.positive { background: #e3f9e5; }
         .kpi.negative { background: #ffe0e0; }
 
-        /* GRÁFICOS COMPACTOS */
-        .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px; padding: 0 10px; }
-        .chart-container { background: white; padding: 6px; border-radius: 6px; height: 180px; }
+        /* GRÁFICOS EM 2 LINHAS (3 CADA) */
+        .charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 10px; }
+        .chart-container { background: white; padding: 6px; border-radius: 6px; height: 200px; }
 
-        /* TABELAS COMPACTAS */
-        .tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; padding: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; background: white; border-radius: 6px; overflow: hidden; }
-        th, td { padding: 4px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f0f0f0; font-weight: bold; }
+        /* TODAS AS TABELAS EM UMA LINHA */
+        .tables { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; background: white; border-radius: 6px; overflow: hidden; }
+        th, td { padding: 3px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f0f0f0; font-weight: bold; font-size: 12px; }
         .footer { text-align: right; font-size: 11px; padding: 6px 10px; color: gray; }
         button { margin: 0 2px; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .btn-export { background: #28a745; color: white; }
