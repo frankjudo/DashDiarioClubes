@@ -12,25 +12,29 @@
         body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
         h2 { text-align: center; margin: 10px 0; }
         .controls { text-align: center; margin-bottom: 10px; font-size: 14px; }
-        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-        .kpi { background: white; border-radius: 6px; padding: 8px; width: 140px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 13px; }
-        .kpi i { font-size: 20px; margin-bottom: 5px; display: block; }
+        .controls input, .controls select, .controls button { margin: 0 5px; padding: 5px 10px; font-size: 14px; }
+        .btn-export { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-apply { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+
+        /* KPIs */
+        .kpi-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 0 20px; margin-bottom: 10px; }
+        .kpi { background: white; border-radius: 8px; padding: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: background 0.5s; }
+        .kpi i { font-size: 24px; margin-bottom: 5px; display: block; }
         .kpi.positive { background: #e3f9e5; }
         .kpi.negative { background: #ffe0e0; }
+        .kpi .valor { font-weight: bold; font-size: 16px; }
 
-        /* GRÁFICOS EM 2 LINHAS (3 CADA) */
-        .charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 10px; }
-        .chart-container { background: white; padding: 6px; border-radius: 6px; height: 200px; }
+        /* Gráficos */
+        .charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 20px; margin-bottom: 10px; }
+        .chart-container { background: white; border-radius: 8px; padding: 5px; height: 250px; }
 
-        /* TODAS AS TABELAS EM UMA LINHA */
-        .tables { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; background: white; border-radius: 6px; overflow: hidden; }
-        th, td { padding: 3px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f0f0f0; font-weight: bold; font-size: 12px; }
-        .footer { text-align: right; font-size: 11px; padding: 6px 10px; color: gray; }
-        button { margin: 0 2px; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .btn-export { background: #28a745; color: white; }
-        .btn-apply { background: #007bff; color: white; }
+        /* Tabelas */
+        .tables { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; padding: 0 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; background: white; border-radius: 5px; overflow: hidden; }
+        th, td { padding: 4px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f0f0f0; font-weight: bold; cursor: pointer; }
+
+        .footer { text-align: right; font-size: 12px; padding: 10px 20px; color: gray; }
     </style>
 </head>
 <body>
@@ -61,12 +65,12 @@
     </div>
 
     <div class="tables">
-        <table id="topDepositos"><thead><tr><th colspan="2">Top 10 Depósitos</th></tr><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topFTD"><thead><tr><th colspan="2">Top 10 FTD</th></tr><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topGGR"><thead><tr><th colspan="2">Top 10 GGR</th></tr><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topSportsbook"><thead><tr><th colspan="2">Top 10 Sportsbook</th></tr><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topCassino"><thead><tr><th colspan="2">Top 10 Cassino</th></tr><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topBonus"><thead><tr><th colspan="2">Top 10 Bônus Convertidos</th></tr><tr><th>Clube</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topDepositos"><thead><tr><th>Top 10 Depósitos</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topFTD"><thead><tr><th>Top 10 FTD</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topGGR"><thead><tr><th>Top 10 GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topSportsbook"><thead><tr><th>Top 10 Sportsbook</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topCassino"><thead><tr><th>Top 10 Cassino</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <table id="topBonus"><thead><tr><th>Top 10 Bônus Convertidos</th><th>Valor</th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="footer">Última atualização: <span id="ultimaAtualizacao"></span></div>
@@ -79,8 +83,8 @@ const charts = {};
 function criarGrafico(ctx, label, color) {
     return new Chart(ctx, {
         type: 'line',
-        data: { labels: [], datasets: [{ label, data: [], borderColor: color, backgroundColor: color+'33', fill: false, tension: 0.3 }] },
-        options: { responsive: true, plugins: { tooltip: { enabled: true } }, scales: { y: { ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 9 } } } } }
+        data: { labels: [], datasets: [{ label, data: [], borderColor: color, backgroundColor: color+'33', fill: false, tension: 0.3, pointRadius: 3 }] },
+        options: { responsive: true, plugins: { tooltip: { enabled: true } }, scales: { x: { ticks: { font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } } }
     });
 }
 
