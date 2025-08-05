@@ -10,20 +10,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; overflow: hidden; }
-        h2 { text-align: center; margin: 10px 0; }
-        .controls { text-align: center; margin-bottom: 10px; }
-        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
-        .kpi { background: #e8f5e9; border-radius: 8px; padding: 12px; width: 170px; height: 75px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: background 0.5s; font-size: 14px; }
-        .kpi i { font-size: 22px; margin-bottom: 4px; display: block; }
+        h2 { text-align: center; margin: 8px 0; }
+        .controls { text-align: center; margin-bottom: 8px; }
+        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 8px; }
+        .kpi { background: #e8f5e9; border-radius: 8px; padding: 15px; width: 190px; height: 90px; text-align: center;
+               box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: background 0.5s; font-size: 16px; font-weight: bold; }
+        .kpi .valor { font-size: 22px; font-weight: bold; display: block; margin-top: 3px; }
+        .kpi i { font-size: 26px; margin-bottom: 4px; display: block; }
         .kpi.positive { background: #d4edda; }
         .kpi.negative { background: #f8d7da; }
-        .main { display: flex; flex-direction: column; height: calc(100vh - 110px); padding: 0 8px; }
-        .charts { flex: 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .chart-container { background: white; padding: 5px; border-radius: 8px; height: 250px; }
-        .tables { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; font-size: 15px; } /* fonte aumentada */
+        .main { display: flex; flex-direction: column; height: calc(100vh - 120px); padding: 0 8px; }
+        .charts { flex: 2.2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .chart-container { background: white; padding: 5px; border-radius: 8px; }
+        .tables { flex: 0.8; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; font-size: 15px; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; height: 100%; }
         th, td { padding: 5px 6px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f0f0f0; font-weight: bold; font-size: 14px; }
+        th { background: #f0f0f0; font-weight: bold; font-size: 15px; }
         .footer { text-align: right; font-size: 12px; padding: 4px 10px; color: gray; }
         button { margin: 0 5px; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .btn-export { background: #28a745; color: white; }
@@ -42,12 +44,12 @@
     </div>
 
     <div class="kpi-container">
-        <div class="kpi" id="kpi-ftd"><i class="fa-solid fa-user-plus" style="color:green"></i><span class="valor">0</span><br>FTD</div>
-        <div class="kpi" id="kpi-depositos"><i class="fa-solid fa-coins" style="color:gold"></i><span class="valor">0</span><br>Depósitos</div>
-        <div class="kpi" id="kpi-ggr"><i class="fa-solid fa-chart-line" style="color:blue"></i><span class="valor">0</span><br>GGR</div>
-        <div class="kpi" id="kpi-sportsbook"><i class="fa-solid fa-football" style="color:purple"></i><span class="valor">0</span><br>Sportsbook GGR</div>
-        <div class="kpi" id="kpi-cassino"><i class="fa-solid fa-dice" style="color:red"></i><span class="valor">0</span><br>Cassino GGR</div>
-        <div class="kpi" id="kpi-bonus"><i class="fa-solid fa-gift" style="color:green"></i><span class="valor">0</span><br>Bônus Convertidos</div>
+        <div class="kpi" id="kpi-ftd"><i class="fa-solid fa-user-plus" style="color:green"></i><span class="valor">0</span>FTD</div>
+        <div class="kpi" id="kpi-depositos"><i class="fa-solid fa-coins" style="color:gold"></i><span class="valor">0</span>Depósitos</div>
+        <div class="kpi" id="kpi-ggr"><i class="fa-solid fa-chart-line" style="color:blue"></i><span class="valor">0</span>GGR</div>
+        <div class="kpi" id="kpi-sportsbook"><i class="fa-solid fa-football" style="color:purple"></i><span class="valor">0</span>Sportsbook GGR</div>
+        <div class="kpi" id="kpi-cassino"><i class="fa-solid fa-dice" style="color:red"></i><span class="valor">0</span>Cassino GGR</div>
+        <div class="kpi" id="kpi-bonus"><i class="fa-solid fa-gift" style="color:green"></i><span class="valor">0</span>Bônus Convertidos</div>
     </div>
 
     <div class="main">
@@ -59,7 +61,6 @@
             <div class="chart-container"><canvas id="chartCassino"></canvas></div>
             <div class="chart-container"><canvas id="chartBonus"></canvas></div>
         </div>
-
         <div class="tables">
             <table id="topDepositos"><thead><tr><th>Top 10 Depósitos</th><th>Valor</th></tr></thead><tbody></tbody></table>
             <table id="topFTD"><thead><tr><th>Top 10 FTD</th><th>Valor</th></tr></thead><tbody></tbody></table>
