@@ -9,28 +9,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
-        h2 { text-align: center; margin: 10px 0; }
-        .controls { text-align: center; margin-bottom: 15px; }
-        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+        body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; overflow: hidden; }
+        h2 { text-align: center; margin: 8px 0; }
+        .controls { text-align: center; margin-bottom: 8px; }
+        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
         .kpi {
-            background: white; border-radius: 10px; padding: 20px; width: 200px;
+            background: white; border-radius: 10px; padding: 18px; width: 200px;
             text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             transition: background 0.5s, transform 0.2s ease-in-out;
-            font-size: 16px;
         }
         .kpi:hover { transform: scale(1.05); }
-        .kpi i { font-size: 32px; margin-bottom: 10px; display: block; }
+        .kpi i { font-size: 32px; margin-bottom: 8px; display: block; }
         .kpi .valor { font-size: 20px; font-weight: bold; }
         .kpi.positive { background: #e3f9e5; }
         .kpi.negative { background: #ffe0e0; }
-        .charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 10px; }
-        .chart-container { background: white; padding: 5px; border-radius: 8px; height: 240px; }
-        .tables { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; padding: 10px; font-size: 12px; }
+        .charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 10px; height: 48vh; }
+        .chart-container { background: white; padding: 5px; border-radius: 8px; }
+        .tables { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 4px; font-size: 11px; height: 40vh; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 4px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f0f0f0; font-weight: bold; cursor: pointer; }
-        .footer { text-align: right; font-size: 12px; padding: 5px 10px; color: gray; }
+        th, td { padding: 3px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f0f0f0; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .footer { text-align: right; font-size: 12px; padding: 4px 10px; color: gray; position: absolute; bottom: 0; width: 100%; background: #f5f7fa; }
         button { margin: 0 3px; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
         .btn-export { background: #28a745; color: white; }
         .btn-apply { background: #007bff; color: white; }
