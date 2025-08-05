@@ -1,196 +1,139 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Clubes</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- PapaParse -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
-    <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-
-    <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
-    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { background: #f5f7fa; }
-        .kpi-card {
-            background: #fff;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            transition: background 0.5s ease;
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 0;
         }
-        .kpi-card i {
+        header {
+            text-align: center;
+            padding: 10px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .filtros {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 10px;
+        }
+        .kpi {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .kpi i {
             font-size: 24px;
             margin-bottom: 5px;
         }
-        .kpi-value { font-size: 24px; font-weight: bold; }
-        .table-title {
-            font-size: 1.2em;
-            margin-top: 15px;
-            margin-bottom: 5px;
+        .kpi-value {
+            font-size: 18px;
             font-weight: bold;
-            text-align: left;
-            color: #333;
         }
-        .chart-container {
+        .graficos, .tabelas {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 10px;
+        }
+        .grafico, .tabela {
             background: #fff;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
-        footer {
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        table th, table td {
+            text-align: left;
+            padding: 6px;
+            border-bottom: 1px solid #ddd;
+        }
+        .footer {
             text-align: right;
-            font-size: 0.85em;
-            color: gray;
-            margin-top: 10px;
+            font-size: 12px;
+            padding: 10px;
+            color: #555;
+        }
+        .export-btn {
+            padding: 6px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .export-btn i {
+            margin-right: 5px;
         }
     </style>
 </head>
-<body class="container-fluid py-3">
+<body>
 
-    <h2 class="text-center mb-4">Dashboard de Clubes</h2>
+<header>Dashboard de Clubes</header>
 
-    <!-- Filtros -->
-    <div class="row mb-3">
-        <div class="col-auto">
-            <input type="date" id="filtroData" class="form-control">
-        </div>
-        <div class="col-auto">
-            <select id="filtroClube" class="form-control">
-                <option value="Todos">Todos</option>
-            </select>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-primary" onclick="aplicarFiltro()">Aplicar</button>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-success" onclick="exportarCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-        </div>
-    </div>
+<div class="filtros">
+    <input type="date" id="dataFiltro">
+    <select id="clubeFiltro"><option value="Todos">Todos</option></select>
+    <button id="aplicarFiltro">Aplicar</button>
+    <button class="export-btn" id="exportCSV"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+</div>
 
-    <!-- KPIs -->
-    <div class="row text-center">
-        <div class="col-md-2"><div class="kpi-card"><i class="fas fa-user-plus text-success"></i><div class="kpi-value" id="kpiFTD">0</div>FTD</div></div>
-        <div class="col-md-2"><div class="kpi-card"><i class="fas fa-coins text-warning"></i><div class="kpi-value" id="kpiDepositos">0</div>Depósitos</div></div>
-        <div class="col-md-2"><div class="kpi-card"><i class="fas fa-chart-line text-primary"></i><div class="kpi-value" id="kpiGGR">0</div>GGR</div></div>
-        <div class="col-md-2"><div class="kpi-card"><i class="fas fa-football-ball text-purple"></i><div class="kpi-value" id="kpiSportsbook">0</div>Sportsbook GGR</div></div>
-        <div class="col-md-2"><div class="kpi-card"><i class="fas fa-dice text-danger"></i><div class="kpi-value" id="kpiCassino">0</div>Cassino GGR</div></div>
-        <div class="col-md-2"><div class="kpi-card"><i class="fas fa-gift text-success"></i><div class="kpi-value" id="kpiBonus">0</div>Bônus Convertidos</div></div>
-    </div>
+<div class="kpi-container">
+    <div class="kpi"><i class="fas fa-user-plus" style="color:green;"></i><div class="kpi-value" id="kpi-ftd">R$ 0,00</div><div>FTD</div></div>
+    <div class="kpi"><i class="fas fa-coins" style="color:gold;"></i><div class="kpi-value" id="kpi-dep">R$ 0,00</div><div>Depósitos</div></div>
+    <div class="kpi"><i class="fas fa-chart-line" style="color:blue;"></i><div class="kpi-value" id="kpi-ggr">R$ 0,00</div><div>GGR</div></div>
+    <div class="kpi"><i class="fas fa-football-ball" style="color:purple;"></i><div class="kpi-value" id="kpi-sport">R$ 0,00</div><div>Sportsbook GGR</div></div>
+    <div class="kpi"><i class="fas fa-dice" style="color:red;"></i><div class="kpi-value" id="kpi-casino">R$ 0,00</div><div>Cassino GGR</div></div>
+    <div class="kpi"><i class="fas fa-gift" style="color:green;"></i><div class="kpi-value" id="kpi-bonus">R$ 0,00</div><div>Bônus Convertidos</div></div>
+</div>
 
-    <!-- Gráficos -->
-    <div class="row">
-        <div class="col-md-4 chart-container"><canvas id="graficoGGR"></canvas></div>
-        <div class="col-md-4 chart-container"><canvas id="graficoDepositos"></canvas></div>
-        <div class="col-md-4 chart-container"><canvas id="graficoFTD"></canvas></div>
-        <div class="col-md-4 chart-container"><canvas id="graficoSportsbook"></canvas></div>
-        <div class="col-md-4 chart-container"><canvas id="graficoCassino"></canvas></div>
-        <div class="col-md-4 chart-container"><canvas id="graficoBonus"></canvas></div>
-    </div>
+<div class="graficos">
+    <div class="grafico"><canvas id="graficoGGR"></canvas></div>
+    <div class="grafico"><canvas id="graficoDepositos"></canvas></div>
+    <div class="grafico"><canvas id="graficoFTD"></canvas></div>
+    <div class="grafico"><canvas id="graficoSportsbook"></canvas></div>
+    <div class="grafico"><canvas id="graficoCassino"></canvas></div>
+    <div class="grafico"><canvas id="graficoBonus"></canvas></div>
+</div>
 
-    <!-- Tabelas Top 10 -->
-    <h3 class="table-title">Top 10 Depósitos</h3>
-    <table id="topDepositos" class="display" style="width:100%"></table>
+<div class="tabelas">
+    <div class="tabela"><h4>Top 10 Depósitos</h4><table id="topDepositos"></table></div>
+    <div class="tabela"><h4>Top 10 FTD</h4><table id="topFTD"></table></div>
+    <div class="tabela"><h4>Top 10 GGR</h4><table id="topGGR"></table></div>
+    <div class="tabela"><h4>Top 10 Sportsbook</h4><table id="topSports"></table></div>
+    <div class="tabela"><h4>Top 10 Cassino</h4><table id="topCassino"></table></div>
+    <div class="tabela"><h4>Top 10 Bônus Convertidos</h4><table id="topBonus"></table></div>
+</div>
 
-    <h3 class="table-title">Top 10 FTD</h3>
-    <table id="topFTD" class="display" style="width:100%"></table>
-
-    <h3 class="table-title">Top 10 GGR</h3>
-    <table id="topGGR" class="display" style="width:100%"></table>
-
-    <h3 class="table-title">Top 10 Sportsbook</h3>
-    <table id="topSportsbook" class="display" style="width:100%"></table>
-
-    <h3 class="table-title">Top 10 Cassino</h3>
-    <table id="topCassino" class="display" style="width:100%"></table>
-
-    <h3 class="table-title">Top 10 Bônus Convertidos</h3>
-    <table id="topBonus" class="display" style="width:100%"></table>
-
-    <footer>Última atualização: <span id="ultimaAtualizacao"></span></footer>
+<div class="footer">Última atualização: <span id="lastUpdate"></span></div>
 
 <script>
-const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
-
-$(document).ready(function () {
-    carregarDados();
-    $('#ultimaAtualizacao').text(new Date().toLocaleString());
-});
-
-function carregarDados() {
-    Papa.parse(URL_CSV, {
-        download: true,
-        header: true,
-        complete: function (result) {
-            console.log("CSV carregado:", result.data.slice(0, 5));
-            popularKPIs(result.data);
-            popularGraficos(result.data);
-            popularTabelas(result.data);
-        }
+    $(document).ready(function(){
+        $("#lastUpdate").text(new Date().toLocaleString());
+        // Aqui você adicionará a lógica para carregar dados reais do CSV e popular KPIs, gráficos e tabelas
     });
-}
-
-function popularKPIs(dados) {
-    $('#kpiFTD').text("R$ " + formatarValor(275509));
-    $('#kpiDepositos').text("R$ " + formatarValor(5223999));
-    $('#kpiGGR').text("R$ " + formatarValor(1307962));
-    $('#kpiSportsbook').text("-R$ " + formatarValor(169295));
-    $('#kpiCassino').text("R$ " + formatarValor(1477226));
-    $('#kpiBonus').text("R$ " + formatarValor(504335));
-}
-
-function popularGraficos(dados) {
-    const ctxGGR = document.getElementById('graficoGGR').getContext('2d');
-    new Chart(ctxGGR, {
-        type: 'line',
-        data: { labels: ['2025-07-21','2025-07-22'], datasets: [{label:'Cálculo - GGR',data:[100000,150000],borderColor:'green'}] },
-        options: { responsive:true, plugins:{tooltip:{enabled:true}} }
-    });
-}
-
-function popularTabelas(dados) {
-    criarTabela('#topDepositos', [["Clube","Valor"], ["romulo@xpgames.bet","R$ 2.531.321,00"]]);
-    criarTabela('#topFTD', [["Clube","Valor"], ["romulo@xpgames.bet","R$ 199.162,00"]]);
-    criarTabela('#topGGR', [["Clube","Valor"], ["crisslots123@gmail.com","R$ 883.931,00"]]);
-    criarTabela('#topSportsbook', [["Clube","Valor"], ["romulo@xpgames.bet","R$ 46.018,00"]]);
-    criarTabela('#topCassino', [["Clube","Valor"], ["crisslots123@gmail.com","R$ 468.396,00"]]);
-    criarTabela('#topBonus', [["Clube","Valor"], ["betextraofc@gmail.com","R$ 255.262,00"]]);
-}
-
-function criarTabela(id, dados) {
-    $(id).DataTable({
-        data: dados.slice(1),
-        columns: [{ title: dados[0][0] }, { title: dados[0][1] }],
-        destroy: true,
-        paging: false,
-        searching: false,
-        info: false
-    });
-}
-
-function formatarValor(valor) {
-    return valor.toLocaleString('pt-BR');
-}
-
-function aplicarFiltro() { carregarDados(); }
-function exportarCSV() { window.open(URL_CSV, "_blank"); }
 </script>
 
 </body>
