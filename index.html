@@ -10,21 +10,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; overflow: hidden; }
-        h2 { text-align: center; margin: 8px 0; }
-        .controls { text-align: center; margin-bottom: 8px; }
-        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 8px; }
-        .kpi { background: #e8f5e9; border-radius: 8px; padding: 15px; width: 190px; height: 90px; text-align: center;
+        h2 { text-align: center; margin: 5px 0; }
+        .controls { text-align: center; margin-bottom: 4px; }
+        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 6px; }
+        .kpi { background: #e8f5e9; border-radius: 8px; padding: 10px; width: 190px; height: 75px; text-align: center; 
                box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: background 0.5s; font-size: 16px; font-weight: bold; }
-        .kpi .valor { font-size: 24px; font-weight: bold; display: block; margin-top: 4px; }
-        .kpi i { font-size: 26px; margin-bottom: 4px; display: block; }
-        .kpi.positive { background: #d4edda; }
-        .kpi.negative { background: #f8d7da; }
-        .main { display: flex; flex-direction: column; height: calc(100vh - 120px); padding: 0 8px; }
-        .charts { flex: 2.1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; }
-        .chart-container { background: white; padding: 5px; border-radius: 8px; }
-        .tables { flex: 0.9; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; font-size: 15px; }
+        .kpi .valor { font-size: 28px; font-weight: bold; display: block; margin-top: 2px; }
+        .kpi i { font-size: 26px; margin-bottom: 2px; display: block; }
+        .main { display: flex; flex-direction: column; height: calc(100vh - 110px); padding: 0 6px; }
+        .charts { flex: 2; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 6px; }
+        .chart-container { background: white; padding: 4px; border-radius: 6px; height: 160px; }
+        .chart-container:nth-child(n+4) { height: 190px; }
+        .tables { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; font-size: 15px; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; height: 100%; }
-        th, td { padding: 5px 6px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th, td { padding: 6px 6px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background: #f0f0f0; font-weight: bold; font-size: 15px; }
         .footer { text-align: right; font-size: 12px; padding: 4px 10px; color: gray; }
         button { margin: 0 5px; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
@@ -54,12 +53,12 @@
 
     <div class="main">
         <div class="charts">
-            <div class="chart-container" style="height: 220px"><canvas id="chartGGR"></canvas></div>
-            <div class="chart-container" style="height: 220px"><canvas id="chartDepositos"></canvas></div>
-            <div class="chart-container" style="height: 220px"><canvas id="chartFTD"></canvas></div>
-            <div class="chart-container" style="height: 240px"><canvas id="chartSportsbook"></canvas></div>
-            <div class="chart-container" style="height: 240px"><canvas id="chartCassino"></canvas></div>
-            <div class="chart-container" style="height: 240px"><canvas id="chartBonus"></canvas></div>
+            <div class="chart-container"><canvas id="chartGGR"></canvas></div>
+            <div class="chart-container"><canvas id="chartDepositos"></canvas></div>
+            <div class="chart-container"><canvas id="chartFTD"></canvas></div>
+            <div class="chart-container"><canvas id="chartSportsbook"></canvas></div>
+            <div class="chart-container"><canvas id="chartCassino"></canvas></div>
+            <div class="chart-container"><canvas id="chartBonus"></canvas></div>
         </div>
         <div class="tables">
             <table id="topDepositos"><thead><tr><th>Top 10 Depósitos</th><th>Valor</th></tr></thead><tbody></tbody></table>
@@ -82,7 +81,7 @@ function criarGrafico(ctx, label, color) {
     return new Chart(ctx, {
         type: 'line',
         data: { labels: [], datasets: [{ label, data: [], borderColor: color, backgroundColor: color+'33', fill: false, tension: 0.3 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { enabled: true } } }
+        options: { responsive: true, plugins: { tooltip: { enabled: true } }, maintainAspectRatio: false }
     });
 }
 
@@ -91,27 +90,23 @@ function animarKPI(id, valorNovo) {
     const valorAntigo = parseFloat(el.text().replace(/[R$\.,]/g,'')) || 0;
     let atual = valorAntigo;
     const incremento = (valorNovo - valorAntigo) / 20;
-    const positivo = valorNovo >= valorAntigo;
-    $(id).removeClass("positive negative").addClass(positivo ? "positive" : "negative");
+    $(id).removeClass("positive negative").addClass(valorNovo >= 0 ? "positive" : "negative");
     let step = 0;
     const intervalo = setInterval(() => {
         atual += incremento;
         step++;
         el.text("R$ " + atual.toLocaleString('pt-BR', {minimumFractionDigits:2}));
+        el.css("color", valorNovo < 0 ? "red" : "black");
         if (step >= 20) { clearInterval(intervalo); el.text("R$ " + valorNovo.toLocaleString('pt-BR', {minimumFractionDigits:2})); }
     }, 30);
 }
 
 function carregarDados() {
-    Papa.parse(urlCSV, {
-        download: true,
-        header: true,
-        complete: function(results) {
-            dadosFiltrados = results.data;
-            preencherFiltros();
-            atualizarDashboard();
-        }
-    });
+    Papa.parse(urlCSV, { download: true, header: true, complete: (results) => {
+        dadosFiltrados = results.data;
+        preencherFiltros();
+        atualizarDashboard();
+    }});
 }
 
 function preencherFiltros() {
@@ -160,8 +155,7 @@ function atualizarDashboard() {
     charts.chartCassino.data.labels = labels; charts.chartCassino.data.datasets[0].data = labels.map(l=>porData[l].cassino);
     charts.chartBonus.data.labels = labels; charts.chartBonus.data.datasets[0].data = labels.map(l=>porData[l].bonus);
 
-    charts.chartGGR.update(); charts.chartDepositos.update(); charts.chartFTD.update();
-    charts.chartSportsbook.update(); charts.chartCassino.update(); charts.chartBonus.update();
+    Object.values(charts).forEach(c=>c.update());
 
     preencherTabela("#topDepositos", dados, "Usuário - Depósitos");
     preencherTabela("#topFTD", dados, "Usuário - FTD-Montante");
@@ -175,13 +169,9 @@ function atualizarDashboard() {
 
 function preencherTabela(id, dados, campo) {
     const agrupado = {};
-    dados.forEach(d=>{
-        const clube = d["Usuário - Nome de usuário"];
-        agrupado[clube] = (agrupado[clube]||0) + (parseFloat(d[campo])||0);
-    });
-    const top10 = Object.entries(agrupado).sort((a,b)=>b[1]-a[1]).slice(0,10); // <-- agora sempre top10
-    const corpo = top10.map(t=>`<tr><td>${t[0]}</td><td>R$ ${t[1].toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`).join('');
-    $(id+" tbody").html(corpo);
+    dados.forEach(d=>{ agrupado[d["Usuário - Nome de usuário"]] = (agrupado[d["Usuário - Nome de usuário"]]||0) + (parseFloat(d[campo])||0); });
+    const top10 = Object.entries(agrupado).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    $(id+" tbody").html(top10.map(t=>`<tr><td>${t[0]}</td><td>R$ ${t[1].toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`).join(''));
 }
 
 function exportarCSV() {
@@ -196,11 +186,9 @@ function exportarCSV() {
 }
 
 function ativarFullscreen() {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) elem.requestFullscreen();
-    else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
-    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+    if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+    else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
+    else if (document.documentElement.msRequestFullscreen) document.documentElement.msRequestFullscreen();
 }
 
 $(document).ready(function(){
