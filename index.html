@@ -9,44 +9,42 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f7fa; margin:0; padding:0; overflow-x:hidden; }
+    body { font-family: Arial,sans-serif; background:#f5f7fa; margin:0; padding:0; overflow-y:auto; }
     h2 { text-align:center; margin:16px 0; }
     .controls { text-align:center; margin-bottom:12px; }
     .controls input, .controls select, .controls button { margin:4px; padding:6px 10px; }
     .kpi-container { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; padding:0 16px; }
     .kpi {
-      position: relative;
+      position:relative;
       background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.1);
       width:160px; padding:12px; text-align:center; transition:background .3s;
     }
-    .kpi i.fa-exclamation-triangle { position:absolute; top:6px; right:6px; color:#e74c3c; cursor:default; }
     .kpi.positive { background:#e3f9e5; }
     .kpi.negative { background:#ffe0e0; }
-    .kpi i.icon { font-size:24px; display:block; margin-bottom:6px; }
+    .kpi i.alert { position:absolute; top:6px; right:6px; color:#e74c3c; font-size:14px; }
+    .kpi .icon { font-size:24px; display:block; margin-bottom:6px; }
     .kpi .valor { font-size:18px; font-weight:bold; display:block; margin:4px 0; }
     .charts {
       display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px;
-      padding:0 16px; margin-top:12px;
+      padding:0 16px; margin-bottom:12px;
     }
-    .chart-container { background:#fff; border-radius:8px; padding:8px; height:200px; }
+    .chart-container { background:#fff; border-radius:8px; padding:8px; height:180px; }
     .tables {
-      padding:12px 16px; max-height:300px; overflow-y:auto;
+      padding:0 16px 16px; max-height:320px; overflow-y:auto;
       display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px;
     }
     table { width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; }
     th,td { padding:6px; border-bottom:1px solid #ddd; font-size:14px; }
     th { background:#f0f0f0; font-weight:bold; }
-    th[colspan] { text-align:left; background:#ccc; }
+    th[colspan] { background:#ddd; text-align:left; }
     .footer { text-align:right; font-size:12px; color:#666; padding:8px 16px; }
     #loadingOverlay {
       display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(255,255,255,0.7); z-index:9999;
-      justify-content:center; align-items:center;
+      background:rgba(255,255,255,0.7); z-index:9999; justify-content:center; align-items:center;
     }
     .spinner {
       border:8px solid #f3f3f3; border-top:8px solid #007bff;
-      border-radius:50%; width:60px; height:60px;
-      animation:spin 1s linear infinite;
+      border-radius:50%; width:60px; height:60px; animation:spin 1s linear infinite;
     }
     @keyframes spin { 100% { transform:rotate(360deg); } }
   </style>
@@ -68,12 +66,30 @@
   </div>
 
   <div class="kpi-container">
-    <div class="kpi" id="kpi-ftd"><i class="icon fa-solid fa-user-plus"></i><span class="valor">0</span>FTD</div>
-    <div class="kpi" id="kpi-depositos"><i class="icon fa-solid fa-coins"></i><span class="valor">0</span>Depósitos</div>
-    <div class="kpi" id="kpi-ggr"><i class="icon fa-solid fa-chart-line"></i><span class="valor">0</span>GGR</div>
-    <div class="kpi" id="kpi-sportsbook"><i class="icon fa-solid fa-futbol"></i><span class="valor">0</span>Sportsbook GGR</div>
-    <div class="kpi" id="kpi-cassino"><i class="icon fa-solid fa-dice"></i><span class="valor">0</span>Cassino GGR</div>
-    <div class="kpi" id="kpi-bonus"><i class="icon fa-solid fa-gift"></i><span class="valor">0</span>Bônus Convertidos</div>
+    <div class="kpi" id="kpi-ftd">
+      <i class="icon fa-solid fa-user-plus"></i>
+      <span class="valor">0</span>FTD
+    </div>
+    <div class="kpi" id="kpi-depositos">
+      <i class="icon fa-solid fa-coins"></i>
+      <span class="valor">0</span>Depósitos
+    </div>
+    <div class="kpi" id="kpi-ggr">
+      <i class="icon fa-solid fa-chart-line"></i>
+      <span class="valor">0</span>GGR
+    </div>
+    <div class="kpi" id="kpi-sportsbook">
+      <i class="icon fa-solid fa-futbol"></i>
+      <span class="valor">0</span>Sportsbook GGR
+    </div>
+    <div class="kpi" id="kpi-cassino">
+      <i class="icon fa-solid fa-dice"></i>
+      <span class="valor">0</span>Cassino GGR
+    </div>
+    <div class="kpi" id="kpi-bonus">
+      <i class="icon fa-solid fa-gift"></i>
+      <span class="valor">0</span>Bônus Convertidos
+    </div>
   </div>
 
   <div class="charts">
@@ -90,72 +106,64 @@
       <thead>
         <tr><th colspan="2">Top 10 Depósitos</th></tr>
         <tr><th>Clube</th><th>Valor</th></tr>
-      </thead>
-      <tbody></tbody>
+      </thead><tbody></tbody>
     </table>
     <table id="topFTD">
       <thead>
         <tr><th colspan="2">Top 10 FTD</th></tr>
         <tr><th>Clube</th><th>Valor</th></tr>
-      </thead>
-      <tbody></tbody>
+      </thead><tbody></tbody>
     </table>
     <table id="topGGR">
       <thead>
         <tr><th colspan="2">Top 10 GGR</th></tr>
         <tr><th>Clube</th><th>Valor</th></tr>
-      </thead>
-      <tbody></tbody>
+      </thead><tbody></tbody>
     </table>
   </div>
 
-  <div class="footer">Última atualização: <span id="ultimaAtualizacao"></span></div>
-  <div id="loadingOverlay"><div class="spinner"></div></div>
+  <div class="footer">
+    Última atualização: <span id="ultimaAtualizacao"></span>
+  </div>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+  </div>
 
   <script>
     const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
     let rawData = [], charts = {}, avgFTD = 0;
 
-    function showLoading(v){ $("#loadingOverlay").css("display", v ? "flex" : "none"); }
-
-    function criarGrafico(el, lblA, lblB, cA, cB) {
-      return new Chart(el, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [
-            { label: lblA, data: [], borderColor: cA, backgroundColor: cA+'33', fill:false },
-            { label: lblB, data: [], borderColor: cB, backgroundColor: cB+'33', fill:false }
-          ]
-        },
-        options:{ responsive:true, maintainAspectRatio:false, plugins:{ tooltip:{ mode:'index'}}}
+    function showLoading(v){ $("#loadingOverlay").css("display", v?"flex":"none"); }
+    function criarGrafico(ctx,labelA,labelB,colA,colB){
+      return new Chart(ctx, {
+        type:'line',
+        data:{ labels:[], datasets:[
+          {label:labelA, data:[], borderColor:colA, backgroundColor:colA+"33", fill:false},
+          {label:labelB, data:[], borderColor:colB, backgroundColor:colB+"33", fill:false}
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false }
       });
     }
-
-    function animarKPI(sel, val, flag=false, msg='') {
-      const el = $(`${sel} .valor`);
-      const old = parseFloat(el.text().replace(/[^0-9\-\.]/g,''))||0;
-      const inc = (val - old)/20;
-      let i = 0;
-      $(`${sel} .fa-exclamation-triangle`).remove();
-      const t = setInterval(()=>{
-        i++;
-        el.text("R$ " + (old + inc*i).toLocaleString('pt-BR',{minimumFractionDigits:2}));
-        if(i>=20) {
-          clearInterval(t);
-          el.text("R$ " + val.toLocaleString('pt-BR',{minimumFractionDigits:2}));
-          if(flag) $(sel).append(`<i class="fa-solid fa-exclamation-triangle" title="${msg}"></i>`);
-        }
+    function animarKPI(sel,valor,critico=false,msg=""){
+      const el=$(sel+" .valor"), antigo=parseFloat(el.text().replace(/[^0-9\-\.]/g,''))||0;
+      let atual=antigo, step=0, inc=(valor-antigo)/20;
+      $(sel).toggleClass("negative",critico).toggleClass("positive",!critico);
+      if(critico) $(sel).append(`<i class="alert fa-solid fa-exclamation-triangle" title="${msg}"></i>`);
+      const iv=setInterval(()=>{
+        step++; atual+=inc;
+        el.text("R$ "+atual.toLocaleString('pt-BR',{minimumFractionDigits:2}));
+        if(step>=20){ clearInterval(iv); el.text("R$ "+valor.toLocaleString('pt-BR',{minimumFractionDigits:2})); }
       },30);
     }
 
-    function parseData(cb) {
+    function parseData(){
       showLoading(true);
-      Papa.parse(urlCSV,{
+      Papa.parse(urlCSV, {
         download:true, header:true,
-        complete(r) {
-          rawData = r.data.filter(d=>d.DATA);
-          avgFTD = rawData.reduce((s,d)=>s+(+d["Usuário - FTD-Montante"]||0),0)/rawData.length;
+        complete(r){
+          rawData=r.data.filter(d=>d.DATA);
+          avgFTD = rawData.reduce((s,d)=>s + (+d["Usuário - FTD-Montante"]||0),0) / rawData.length;
           fillFilters();
           updateAll();
           showLoading(false);
@@ -163,52 +171,47 @@
       });
     }
 
-    function fillFilters() {
-      const names = [...new Set(rawData.map(d=>d["Usuário - Nome de usuário"]))];
-      const opts = ['<option>Todos</option>'].concat(names.map(n=>`<option>${n}</option>`)).join('');
-      $("#filtroClubeA, #filtroClubeB").html(opts);
+    function fillFilters(){
+      const nomes=[...new Set(rawData.map(d=>d["Usuário - Nome de usuário"]))];
+      const opts = `<option>Todos</option>` + nomes.map(n=>`<option>${n}</option>`).join("");
+      $("#filtroClubeA,#filtroClubeB").html(opts);
     }
 
-    function setPeriodo(days) {
-      const end = new Date(), start = new Date();
-      start.setDate(end.getDate() - days);
-      $("#filtroInicio").val(start.toISOString().split('T')[0]);
-      $("#filtroFim").val(end.toISOString().split('T')[0]);
+    function setPeriodo(d){
+      const fim=new Date(), ini=new Date();
+      ini.setDate(fim.getDate()-d);
+      $("#filtroInicio").val(ini.toISOString().slice(0,10));
+      $("#filtroFim").val(fim.toISOString().slice(0,10));
       updateAll();
     }
 
     function aplicarFiltros(){ updateAll(); }
 
-    function updateAll() {
-      // filtros
+    function updateAll(){
       let data = rawData.slice();
-      const ini = $("#filtroInicio").val();
-      const fim = $("#filtroFim").val();
-      if(ini) data = data.filter(d=>d.DATA >= ini);
-      if(fim) data = data.filter(d=>d.DATA <= fim);
+      const ini=$("#filtroInicio").val(), fim=$("#filtroFim").val();
+      if(ini) data=data.filter(d=>d.DATA>=ini);
+      if(fim) data=data.filter(d=>d.DATA<=fim);
+      const a=$("#filtroClubeA").val(), b=$("#filtroClubeB").val();
+      const selA = a==="Todos"?data:data.filter(d=>d["Usuário - Nome de usuário"]===a);
+      const selB = b==="Todos"?data:data.filter(d=>d["Usuário - Nome de usuário"]===b);
 
-      const fA = $("#filtroClubeA").val(), fB = $("#filtroClubeB").val();
-      const selA = fA==='Todos' ? data : data.filter(d=>d["Usuário - Nome de usuário"]===fA);
-      const selB = fB==='Todos' ? data : data.filter(d=>d["Usuário - Nome de usuário"]===fB);
-
-      // KPI sums
-      const sum = (arr, k)=>arr.reduce((s,d)=>s+(+d[k]||0),0);
+      const sum = (arr,key)=>arr.reduce((s,d)=>s + (+d[key]||0),0);
       const vFTD = sum(selA,"Usuário - FTD-Montante") + sum(selB,"Usuário - FTD-Montante");
-      const vDEP = sum(selA,"Usuário - Depósitos")       + sum(selB,"Usuário - Depósitos");
-      const vGGR = sum(selA,"Cálculo - GGR")             + sum(selB,"Cálculo - GGR");
-      const vSB  = sum(selA,"Sportsbook - GGR")          + sum(selB,"Sportsbook - GGR");
-      const vCS  = sum(selA,"Cassino - GGR")             + sum(selB,"Cassino - GGR");
-      const vBO  = sum(selA,"Cálculo - bônus convertidos")+ sum(selB,"Cálculo - bônus convertidos");
+      const vDEP = sum(selA,"Usuário - Depósitos")    + sum(selB,"Usuário - Depósitos");
+      const vGGR = sum(selA,"Cálculo - GGR")          + sum(selB,"Cálculo - GGR");
+      const vSB  = sum(selA,"Sportsbook - GGR")       + sum(selB,"Sportsbook - GGR");
+      const vCS  = sum(selA,"Cassino - GGR")          + sum(selB,"Cassino - GGR");
+      const vBO  = sum(selA,"Cálculo - bônus convertidos")+sum(selB,"Cálculo - bônus convertidos");
 
-      animarKPI('#kpi-ftd', vFTD, vFTD < avgFTD*0.5, 'FTD abaixo de 50% da média histórica');
-      animarKPI('#kpi-depositos', vDEP);
-      animarKPI('#kpi-ggr', vGGR);
-      animarKPI('#kpi-sportsbook', vSB, vSB < 0, 'Sportsbook GGR negativo');
-      animarKPI('#kpi-cassino', vCS);
-      animarKPI('#kpi-bonus', vBO);
+      animarKPI("#kpi-ftd", vFTD, vFTD < avgFTD*0.5, "FTD abaixo de 50% da média");
+      animarKPI("#kpi-depositos", vDEP);
+      animarKPI("#kpi-ggr", vGGR);
+      animarKPI("#kpi-sportsbook", vSB<0, vSB<0, "Sportsbook GGR negativo");
+      animarKPI("#kpi-cassino", vCS);
+      animarKPI("#kpi-bonus", vBO);
 
-      // agrupa por DATA
-      const grp = arr=>{
+      function agrup(arr){
         const o={};
         arr.forEach(d=>{
           if(!o[d.DATA]) o[d.DATA]={ftd:0,dep:0,ggr:0,sb:0,cs:0,bo:0};
@@ -220,61 +223,59 @@
           o[d.DATA].bo  += +d["Cálculo - bônus convertidos"]||0;
         });
         return o;
-      };
-      const oA = grp(selA), oB = grp(selB);
-      const labels = [...new Set([...Object.keys(oA),...Object.keys(oB)])].sort();
+      }
+      const oA=agrup(selA), oB=agrup(selB);
+      const labels=[...new Set([...Object.keys(oA),...Object.keys(oB)])].sort();
 
-      function updChart(ch, key) {
-        ch.data.labels = labels;
-        ch.data.datasets[0].data = labels.map(d=>oA[d]?oA[d][key]:0);
-        ch.data.datasets[1].data = labels.map(d=>oB[d]?oB[d][key]:0);
+      function upd(ch,key){
+        ch.data.labels=labels;
+        ch.data.datasets[0].data=labels.map(d=>oA[d]?oA[d][key]:0);
+        ch.data.datasets[1].data=labels.map(d=>oB[d]?oB[d][key]:0);
         ch.update();
       }
+      upd(charts.chartGGR,"ggr");
+      upd(charts.chartDepositos,"dep");
+      upd(charts.chartFTD,"ftd");
+      upd(charts.chartSportsbook,"sb");
+      upd(charts.chartCassino,"cs");
+      upd(charts.chartBonus,"bo");
 
-      updChart(charts.chartGGR, 'ggr');
-      updChart(charts.chartDepositos, 'dep');
-      updChart(charts.chartFTD, 'ftd');
-      updChart(charts.chartSportsbook, 'sb');
-      updChart(charts.chartCassino, 'cs');
-      updChart(charts.chartBonus, 'bo');
-
-      // Top10 geral
-      function fillTop(id, key) {
-        const agg = {};
+      // Top10
+      function top10(id,key){
+        const agg={};
         data.forEach(d=>{
-          const c = d["Usuário - Nome de usuário"];
-          agg[c] = (agg[c]||0) + (+d[key]||0);
+          const c=d["Usuário - Nome de usuário"];
+          agg[c]=(agg[c]||0)+(+d[key]||0);
         });
-        const top = Object.entries(agg)
-          .sort((a,b)=>b[1]-a[1]).slice(0,10);
-        const rows = top.map(x=>`<tr><td>${x[0]}</td><td>R$ ${x[1].toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`);
-        $(`${id} tbody`).html(rows.join(''));
+        const arr=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,10);
+        const rows=arr.map(x=>`<tr><td>${x[0]}</td><td>R$ ${x[1].toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`);
+        $(id+" tbody").html(rows.join(""));
       }
-      fillTop('#topDepositos',  "Usuário - Depósitos");
-      fillTop('#topFTD',        "Usuário - FTD-Montante");
-      fillTop('#topGGR',        "Cálculo - GGR");
+      top10("#topDepositos","Usuário - Depósitos");
+      top10("#topFTD","Usuário - FTD-Montante");
+      top10("#topGGR","Cálculo - GGR");
 
-      $('#ultimaAtualizacao').text(new Date().toLocaleString());
+      $("#ultimaAtualizacao").text(new Date().toLocaleString());
     }
 
     function exportarCSV(){
-      const csv = Papa.unparse(rawData);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'dados_filtrados.csv';
+      const csv=Papa.unparse(rawData);
+      const blob=new Blob([csv],{type:"text/csv"});
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download="dados.csv";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
     }
 
     $(function(){
-      charts.chartGGR       = criarGrafico($('#chartGGR')[0],       'Clube A GGR','Clube B GGR','blue','orange');
-      charts.chartDepositos = criarGrafico($('#chartDepositos')[0], 'Clube A Depósitos','Clube B Depósitos','blue','orange');
-      charts.chartFTD       = criarGrafico($('#chartFTD')[0],       'Clube A FTD','Clube B FTD','blue','orange');
-      charts.chartSportsbook= criarGrafico($('#chartSportsbook')[0],'Clube A Sportsbook','Clube B Sportsbook','blue','orange');
-      charts.chartCassino   = criarGrafico($('#chartCassino')[0],   'Clube A Cassino','Clube B Cassino','blue','orange');
-      charts.chartBonus     = criarGrafico($('#chartBonus')[0],     'Clube A Bônus','Clube B Bônus','blue','orange');
+      charts.chartGGR        = criarGrafico($("#chartGGR")[0],"Clube A GGR","Clube B GGR","blue","orange");
+      charts.chartDepositos  = criarGrafico($("#chartDepositos")[0],"Clube A Depósitos","Clube B Depósitos","blue","orange");
+      charts.chartFTD        = criarGrafico($("#chartFTD")[0],"Clube A FTD","Clube B FTD","blue","orange");
+      charts.chartSportsbook = criarGrafico($("#chartSportsbook")[0],"Clube A Sportsbook","Clube B Sportsbook","blue","orange");
+      charts.chartCassino    = criarGrafico($("#chartCassino")[0],"Clube A Cassino","Clube B Cassino","blue","orange");
+      charts.chartBonus      = criarGrafico($("#chartBonus")[0],"Clube A Bônus","Clube B Bônus","blue","orange");
       parseData();
     });
   </script>
