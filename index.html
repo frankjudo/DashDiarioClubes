@@ -28,6 +28,7 @@
         button { cursor: pointer; }
         .btn-export { background: #28a745; color: white; border: none; border-radius: 4px; }
         .btn-apply { background: #007bff; color: white; border: none; border-radius: 4px; }
+        /* Spinner overlay */
         #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; justify-content: center; align-items: center; }
         .spinner { border: 8px solid #f3f3f3; border-top: 8px solid #007bff; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -38,7 +39,7 @@
     <div class="controls">
         <input type="date" id="filtroInicio"> até 
         <input type="date" id="filtroFim">
-        <button class="btn-apply" onclick="setOntem()">Ontem</button>
+        <button class="btn-apply" onclick="setPeriodo(1)">Ontem</button>
         <button class="btn-apply" onclick="setPeriodo(7)">Últimos 7 dias</button>
         <button class="btn-apply" onclick="setPeriodo(30)">Últimos 30 dias</button>
         <br>
@@ -81,13 +82,32 @@ let dadosFiltrados = [];
 let charts = {};
 
 function showLoading(show) { $("#loadingOverlay").css("display", show ? "flex" : "none"); }
-function criarGrafico(ctx,labelA,labelB,colorA,colorB){return new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:labelA,data:[],borderColor:colorA,backgroundColor:colorA+'33',fill:false,tension:0.3},{label:labelB,data:[],borderColor:colorB,backgroundColor:colorB+'33',fill:false,tension:0.3}]},options:{responsive:true,plugins:{tooltip:{enabled:true}}}});}
-function animarKPI(id,valorNovo){const el=$(id+" .valor");const valorAntigo=parseFloat(el.text().replace(/[R$\.,]/g,''))||0;let atual=valorAntigo;const incremento=(valorNovo-valorAntigo)/20;const positivo=valorNovo>=0;$(id).removeClass("positive negative").addClass(positivo?"positive":"negative");let step=0;const intervalo=setInterval(()=>{atual+=incremento;step++;el.text("R$ "+atual.toLocaleString('pt-BR',{minimumFractionDigits:2}));if(step>=20){clearInterval(intervalo);el.text("R$ "+valorNovo.toLocaleString('pt-BR',{minimumFractionDigits:2}));}},30);}
-function carregarDados(){showLoading(true);Papa.parse(urlCSV,{download:true,header:true,complete:function(results){dadosFiltrados=results.data;preencherFiltros();atualizarDashboard();showLoading(false);}});}
-function preencherFiltros(){const clubes=[...new Set(dadosFiltrados.map(d=>d["Usuário - Nome de usuário"]))];$("#filtroClubeA,#filtroClubeB").html('<option value="Todos">Todos</option>'+clubes.map(c=>`<option value="${c}">${c}</option>`).join(''));}
+function criarGrafico(ctx,labelA,labelB,colorA,colorB){
+    return new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:labelA,data:[],borderColor:colorA,backgroundColor:colorA+'33',fill:false,tension:0.3},{label:labelB,data:[],borderColor:colorB,backgroundColor:colorB+'33',fill:false,tension:0.3}]},options:{responsive:true,plugins:{tooltip:{enabled:true}}}});
+}
+function animarKPI(id,valorNovo){
+    const el=$(id+" .valor");const valorAntigo=parseFloat(el.text().replace(/[R$\.,]/g,''))||0;let atual=valorAntigo;const incremento=(valorNovo-valorAntigo)/20;
+    const positivo=valorNovo>=0;$(id).removeClass("positive negative").addClass(positivo?"positive":"negative");
+    let step=0;const intervalo=setInterval(()=>{atual+=incremento;step++;el.text("R$ "+atual.toLocaleString('pt-BR',{minimumFractionDigits:2}));if(step>=20){clearInterval(intervalo);el.text("R$ "+valorNovo.toLocaleString('pt-BR',{minimumFractionDigits:2}));}},30);
+}
+function carregarDados(){
+    showLoading(true);
+    Papa.parse(urlCSV,{download:true,header:true,complete:function(results){
+        dadosFiltrados=results.data;preencherFiltros();atualizarDashboard();showLoading(false);
+    }});
+}
+function preencherFiltros(){
+    const clubes=[...new Set(dadosFiltrados.map(d=>d["Usuário - Nome de usuário"]))];
+    $("#filtroClubeA,#filtroClubeB").html('<option value="Todos">Todos</option>'+clubes.map(c=>`<option value="${c}">${c}</option>`).join(''));
+}
 function aplicarFiltros(){atualizarDashboard();}
-function setOntem(){const ontem=new Date();ontem.setDate(ontem.getDate()-1);const data=ontem.toISOString().split('T')[0];$("#filtroInicio").val(data);$("#filtroFim").val(data);aplicarFiltros();}
-function setPeriodo(dias){const hoje=new Date();const inicio=new Date();inicio.setDate(hoje.getDate()-dias);$("#filtroInicio").val(inicio.toISOString().split('T')[0]);$("#filtroFim").val(hoje.toISOString().split('T')[0]);aplicarFiltros();}
+function setPeriodo(dias){
+    const hoje=new Date();const inicio=new Date();
+    inicio.setDate(hoje.getDate()-dias);
+    $("#filtroInicio").val(inicio.toISOString().split('T')[0]);
+    $("#filtroFim").val(hoje.toISOString().split('T')[0]);
+    aplicarFiltros();
+}
 function atualizarDashboard(){
     const clubeA=$("#filtroClubeA").val(),clubeB=$("#filtroClubeB").val(),inicio=$("#filtroInicio").val(),fim=$("#filtroFim").val();
     let dados=dadosFiltrados;
@@ -95,7 +115,9 @@ function atualizarDashboard(){
     if(fim) dados=dados.filter(d=>d["DATA"]<=fim);
 
     const filtrarPorClube=(clube)=>clube==="Todos"?dados:dados.filter(d=>d["Usuário - Nome de usuário"]===clube);
-    const dadosA=filtrarPorClube(clubeA),dadosB=filtrarPorClube(clubeB);
+
+    let dadosA=[],dadosB=[];
+    if(clubeA==="Todos" && clubeB==="Todos"){dadosA=dados;dadosB=[];}else{dadosA=filtrarPorClube(clubeA);dadosB=clubeB!==clubeA?filtrarPorClube(clubeB):[];}
 
     const sum=(arr,campo)=>arr.reduce((s,d)=>s+(parseFloat(d[campo])||0),0);
     animarKPI("#kpi-ftd",sum(dadosA,"Usuário - FTD-Montante")+sum(dadosB,"Usuário - FTD-Montante"));
@@ -117,9 +139,30 @@ function atualizarDashboard(){
 
     $("#ultimaAtualizacao").text(new Date().toLocaleString());
 }
-function preencherTabela(id,dados,campo){const agrupado={};dados.forEach(d=>{const c=d["Usuário - Nome de usuário"];agrupado[c]=(agrupado[c]||0)+(parseFloat(d[campo])||0);});const top10=Object.entries(agrupado).sort((a,b)=>b[1]-a[1]).slice(0,10);$(id+" tbody").html(top10.map(t=>`<tr><td>${t[0]}</td><td>R$ ${t[1].toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`).join(''));}
-function exportarCSV(){const csv=Papa.unparse(dadosFiltrados);const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download="dados_filtrados.csv";document.body.appendChild(link);link.click();document.body.removeChild(link);}
-$(document).ready(function(){charts.chartGGR=criarGrafico(document.getElementById('chartGGR'),"Clube A GGR","Clube B GGR","blue","orange");charts.chartDepositos=criarGrafico(document.getElementById('chartDepositos'),"Clube A Depósitos","Clube B Depósitos","blue","orange");charts.chartFTD=criarGrafico(document.getElementById('chartFTD'),"Clube A FTD","Clube B FTD","blue","orange");charts.chartSportsbook=criarGrafico(document.getElementById('chartSportsbook'),"Clube A Sportsbook","Clube B Sportsbook","blue","orange");charts.chartCassino=criarGrafico(document.getElementById('chartCassino'),"Clube A Cassino","Clube B Cassino","blue","orange");charts.chartBonus=criarGrafico(document.getElementById('chartBonus'),"Clube A Bônus","Clube B Bônus","blue","orange");carregarDados();});
+function preencherTabela(id,dados,campo){
+    const agrupado={};dados.forEach(d=>{const c=d["Usuário - Nome de usuário"];agrupado[c]=(agrupado[c]||0)+(parseFloat(d[campo])||0);});
+    const top10=Object.entries(agrupado).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    $(id+" tbody").html(top10.map(t=>`<tr><td>${t[0]}</td><td>R$ ${t[1].toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`).join(''));
+}
+function exportarCSV(){
+    const csv=Papa.unparse(dadosFiltrados);
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+    const link=document.createElement("a");
+    link.href=URL.createObjectURL(blob);
+    link.download="dados_filtrados.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+$(document).ready(function(){
+    charts.chartGGR=criarGrafico(document.getElementById('chartGGR'),"Clube A GGR","Clube B GGR","blue","orange");
+    charts.chartDepositos=criarGrafico(document.getElementById('chartDepositos'),"Clube A Depósitos","Clube B Depósitos","blue","orange");
+    charts.chartFTD=criarGrafico(document.getElementById('chartFTD'),"Clube A FTD","Clube B FTD","blue","orange");
+    charts.chartSportsbook=criarGrafico(document.getElementById('chartSportsbook'),"Clube A Sportsbook","Clube B Sportsbook","blue","orange");
+    charts.chartCassino=criarGrafico(document.getElementById('chartCassino'),"Clube A Cassino","Clube B Cassino","blue","orange");
+    charts.chartBonus=criarGrafico(document.getElementById('chartBonus'),"Clube A Bônus","Clube B Bônus","blue","orange");
+    carregarDados();
+});
 </script>
 </body>
 </html>
