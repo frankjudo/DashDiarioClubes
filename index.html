@@ -9,27 +9,30 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
-        h2 { text-align: center; margin: 20px 0; }
-        .controls { text-align: center; margin-bottom: 15px; }
-        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
-        .kpi { background: #e3f9e5; border-radius: 8px; padding: 10px 15px; width: 170px; text-align: center; 
+        html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; background: #f5f7fa; }
+        body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        h2 { text-align: center; margin: 10px 0; }
+        .controls { text-align: center; margin-bottom: 10px; }
+        .kpi-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 10px; }
+        .kpi { background: #e3f9e5; border-radius: 8px; padding: 8px 12px; width: 160px; text-align: center; 
                box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.4s; }
-        .kpi.negative { background: #ffd6d6 !important; }
-        .kpi i { font-size: 28px; margin-bottom: 5px; display: block; }
+        .kpi i { font-size: 26px; margin-bottom: 3px; display: block; }
         .kpi .valor { font-size: 18px; font-weight: bold; display: block; margin-bottom: 4px; }
+        .negative { background: #ffd6d6 !important; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
 
-        .charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 0 20px; margin-bottom: 20px; }
+        .content { display: flex; flex-direction: column; flex: 1; }
+        .charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 20px; flex: 1; }
         .chart-container { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        .divider { width: 95%; height: 1px; background: #ddd; margin: 20px auto; }
+        .divider { width: 95%; height: 1px; background: #ddd; margin: 5px auto; }
 
-        .tables { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; padding: 0 20px; }
+        .tables { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 0 20px; flex: 1; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 15px; background: white; border-radius: 8px; 
                 overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 6px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background: #f0f0f0; font-weight: bold; }
-        .footer { text-align: right; font-size: 12px; padding: 10px 20px; color: gray; }
+        .footer { text-align: right; font-size: 12px; padding: 5px 20px; color: gray; }
         button { margin: 0 5px; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; }
         .btn-export { background: #28a745; color: white; }
         .btn-apply { background: #007bff; color: white; }
@@ -55,24 +58,26 @@
         <div class="kpi" id="kpi-bonus"><i class="fa-solid fa-gift" style="color:green"></i><span class="valor">0</span>Bônus Convertidos</div>
     </div>
 
-    <div class="charts">
-        <div class="chart-container"><canvas id="chartGGR"></canvas></div>
-        <div class="chart-container"><canvas id="chartDepositos"></canvas></div>
-        <div class="chart-container"><canvas id="chartFTD"></canvas></div>
-        <div class="chart-container"><canvas id="chartSportsbook"></canvas></div>
-        <div class="chart-container"><canvas id="chartCassino"></canvas></div>
-        <div class="chart-container"><canvas id="chartBonus"></canvas></div>
-    </div>
+    <div class="content">
+        <div class="charts">
+            <div class="chart-container"><canvas id="chartGGR"></canvas></div>
+            <div class="chart-container"><canvas id="chartDepositos"></canvas></div>
+            <div class="chart-container"><canvas id="chartFTD"></canvas></div>
+            <div class="chart-container"><canvas id="chartSportsbook"></canvas></div>
+            <div class="chart-container"><canvas id="chartCassino"></canvas></div>
+            <div class="chart-container"><canvas id="chartBonus"></canvas></div>
+        </div>
 
-    <div class="divider"></div>
+        <div class="divider"></div>
 
-    <div class="tables">
-        <table id="topDepositos"><thead><tr><th>Top 10 Depósitos</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topFTD"><thead><tr><th>Top 10 FTD</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topGGR"><thead><tr><th>Top 10 GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topSportsbook"><thead><tr><th>Top 10 Sportsbook</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topCassino"><thead><tr><th>Top 10 Cassino</th><th>Valor</th></tr></thead><tbody></tbody></table>
-        <table id="topBonus"><thead><tr><th>Top 10 Bônus Convertidos</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        <div class="tables">
+            <table id="topDepositos"><thead><tr><th>Top 10 Depósitos</th><th>Valor</th></tr></thead><tbody></tbody></table>
+            <table id="topFTD"><thead><tr><th>Top 10 FTD</th><th>Valor</th></tr></thead><tbody></tbody></table>
+            <table id="topGGR"><thead><tr><th>Top 10 GGR</th><th>Valor</th></tr></thead><tbody></tbody></table>
+            <table id="topSportsbook"><thead><tr><th>Top 10 Sportsbook</th><th>Valor</th></tr></thead><tbody></tbody></table>
+            <table id="topCassino"><thead><tr><th>Top 10 Cassino</th><th>Valor</th></tr></thead><tbody></tbody></table>
+            <table id="topBonus"><thead><tr><th>Top 10 Bônus Convertidos</th><th>Valor</th></tr></thead><tbody></tbody></table>
+        </div>
     </div>
 
     <div class="footer">Última atualização: <span id="ultimaAtualizacao"></span></div>
@@ -86,7 +91,7 @@ function criarGrafico(ctx, label, color) {
     return new Chart(ctx, {
         type: 'line',
         data: { labels: [], datasets: [{ label, data: [], borderColor: color, backgroundColor: color+'33', fill: false, tension: 0.3 }] },
-        options: { responsive: true, plugins: { tooltip: { enabled: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { enabled: true } } }
     });
 }
 
