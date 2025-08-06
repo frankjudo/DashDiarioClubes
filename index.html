@@ -121,10 +121,9 @@
         options:{ responsive:true, maintainAspectRatio:false }
       });
     }
-    function animarKPI(sel, val, crit=false, msg=""){
-      const el = $(sel+" .valor"),
-            old = parseFloat(el.text().replace(/[^0-9\-\.]/g,''))||0;
-      let cur = old, step=0, inc=(val-old)/20;
+    function animarKPI(sel, valorNovo, crit=false, msg=""){
+      const el = $(sel+" .valor"), old = parseFloat(el.text().replace(/[^0-9\.\-]/g,''))||0;
+      let cur=old, step=0, inc=(valorNovo-old)/20;
       $(sel).find("i.alert").remove();
       $(sel).toggleClass("negative", crit).toggleClass("positive", !crit);
       if(crit) $(sel).append(`<i class="alert fa-solid fa-exclamation-triangle" title="${msg}"></i>`);
@@ -132,30 +131,27 @@
         step++; cur += inc;
         el.text("R$ "+cur.toLocaleString('pt-BR',{minimumFractionDigits:2}));
         if(step>=20){ clearInterval(iv);
-          el.text("R$ "+val.toLocaleString('pt-BR',{minimumFractionDigits:2})); }
+          el.text("R$ "+valorNovo.toLocaleString('pt-BR',{minimumFractionDigits:2})); }
       },30);
     }
 
     function parseData(){
       showLoading(true);
-      Papa.parse(urlCSV, {
-        download:true, header:true,
-        complete(res){
-          rawData = res.data.filter(d=>d.DATA);
-          avgFTD = rawData.reduce((s,d)=>s + (+d["Usuário - FTD-Montante"]||0),0) / rawData.length;
-          fillFilters(); updateAll(); showLoading(false);
-        }
-      });
+      Papa.parse(urlCSV,{ download:true, header:true, complete(res){
+        rawData = res.data.filter(d=>d.DATA);
+        avgFTD = rawData.reduce((s,d)=>s + (+d["Usuário - FTD-Montante"]||0),0) / rawData.length;
+        fillFilters(); updateAll(); showLoading(false);
+      }});
     }
 
     function fillFilters(){
       const names = [...new Set(rawData.map(d=>d["Usuário - Nome de usuário"]))];
-      const opts = '<option>Todos</option>' + names.map(n=>`<option>${n}</option>`).join("");
+      const opts = '<option>Todos</option>'+names.map(n=>`<option>${n}</option>`).join("");
       $("#filtroClubeA,#filtroClubeB").html(opts);
     }
 
     function setPeriodo(days){
-      const end = new Date(), start = new Date();
+      const end=new Date(), start=new Date();
       start.setDate(end.getDate()-days);
       $("#filtroInicio").val(start.toISOString().slice(0,10));
       $("#filtroFim").val(end.toISOString().slice(0,10));
@@ -166,38 +162,33 @@
 
     function updateAll(){
       let data = rawData.slice();
-      const ini = $("#filtroInicio").val(), fim = $("#filtroFim").val();
-      if(ini) data = data.filter(d=>d.DATA >= ini);
-      if(fim) data = data.filter(d=>d.DATA <= fim);
+      const ini=$("#filtroInicio").val(), fim=$("#filtroFim").val();
+      if(ini) data=data.filter(d=>d.DATA>=ini);
+      if(fim) data=data.filter(d=>d.DATA<=fim);
 
-      const a = $("#filtroClubeA").val(),
-            b = $("#filtroClubeB").val();
-
+      const a=$("#filtroClubeA").val(), b=$("#filtroClubeB").val();
       const selA = a==="Todos" ? data : data.filter(d=>d["Usuário - Nome de usuário"]===a);
       let   selB = b==="Todos" ? data : data.filter(d=>d["Usuário - Nome de usuário"]===b);
-      // ** Evita duplicação se A === B **
-      if(a === b) selB = [];
+      if(a===b) selB = [];
 
-      const sum = (arr,key)=>arr.reduce((s,d)=>s + (+d[key]||0),0);
-
+      const sum=(arr,k)=>arr.reduce((s,d)=>s + (+d[k]||0),0);
       const vFTD = sum(selA,"Usuário - FTD-Montante") + sum(selB,"Usuário - FTD-Montante");
       const vDEP = sum(selA,"Usuário - Depósitos")    + sum(selB,"Usuário - Depósitos");
       const vGGR = sum(selA,"Cálculo - GGR")          + sum(selB,"Cálculo - GGR");
       const vSB  = sum(selA,"Sportsbook - GGR")       + sum(selB,"Sportsbook - GGR");
       const vCS  = sum(selA,"Cassino - GGR")          + sum(selB,"Cassino - GGR");
-      const vBO  = sum(selA,"Cálculo - bônus convertidos")+sum(selB,"Cálculo - bônus convertidos");
+      const vBO  = sum(selA,"Cálculo - bônus convertidos") + sum(selB,"Cálculo - bônus convertidos");
 
-      animarKPI("#kpi-ftd", vFTD, vFTD < avgFTD*0.5, "FTD <50% da média");
+      animarKPI("#kpi-ftd", vFTD, vFTD < avgFTD*0.5, "FTD <50% média");
       animarKPI("#kpi-depositos", vDEP);
       animarKPI("#kpi-ggr", vGGR);
-      animarKPI("#kpi-sportsbook", vSB<0, vSB<0, "Sportsbook GGR negativo");
+      animarKPI("#kpi-sportsbook", vSB, vSB<0, "Sportsbook negativo");
       animarKPI("#kpi-cassino", vCS);
       animarKPI("#kpi-bonus", vBO);
 
-      // Agrupa por data
       function agg(arr){
-        const o = {};
-        arr.forEach(d => {
+        const o={};
+        arr.forEach(d=>{
           if(!o[d.DATA]) o[d.DATA]={ftd:0,dep:0,ggr:0,sb:0,cs:0,bo:0};
           o[d.DATA].ftd += +d["Usuário - FTD-Montante"]||0;
           o[d.DATA].dep += +d["Usuário - Depósitos"]||0;
@@ -208,34 +199,29 @@
         });
         return o;
       }
-      const oA = agg(selA), oB = agg(selB);
-      const labels = [...new Set([...Object.keys(oA),...Object.keys(oB)])].sort();
-
-      function updChart(ch,key){
-        ch.data.labels = labels;
-        ch.data.datasets[0].data = labels.map(d=>oA[d]?oA[d][key]:0);
-        ch.data.datasets[1].data = labels.map(d=>oB[d]?oB[d][key]:0);
+      const oA=agg(selA), oB=agg(selB);
+      const labels=[...new Set([...Object.keys(oA),...Object.keys(oB)])].sort();
+      function upd(ch,key){
+        ch.data.labels=labels;
+        ch.data.datasets[0].data=labels.map(d=>oA[d]?oA[d][key]:0);
+        ch.data.datasets[1].data=labels.map(d=>oB[d]?oB[d][key]:0);
         ch.update();
       }
-      updChart(charts.chartGGR,"ggr");
-      updChart(charts.chartDepositos,"dep");
-      updChart(charts.chartFTD,"ftd");
-      updChart(charts.chartSportsbook,"sb");
-      updChart(charts.chartCassino,"cs");
-      updChart(charts.chartBonus,"bo");
+      upd(charts.chartGGR,"ggr");    upd(charts.chartDepositos,"dep");
+      upd(charts.chartFTD,"ftd");    upd(charts.chartSportsbook,"sb");
+      upd(charts.chartCassino,"cs"); upd(charts.chartBonus,"bo");
 
-      // Top10
       function top10(id,key){
-        const aggC = {};
+        const aggC={};
         data.forEach(d=>{
           const c=d["Usuário - Nome de usuário"];
-          aggC[c] = (aggC[c]||0) + (+d[key]||0);
+          aggC[c]=(aggC[c]||0)+(+d[key]||0);
         });
-        const arr = Object.entries(aggC)
-                         .sort((a,b)=>b[1]-a[1])
-                         .slice(0,10)
-                         .map(([c,v])=>`<tr><td>${c}</td><td>R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`);
-        $(id+" tbody").html(arr.join(""));
+        const html = Object.entries(aggC)
+          .sort((a,b)=>b[1]-a[1]).slice(0,10)
+          .map(([c,v])=>`<tr><td>${c}</td><td>R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`)
+          .join("");
+        $(id+" tbody").html(html);
       }
       top10("#topDepositos","Usuário - Depósitos");
       top10("#topFTD","Usuário - FTD-Montante");
@@ -245,9 +231,9 @@
     }
 
     function exportarCSV(){
-      const csv = Papa.unparse(rawData);
-      const blob = new Blob([csv],{type:"text/csv"});
-      const a = document.createElement("a");
+      const csv = Papa.unparse(rawData),
+            blob = new Blob([csv],{type:"text/csv"}),
+            a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = "dados.csv";
       document.body.appendChild(a);
