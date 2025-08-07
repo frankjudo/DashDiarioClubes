@@ -479,8 +479,9 @@
     </div>
 
 <script>
-// Dados de exemplo para demonstração
-const dadosDemonstracao = [
+// Configurações
+const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+const DADOS_DEMONSTRACAO = [
     {"DATA": "2023-10-01", "Usuário - Nome de usuário": "Clube A", "Usuário - FTD-Montante": "1500", "Usuário - Depósitos": "5000", "Cálculo - GGR": "1200", "Sportsbook - GGR": "700", "Cassino - GGR": "500", "Cálculo - bônus convertidos": "300"},
     {"DATA": "2023-10-02", "Usuário - Nome de usuário": "Clube A", "Usuário - FTD-Montante": "1800", "Usuário - Depósitos": "5500", "Cálculo - GGR": "1400", "Sportsbook - GGR": "800", "Cassino - GGR": "600", "Cálculo - bônus convertidos": "350"},
     {"DATA": "2023-10-03", "Usuário - Nome de usuário": "Clube A", "Usuário - FTD-Montante": "2000", "Usuário - Depósitos": "6000", "Cálculo - GGR": "1600", "Sportsbook - GGR": "900", "Cassino - GGR": "700", "Cálculo - bônus convertidos": "400"},
@@ -494,6 +495,7 @@ const dadosDemonstracao = [
 
 let dadosFiltrados = [];
 let charts = {};
+let usandoDadosDemonstracao = false;
 
 function showLoading(show, message = "Carregando dados...") {
     $("#loadingMessage").text(message);
@@ -588,16 +590,67 @@ function animarKPI(id, valorNovo) {
 }
 
 function carregarDados() {
-    showLoading(true);
+    showLoading(true, "Conectando ao servidor...");
     
-    // Simulação de carregamento com dados de demonstração
+    // Tentar carregar do CSV online primeiro
+    Papa.parse(URL_CSV, {
+        download: true,
+        header: true,
+        complete: function(results) {
+            if (results.data && results.data.length > 0) {
+                dadosFiltrados = results.data.filter(d => d.DATA); // Filtrar linhas vazias
+                usandoDadosDemonstracao = false;
+                showLoading(true, "Processando dados...");
+                inicializarDashboard();
+            } else {
+                usarDadosDemonstracao("O CSV online está vazio. Usando dados de demonstração.");
+            }
+        },
+        error: function(error) {
+            usarDadosDemonstracao("Erro ao acessar o CSV online. Usando dados de demonstração.");
+        }
+    });
+}
+
+function usarDadosDemonstracao(mensagem) {
+    console.warn(mensagem);
+    dadosFiltrados = DADOS_DEMONSTRACAO;
+    usandoDadosDemonstracao = true;
+    showLoading(true, mensagem + " Processando...");
     setTimeout(() => {
-        dadosFiltrados = dadosDemonstracao;
-        preencherFiltros();
-        setPeriodo(7); // Define período padrão
-        atualizarDashboard();
-        showLoading(false);
-    }, 1500);
+        inicializarDashboard();
+        alert(mensagem); // Feedback visual para o usuário
+    }, 1000);
+}
+
+function inicializarDashboard() {
+    preencherFiltros();
+    
+    // Definir período padrão (últimos 7 dias)
+    const hoje = new Date();
+    const inicio = new Date();
+    inicio.setDate(hoje.getDate() - 7);
+    
+    $("#filtroInicio").val(inicio.toISOString().split('T')[0]);
+    $("#filtroFim").val(hoje.toISOString().split('T')[0]);
+    
+    // Criar gráficos se não existirem
+    if (!charts.chartGGR) {
+        charts.chartGGR = criarGrafico(document.getElementById('chartGGR'), "Clube A GGR", "Clube B GGR", "#3498db", "#e74c3c");
+        charts.chartDepositos = criarGrafico(document.getElementById('chartDepositos'), "Clube A Depósitos", "Clube B Depósitos", "#3498db", "#e74c3c");
+        charts.chartFTD = criarGrafico(document.getElementById('chartFTD'), "Clube A FTD", "Clube B FTD", "#3498db", "#e74c3c");
+        charts.chartSportsbook = criarGrafico(document.getElementById('chartSportsbook'), "Clube A Sportsbook", "Clube B Sportsbook", "#3498db", "#e74c3c");
+        charts.chartCassino = criarGrafico(document.getElementById('chartCassino'), "Clube A Cassino", "Clube B Cassino", "#3498db", "#e74c3c");
+        charts.chartBonus = criarGrafico(document.getElementById('chartBonus'), "Clube A Bônus", "Clube B Bônus", "#3498db", "#e74c3c");
+    }
+    
+    atualizarDashboard();
+    showLoading(false);
+    
+    // Adicionar aviso se estiver usando dados de demonstração
+    if (usandoDadosDemonstracao) {
+        $(".footer").prepend('<p class="demo-warning"><i class="fas fa-exclamation-triangle"></i> Usando dados de demonstração</p>');
+    }
 }
 
 function preencherFiltros() {
@@ -742,11 +795,26 @@ function preencherTabela(id, dados, campo) {
 }
 
 function exportarCSV() {
-    alert("Funcionalidade de exportação ativada! Em um sistema real, isso baixaria um arquivo CSV.");
+    let csvContent;
+    
+    if (usandoDadosDemonstracao) {
+        csvContent = "AVISO: Estes são dados de demonstração\n\n";
+        csvContent += Papa.unparse(dadosFiltrados);
+    } else {
+        csvContent = Papa.unparse(dadosFiltrados);
+    }
+    
+    const blob = new Blob([csvContent], {type: "text/csv;charset=utf-8;"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "dados_clubes_" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
-// Inicialização dos gráficos e carregamento de dados
 $(document).ready(function() {
+    // Inicializar gráficos vazios
     charts.chartGGR = criarGrafico(document.getElementById('chartGGR'), "Clube A GGR", "Clube B GGR", "#3498db", "#e74c3c");
     charts.chartDepositos = criarGrafico(document.getElementById('chartDepositos'), "Clube A Depósitos", "Clube B Depósitos", "#3498db", "#e74c3c");
     charts.chartFTD = criarGrafico(document.getElementById('chartFTD'), "Clube A FTD", "Clube B FTD", "#3498db", "#e74c3c");
@@ -754,6 +822,10 @@ $(document).ready(function() {
     charts.chartCassino = criarGrafico(document.getElementById('chartCassino'), "Clube A Cassino", "Clube B Cassino", "#3498db", "#e74c3c");
     charts.chartBonus = criarGrafico(document.getElementById('chartBonus'), "Clube A Bônus", "Clube B Bônus", "#3498db", "#e74c3c");
     
+    // Adicionar estilo para o aviso de demonstração
+    $("<style>.demo-warning { color: #e74c3c; font-weight: bold; margin-bottom: 10px; }</style>").appendTo("head");
+    
+    // Carregar dados
     carregarDados();
 });
 </script>
