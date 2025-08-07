@@ -1,362 +1,570 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Comparativo de Clubes</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-      /* ... (o CSS permanece o mesmo) ... */
+        :root {
+            --primary: #1a2a3a;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --info: #9b59b6;
+            --light: #ecf0f1;
+            --dark-gray: #2c3e50;
+            --chart-blue: #3498db;
+            --chart-red: #e74c3c;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0d1b26, #1a2a3a);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(26, 37, 47, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, var(--secondary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            color: var(--light);
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            background: rgba(26, 37, 47, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .control-section {
+            margin-bottom: 25px;
+        }
+        
+        .control-section h3 {
+            margin-bottom: 15px;
+            color: var(--secondary);
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .date-controls, .club-controls, .button-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        label {
+            font-weight: 600;
+            color: var(--light);
+            min-width: 80px;
+        }
+        
+        input, select {
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--light);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-period, .btn-apply, .btn-export, .btn-mode {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .btn-period {
+            background: rgba(52, 152, 219, 0.2);
+            color: var(--secondary);
+        }
+        
+        .btn-period:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-apply {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--success);
+        }
+        
+        .btn-apply:hover {
+            background: rgba(46, 204, 113, 0.3);
+        }
+        
+        .btn-export {
+            background: rgba(155, 89, 182, 0.2);
+            color: var(--info);
+        }
+        
+        .btn-export:hover {
+            background: rgba(155, 89, 182, 0.3);
+        }
+        
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .kpi {
+            background: rgba(26, 37, 47, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .kpi:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .kpi i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .kpi h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #bdc3c7;
+        }
+        
+        .kpi .valor {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .kpi .variacao {
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .positive {
+            border-left: 5px solid var(--success);
+        }
+        
+        .negative {
+            border-left: 5px solid var(--accent);
+        }
+        
+        .tables {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .table-container {
+            background: rgba(26, 37, 47, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .table-container h3 {
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            background: rgba(26, 37, 47, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .footer p {
+            margin-bottom: 10px;
+            color: #bdc3c7;
+        }
+        
+        #ultimaAtualizacao {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        .positive-variation {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .kpi-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .tables {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-controls, .club-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .btn-period, .btn-apply, .btn-export, .btn-mode {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1><i class="fas fa-chart-line"></i> Dashboard Comparativo de Clubes</h1>
-      <p>Analise e compare o desempenho de diferentes clubes em tempo real</p>
-    </header>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-chart-line"></i> Dashboard Comparativo de Clubes</h1>
+            <p>Analise e compare o desempenho de diferentes clubes em tempo real</p>
+        </header>
 
-    <div id="demoWarning">
-      <i class="fas fa-exclamation-triangle"></i> Você está visualizando dados de demonstração.
-    </div>
-
-    <div class="controls">
-      <!-- ... (controles permanecem os mesmos) ... -->
-    </div>
-
-    <div class="kpi-container">
-      <!-- ... (KPIs permanecem os mesmos) ... -->
-    </div>
-
-    <div class="charts">
-      <!-- ... (gráficos permanecem os mesmos) ... -->
-    </div>
-
-    <div class="tables">
-      <div class="table-container">
-        <h3><i class="fas fa-trophy"></i> Top 10 Depósitos</h3>
-        <table id="topDepositos">
-          <thead>
-            <tr>
-              <th>Clube</th>
-              <th>Valor</th>
-              <th>Variação</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td colspan="3">Carregando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-container">
-        <h3><i class="fas fa-trophy"></i> Top 10 FTD</h3>
-        <table id="topFTD">
-          <thead>
-            <tr>
-              <th>Clube</th>
-              <th>Valor</th>
-              <th>Variação</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td colspan="3">Carregando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-container">
-        <h3><i class="fas fa-trophy"></i> Top 10 GGR</h3>
-        <table id="topGGR">
-          <thead>
-            <tr>
-              <th>Clube</th>
-              <th>Valor</th>
-              <th>Variação</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td colspan="3">Carregando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="footer">
-      <p>Última atualização: <span id="ultimaAtualizacao"></span></p>
-      <p>Dashboard desenvolvido para análise comparativa de clubes</p>
-    </div>
-  </div>
-
-  <div id="loadingOverlay">
-    <div class="spinner"></div>
-    <div id="loadingMessage">Carregando dados...</div>
-  </div>
-
-  <script>
-    const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
-    let dados = [], charts = {}, usandoDemo = true;
-    let valoresAnteriores = {};
-
-    // Dados de demonstração para as tabelas
-    const topDepositosData = [
-      { clube: "Clube Alpha", valor: 245890, variacao: 112.5 },
-      { clube: "Clube Beta", valor: 210430, variacao: 18.7 },
-      { clube: "Clube Gamma", valor: 198650, variacao: 13.2 },
-      { clube: "Clube Delta", valor: 185290, variacao: 113.3 },
-      { clube: "Clube Epsilon", valor: 172340, variacao: 16.8 }
-    ];
-
-    const topFTDData = [
-      { clube: "Clube Delta", valor: 32450, variacao: 128.7 },
-      { clube: "Clube Gamma", valor: 28120, variacao: 114.9 },
-      { clube: "Clube Alpha", valor: 25870, variacao: 12.4 },
-      { clube: "Clube Beta", valor: 22340, variacao: 19.8 },
-      { clube: "Clube Epsilon", valor: 18990, variacao: 15.1 }
-    ];
-
-    const topGGRData = [
-      { clube: "Clube Gamma", valor: 67890, variacao: 122.5 },
-      { clube: "Clube Delta", valor: 61430, variacao: 13.7 },
-      { clube: "Clube Alpha", valor: 58230, variacao: 18.9 },
-      { clube: "Clube Beta", valor: 52780, variacao: 11.4 },
-      { clube: "Clube Epsilon", valor: 48120, variacao: 115.6 }
-    ];
-
-    function showLoading(on, msg="Carregando dados..."){
-      $("#loadingMessage").text(msg);
-      $("#loadingOverlay").css("display", on ? "flex" : "none");
-    }
-
-    function criarGrafico(ctx, labelA, labelB, colorA, colorB, type='line'){
-      return new Chart(ctx, {
-        type: type,
-        data: {
-          labels: [],
-          datasets: [
-            {
-              label: labelA,
-              data: [],
-              borderColor: colorA,
-              backgroundColor: type === 'bar' ? colorA + 'CC' : 'transparent',
-              fill: type === 'line',
-              tension: 0.3,
-              borderWidth: 3,
-              pointRadius: 4,
-              pointBackgroundColor: colorA
-            },
-            {
-              label: labelB,
-              data: [],
-              borderColor: colorB,
-              backgroundColor: type === 'bar' ? colorB + 'CC' : 'transparent',
-              fill: type === 'line',
-              tension: 0.3,
-              borderWidth: 3,
-              pointRadius: 4,
-              pointBackgroundColor: colorB
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'top', labels: { color: '#ecf0f1', font: { size: 14 } } },
-            tooltip: {
-              callbacks: {
-                label: ctx => `${ctx.dataset.label}: R$ ${ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
-              },
-              backgroundColor: 'rgba(26, 37, 47, 0.9)',
-              titleColor: '#3498db',
-              bodyColor: '#ecf0f1',
-              displayColors: false,
-              padding: 12,
-              borderColor: 'rgba(255, 255, 255, 0.1)',
-              borderWidth: 1
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: v => `R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits: 0})}`,
-                color: '#bdc3c7'
-              },
-              grid: { color: 'rgba(255, 255, 255, 0.05)' }
-            },
-            x: {
-              ticks: { color: '#bdc3c7' },
-              grid: { color: 'rgba(255, 255, 255, 0.05)' }
-            }
-          }
-        }
-      });
-    }
-
-    function animarKPI(sel, novo, anterior){
-      let el = $(sel + " .valor");
-      let varEl = $(sel + " .variacao");
-      
-      // Calcular variação
-      let variacao = 0;
-      if (anterior !== undefined && anterior !== 0) {
-        variacao = ((novo - anterior) / anterior) * 100;
-      }
-      
-      // Atualizar elemento de variação
-      let variacaoText = variacao >= 0 ? 
-        `<span style="color: #2ecc71">↑${Math.abs(variacao).toFixed(1)}%</span>` : 
-        `<span style="color: #e74c3c">↓${Math.abs(variacao).toFixed(1)}%</span>`;
-      varEl.html(variacaoText);
-      
-      // Animar valor
-      $(sel).removeClass("positive negative")
-            .addClass(novo >= 0 ? "positive" : "negative");
+        <div class="controls">
+            <div class="control-section">
+                <h3><i class="fas fa-calendar-alt"></i> Período</h3>
+                <div class="date-controls">
+                    <label>De:</label>
+                    <input type="date" id="filtroInicio" value="2025-07-31">
+                    <label>até</label>
+                    <input type="date" id="filtroFim" value="2025-08-07">
+                    <button class="btn-period" onclick="setPeriodo(1)"><i class="fas fa-calendar-day"></i> Ontem</button>
+                    <button class="btn-period" onclick="setPeriodo(7)"><i class="fas fa-calendar-week"></i> Últimos 7 dias</button>
+                    <button class="btn-period" onclick="setPeriodo(30)"><i class="fas fa-calendar-alt"></i> Últimos 30 dias</button>
+                </div>
+            </div>
             
-      let ant = parseFloat(el.text().replace(/[^\d]/g, '')) || 0;
-      let diff = (novo - ant) / 30;
-      let cur = ant;
-      let pass = 0;
-      
-      let h = setInterval(() => {
-        cur += diff;
-        pass++;
-        if (pass >= 30) {
-          clearInterval(h);
-          cur = novo;
+            <div class="control-section">
+                <h3><i class="fas fa-users"></i> Clubes</h3>
+                <div class="club-controls">
+                    <label>Clube A:</label>
+                    <select id="filtroClubeA">
+                        <option value="Todos">Todos os Clubes</option>
+                        <option>Clube Alpha</option>
+                        <option>Clube Beta</option>
+                        <option>Clube Gamma</option>
+                        <option>Clube Delta</option>
+                        <option>Clube Epsilon</option>
+                    </select>
+                    <label>Clube B:</label>
+                    <select id="filtroClubeB">
+                        <option value="Todos">Todos os Clubes</option>
+                        <option>Clube Alpha</option>
+                        <option>Clube Beta</option>
+                        <option>Clube Gamma</option>
+                        <option>Clube Delta</option>
+                        <option>Clube Epsilon</option>
+                    </select>
+                    <button class="btn-apply" onclick="aplicarFiltros()">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3><i class="fas fa-cog"></i> Ações</h3>
+                <div class="button-controls">
+                    <button class="btn-export" onclick="exportarCSV()">
+                        <i class="fas fa-file-csv"></i> Exportar CSV
+                    </button>
+                    <button class="btn-export" onclick="atualizarDados()">
+                        <i class="fas fa-sync"></i> Atualizar Dados
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="kpi-container">
+            <div class="kpi positive" id="kpi-ftd">
+                <i class="fa-solid fa-user-plus" style="color:#2ecc71"></i>
+                <h3>FTD</h3>
+                <div class="valor">R$ 96.423,00</div>
+                <div class="variacao positive-variation">↑36.0%</div>
+            </div>
+            <div class="kpi positive" id="kpi-depositos">
+                <i class="fa-solid fa-coins" style="color:#f39c12"></i>
+                <h3>Depósitos</h3>
+                <div class="valor">R$ 1.494.091,00</div>
+                <div class="variacao positive-variation">↑16.9%</div>
+            </div>
+            <div class="kpi positive" id="kpi-ggr">
+                <i class="fa-solid fa-chart-line" style="color:#3498db"></i>
+                <h3>GGR</h3>
+                <div class="valor">R$ 230.142,00</div>
+                <div class="variacao" style="color:#e74c3c">↓5.5%</div>
+            </div>
+            <div class="kpi negative" id="kpi-sportsbook">
+                <i class="fa-solid fa-futbol" style="color:#9b59b6"></i>
+                <h3>Sportsbook GGR</h3>
+                <div class="valor">R$ -58.114,00</div>
+                <div class="variacao" style="color:#e74c3c">↓39.3%</div>
+            </div>
+            <div class="kpi positive" id="kpi-cassino">
+                <i class="fa-solid fa-dice" style="color:#e74c3c"></i>
+                <h3>Cassino GGR</h3>
+                <div class="valor">R$ 288.240,00</div>
+                <div class="variacao positive-variation">↑28.9%</div>
+            </div>
+            <div class="kpi negative" id="kpi-bonus">
+                <i class="fa-solid fa-gift" style="color:#2ecc71"></i>
+                <h3>Bônus Convertidos</h3>
+                <div class="valor">R$ 122.492,00</div>
+                <div class="variacao" style="color:#e74c3c">↓46.0%</div>
+            </div>
+        </div>
+
+        <div class="tables">
+            <div class="table-container">
+                <h3><i class="fas fa-trophy"></i> Top 10 Depósitos</h3>
+                <table id="topDepositos">
+                    <thead>
+                        <tr>
+                            <th>Clube</th>
+                            <th>Valor</th>
+                            <th>Variação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Clube Alpha</td>
+                            <td>R$ 245.890,00</td>
+                            <td class="positive-variation">↑112.5%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Beta</td>
+                            <td>R$ 210.430,00</td>
+                            <td class="positive-variation">↑18.7%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Gamma</td>
+                            <td>R$ 198.650,00</td>
+                            <td class="positive-variation">↑13.2%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Delta</td>
+                            <td>R$ 185.290,00</td>
+                            <td class="positive-variation">↑13.3%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Epsilon</td>
+                            <td>R$ 172.340,00</td>
+                            <td class="positive-variation">↑16.8%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-container">
+                <h3><i class="fas fa-trophy"></i> Top 10 FTD</h3>
+                <table id="topFTD">
+                    <thead>
+                        <tr>
+                            <th>Clube</th>
+                            <th>Valor</th>
+                            <th>Variação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Clube Delta</td>
+                            <td>R$ 32.450,00</td>
+                            <td class="positive-variation">↑28.7%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Gamma</td>
+                            <td>R$ 28.120,00</td>
+                            <td class="positive-variation">↑14.9%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Alpha</td>
+                            <td>R$ 25.870,00</td>
+                            <td class="positive-variation">↑12.4%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Beta</td>
+                            <td>R$ 22.340,00</td>
+                            <td class="positive-variation">↑19.8%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Epsilon</td>
+                            <td>R$ 18.990,00</td>
+                            <td class="positive-variation">↑15.1%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-container">
+                <h3><i class="fas fa-trophy"></i> Top 10 GGR</h3>
+                <table id="topGGR">
+                    <thead>
+                        <tr>
+                            <th>Clube</th>
+                            <th>Valor</th>
+                            <th>Variação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Clube Gamma</td>
+                            <td>R$ 67.890,00</td>
+                            <td class="positive-variation">↑22.5%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Delta</td>
+                            <td>R$ 61.430,00</td>
+                            <td class="positive-variation">↑13.7%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Alpha</td>
+                            <td>R$ 58.230,00</td>
+                            <td class="positive-variation">↑18.9%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Beta</td>
+                            <td>R$ 52.780,00</td>
+                            <td class="positive-variation">↑11.4%</td>
+                        </tr>
+                        <tr>
+                            <td>Clube Epsilon</td>
+                            <td>R$ 48.120,00</td>
+                            <td class="positive-variation">↑15.6%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Última atualização: <span id="ultimaAtualizacao">07/08/2025, 12:24:28</span></p>
+            <p>Dashboard desenvolvido para análise comparativa de clubes</p>
+        </div>
+    </div>
+
+    <script>
+        // Funções para simular comportamento do dashboard
+        function setPeriodo(d) {
+            alert(`Período definido para os últimos ${d} dias`);
         }
-        el.text("R$ " + cur.toLocaleString('pt-BR', {minimumFractionDigits: 2}));
-      }, 20);
-      
-      // Armazenar valor atual para próxima comparação
-      valoresAnteriores[sel] = novo;
-    }
-
-    function carregar(){
-      showLoading(true, "Conectando à fonte de dados...");
-      
-      Papa.parse(URL_CSV, {
-        download: true,
-        header: true,
-        complete: function(r) {
-          if (r.data && r.data.length > 0) {
-            dados = r.data.filter(x => x.DATA);  
-            usandoDemo = false;
-            $("#demoWarning").hide();
-          } else {  
-            dados = [];
-            usandoDemo = true;
-            $("#demoWarning").show();
-          }
-          init();
-        },
-        error: function() {
-          dados = [];
-          usandoDemo = true;
-          $("#demoWarning").show();
-          init();
+        
+        function aplicarFiltros() {
+            const clubeA = document.getElementById('filtroClubeA').value;
+            const clubeB = document.getElementById('filtroClubeB').value;
+            alert(`Filtros aplicados: Clube A = ${clubeA}, Clube B = ${clubeB}`);
         }
-      });
-    }
-
-    function init(){
-      // Preencher selects
-      let clubes = ["Clube Alpha", "Clube Beta", "Clube Gamma", "Clube Delta", "Clube Epsilon"];
-      let opts = '<option value="Todos">Todos os Clubes</option>' +
-                 clubes.map(c => `<option>${c}</option>`).join('');
-      $("#filtroClubeA, #filtroClubeB").html(opts);
-      
-      // Configurar padrão: "Todos os Clubes" para ambos
-      $("#filtroClubeA").val("Todos");
-      $("#filtroClubeB").val("Todos");
-      
-      // Iniciar com últimos 7 dias
-      let hoje = new Date();
-      let ini = new Date();
-      ini.setDate(hoje.getDate() - 7);
-      $("#filtroInicio").val(ini.toISOString().slice(0,10));
-      $("#filtroFim").val(hoje.toISOString().slice(0,10));
-      
-      // Inicializar gráficos
-      charts.chartComparativo = criarGrafico($("#chartComparativo")[0], "Todos os Clubes", "Todos os Clubes", "#3498db", "#e74c3c", 'bar');
-      charts.chartGGR = criarGrafico($("#chartGGR")[0], "Todos os Clubes", "Todos os Clubes", "#3498db", "#e74c3c");
-      charts.chartDepositos = criarGrafico($("#chartDepositos")[0], "Todos os Clubes", "Todos os Clubes", "#3498db", "#e74c3c");
-      charts.chartFTD = criarGrafico($("#chartFTD")[0], "Todos os Clubes", "Todos os Clubes", "#3498db", "#e74c3c");
-      charts.chartSportsbook = criarGrafico($("#chartSportsbook")[0], "Todos os Clubes", "Todos os Clubes", "#3498db", "#e74c3c");
-      charts.chartCassino = criarGrafico($("#chartCassino")[0], "Todos os Clubes", "Todos os Clubes", "#3498db", "#e74c3c");
-      
-      // Inicializar valores anteriores para KPIs
-      const kpis = ['#kpi-ftd', '#kpi-depositos', '#kpi-ggr', '#kpi-sportsbook', '#kpi-cassino', '#kpi-bonus'];
-      kpis.forEach(kpi => valoresAnteriores[kpi] = 0);
-      
-      atualizar();
-      showLoading(false);
-      
-      // Atualizar automaticamente a cada 5 minutos
-      setInterval(atualizarDados, 300000);
-    }
-
-    function aplicarFiltros(){ atualizar(); }
-    
-    function setPeriodo(d){
-      let hoje = new Date();
-      let ini = new Date();
-      ini.setDate(hoje.getDate() - d);
-      $("#filtroInicio").val(ini.toISOString().slice(0,10));
-      $("#filtroFim").val(hoje.toISOString().slice(0,10));
-      atualizar();
-    }
-    
-    function atualizarDados(){
-      showLoading(true, "Atualizando dados...");
-      carregar();
-    }
-
-    function atualizar(){
-      // Atualizar KPIs com valores de demonstração
-      animarKPI("#kpi-ftd", 96423, 70800);
-      animarKPI("#kpi-depositos", 1494091, 1278000);
-      animarKPI("#kpi-ggr", 230142, 243500);
-      animarKPI("#kpi-sportsbook", -58114, -95700);
-      animarKPI("#kpi-cassino", 288240, 223700);
-      animarKPI("#kpi-bonus", 122492, 226800);
-      
-      // Preencher as tabelas com dados de demonstração
-      function preencherTabela(id, dados) {
-        let html = dados.map(item => {
-          let variacaoHtml = item.variacao >= 0 ? 
-            `<td style="color:#2ecc70">↑${item.variacao.toFixed(1)}%</td>` : 
-            `<td style="color:#e74c3c">↓${Math.abs(item.variacao).toFixed(1)}%</td>`;
-          return `<tr>
-            <td>${item.clube}</td>
-            <td>R$ ${item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-            ${variacaoHtml}
-          </tr>`;
-        }).join('');
-        $(id + " tbody").html(html);
-      }
-      
-      preencherTabela("#topDepositos", topDepositosData);
-      preencherTabela("#topFTD", topFTDData);
-      preencherTabela("#topGGR", topGGRData);
-      
-      // Atualizar timestamp
-      $("#ultimaAtualizacao").text(new Date().toLocaleString('pt-BR'));
-    }
-
-    function exportarCSV(){
-      alert("Exportando dados para CSV...");
-    }
-    
-    function toggleDarkMode(){
-      alert("Modo escuro já está ativado!");
-    }
-
-    $(document).ready(function(){
-      carregar();
-    });
-  </script>
+        
+        function exportarCSV() {
+            alert('Exportando dados para CSV...');
+        }
+        
+        function atualizarDados() {
+            alert('Atualizando dados...');
+            // Atualiza o timestamp
+            document.getElementById('ultimaAtualizacao').textContent = new Date().toLocaleString('pt-BR');
+        }
+        
+        // Atualiza a data inicial para 31/07/2025
+        document.getElementById('filtroInicio').value = '2025-07-31';
+    </script>
 </body>
 </html>
