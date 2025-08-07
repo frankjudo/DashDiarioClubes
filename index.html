@@ -682,33 +682,32 @@ function setPeriodo(dias) {
     aplicarFiltros();
 }
 
+// CORREÇÃO PRINCIPAL: Esta função foi completamente reescrita
 function atualizarDashboard() {
     const clubeA = $("#filtroClubeA").val();
     const clubeB = $("#filtroClubeB").val();
     const inicio = $("#filtroInicio").val();
     const fim = $("#filtroFim").val();
     
-    let dados = dadosFiltrados;
-    
-    // Filtrar por data
-    if (inicio) {
-        dados = dados.filter(d => d["DATA"] >= inicio);
-    }
-    if (fim) {
-        dados = dados.filter(d => d["DATA"] <= fim);
-    }
+    // Filtrar dados por período
+    let dadosPeriodo = dadosFiltrados.filter(d => {
+        if (inicio && d.DATA < inicio) return false;
+        if (fim && d.DATA > fim) return false;
+        return true;
+    });
     
     // Filtrar dados por clube
     const filtrarPorClube = (clube) => {
-        return clube === "Todos" ? dados : dados.filter(d => d["Usuário - Nome de usuário"] === clube);
+        return clube === "Todos" ? dadosPeriodo : dadosPeriodo.filter(d => d["Usuário - Nome de usuário"] === clube);
     };
     
     const dadosA = filtrarPorClube(clubeA);
     const dadosB = clubeB !== clubeA ? filtrarPorClube(clubeB) : [];
     
-    // Calcular totais para KPIs
+    // Função para somar valores de um campo específico
     const sum = (arr, campo) => arr.reduce((s, d) => s + (parseFloat(d[campo]) || 0), 0);
     
+    // Calcular totais para KPIs
     animarKPI("#kpi-ftd", sum(dadosA, "Usuário - FTD-Montante") + sum(dadosB, "Usuário - FTD-Montante"));
     animarKPI("#kpi-depositos", sum(dadosA, "Usuário - Depósitos") + sum(dadosB, "Usuário - Depósitos"));
     animarKPI("#kpi-ggr", sum(dadosA, "Cálculo - GGR") + sum(dadosB, "Cálculo - GGR"));
@@ -716,7 +715,7 @@ function atualizarDashboard() {
     animarKPI("#kpi-cassino", sum(dadosA, "Cassino - GGR") + sum(dadosB, "Cassino - GGR"));
     animarKPI("#kpi-bonus", sum(dadosA, "Cálculo - bônus convertidos") + sum(dadosB, "Cálculo - bônus convertidos"));
     
-    // Preparar dados para gráficos
+    // Preparar dados para gráficos (agrupados por data)
     const processarPorData = (dados) => {
         const resultado = {};
         dados.forEach(d => {
@@ -743,12 +742,13 @@ function atualizarDashboard() {
     const dadosPorDataA = processarPorData(dadosA);
     const dadosPorDataB = processarPorData(dadosB);
     
+    // Obter todas as datas únicas do período selecionado
     const datas = [...new Set([
         ...Object.keys(dadosPorDataA),
         ...Object.keys(dadosPorDataB)
     ])].sort();
     
-    // Atualizar gráficos
+    // Atualizar gráficos com os dados do período
     function atualizarGrafico(chart, campo) {
         chart.data.labels = datas;
         chart.data.datasets[0].data = datas.map(d => dadosPorDataA[d] ? dadosPorDataA[d][campo] : 0);
@@ -763,10 +763,10 @@ function atualizarDashboard() {
     if (charts.chartCassino) atualizarGrafico(charts.chartCassino, "cs");
     if (charts.chartBonus) atualizarGrafico(charts.chartBonus, "bo");
     
-    // Atualizar tabelas
-    preencherTabela("#topDepositos", dados, "Usuário - Depósitos");
-    preencherTabela("#topFTD", dados, "Usuário - FTD-Montante");
-    preencherTabela("#topGGR", dados, "Cálculo - GGR");
+    // Atualizar tabelas com os dados do período
+    preencherTabela("#topDepositos", dadosPeriodo, "Usuário - Depósitos");
+    preencherTabela("#topFTD", dadosPeriodo, "Usuário - FTD-Montante");
+    preencherTabela("#topGGR", dadosPeriodo, "Cálculo - GGR");
     
     // Atualizar timestamp
     $("#ultimaAtualizacao").text(new Date().toLocaleString('pt-BR'));
