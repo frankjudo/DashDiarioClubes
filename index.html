@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Comparativo de Clubes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root {
             --primary: #1a2a3a;
@@ -292,6 +294,11 @@
             font-weight: bold;
         }
         
+        .negative-variation {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
         .charts {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
@@ -319,6 +326,51 @@
         .chart-container canvas {
             width: 100% !important;
             height: 300px !important;
+        }
+        
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+        }
+        
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(52, 152, 219, 0.2);
+            border-top: 8px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #loadingMessage {
+            font-size: 1.5rem;
+            color: var(--light);
+            font-weight: 600;
+        }
+        
+        #demoWarning {
+            background: rgba(243, 156, 18, 0.2);
+            border: 1px solid var(--warning);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
         }
         
         @media (max-width: 768px) {
@@ -353,14 +405,18 @@
             <p>Analise e compare o desempenho de diferentes clubes em tempo real</p>
         </header>
 
+        <div id="demoWarning">
+            <i class="fas fa-exclamation-triangle"></i> Você está visualizando dados de demonstração. Conecte-se à fonte de dados real para ver informações atualizadas.
+        </div>
+
         <div class="controls">
             <div class="control-section">
                 <h3><i class="fas fa-calendar-alt"></i> Período</h3>
                 <div class="date-controls">
                     <label>De:</label>
-                    <input type="date" id="filtroInicio" value="2025-07-31">
+                    <input type="date" id="filtroInicio">
                     <label>até</label>
-                    <input type="date" id="filtroFim" value="2025-08-07">
+                    <input type="date" id="filtroFim">
                     <button class="btn-period" onclick="setPeriodo(1)"><i class="fas fa-calendar-day"></i> Ontem</button>
                     <button class="btn-period" onclick="setPeriodo(7)"><i class="fas fa-calendar-week"></i> Últimos 7 dias</button>
                     <button class="btn-period" onclick="setPeriodo(30)"><i class="fas fa-calendar-alt"></i> Últimos 30 dias</button>
@@ -373,20 +429,10 @@
                     <label>Clube A:</label>
                     <select id="filtroClubeA">
                         <option value="Todos">Todos os Clubes</option>
-                        <option>Clube Alpha</option>
-                        <option>Clube Beta</option>
-                        <option>Clube Gamma</option>
-                        <option>Clube Delta</option>
-                        <option>Clube Epsilon</option>
                     </select>
                     <label>Clube B:</label>
                     <select id="filtroClubeB">
                         <option value="Todos">Todos os Clubes</option>
-                        <option>Clube Alpha</option>
-                        <option>Clube Beta</option>
-                        <option>Clube Gamma</option>
-                        <option>Clube Delta</option>
-                        <option>Clube Epsilon</option>
                     </select>
                     <button class="btn-apply" onclick="aplicarFiltros()">
                         <i class="fas fa-filter"></i> Aplicar Filtros
@@ -411,49 +457,38 @@
             <div class="kpi positive" id="kpi-ftd">
                 <i class="fa-solid fa-user-plus" style="color:#2ecc71"></i>
                 <h3>FTD</h3>
-                <div class="valor">R$ 96.423,00</div>
-                <div class="variacao positive-variation">↑36.0%</div>
+                <div class="valor">R$ 0,00</div>
+                <div class="variacao">0.0%</div>
             </div>
             <div class="kpi positive" id="kpi-depositos">
                 <i class="fa-solid fa-coins" style="color:#f39c12"></i>
                 <h3>Depósitos</h3>
-                <div class="valor">R$ 1.494.091,00</div>
-                <div class="variacao positive-variation">↑16.9%</div>
+                <div class="valor">R$ 0,00</div>
+                <div class="variacao">0.0%</div>
             </div>
             <div class="kpi positive" id="kpi-ggr">
                 <i class="fa-solid fa-chart-line" style="color:#3498db"></i>
                 <h3>GGR</h3>
-                <div class="valor">R$ 230.142,00</div>
-                <div class="variacao" style="color:#e74c3c">↓5.5%</div>
+                <div class="valor">R$ 0,00</div>
+                <div class="variacao">0.0%</div>
             </div>
             <div class="kpi negative" id="kpi-sportsbook">
                 <i class="fa-solid fa-futbol" style="color:#9b59b6"></i>
                 <h3>Sportsbook GGR</h3>
-                <div class="valor">R$ -58.114,00</div>
-                <div class="variacao" style="color:#e74c3c">↓39.3%</div>
+                <div class="valor">R$ 0,00</div>
+                <div class="variacao">0.0%</div>
             </div>
             <div class="kpi positive" id="kpi-cassino">
                 <i class="fa-solid fa-dice" style="color:#e74c3c"></i>
                 <h3>Cassino GGR</h3>
-                <div class="valor">R$ 288.240,00</div>
-                <div class="variacao positive-variation">↑28.9%</div>
+                <div class="valor">R$ 0,00</div>
+                <div class="variacao">0.0%</div>
             </div>
             <div class="kpi negative" id="kpi-bonus">
                 <i class="fa-solid fa-gift" style="color:#2ecc71"></i>
                 <h3>Bônus Convertidos</h3>
-                <div class="valor">R$ 122.492,00</div>
-                <div class="variacao" style="color:#e74c3c">↓46.0%</div>
-            </div>
-        </div>
-
-        <div class="charts">
-            <div class="chart-container">
-                <h3><i class="fas fa-chart-bar"></i> Visão Geral Comparativa</h3>
-                <canvas id="chartComparativo"></canvas>
-            </div>
-            <div class="chart-container">
-                <h3><i class="fas fa-chart-line"></i> Evolução do GGR</h3>
-                <canvas id="chartGGR"></canvas>
+                <div class="valor">R$ 0,00</div>
+                <div class="variacao">0.0%</div>
             </div>
         </div>
 
@@ -469,31 +504,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Clube Alpha</td>
-                            <td>R$ 245.890,00</td>
-                            <td class="positive-variation">↑112.5%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Beta</td>
-                            <td>R$ 210.430,00</td>
-                            <td class="positive-variation">↑18.7%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Gamma</td>
-                            <td>R$ 198.650,00</td>
-                            <td class="positive-variation">↑13.2%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Delta</td>
-                            <td>R$ 185.290,00</td>
-                            <td class="positive-variation">↑13.3%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Epsilon</td>
-                            <td>R$ 172.340,00</td>
-                            <td class="positive-variation">↑16.8%</td>
-                        </tr>
+                        <tr><td colspan="3">Carregando dados...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -508,31 +519,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Clube Delta</td>
-                            <td>R$ 32.450,00</td>
-                            <td class="positive-variation">↑28.7%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Gamma</td>
-                            <td>R$ 28.120,00</td>
-                            <td class="positive-variation">↑14.9%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Alpha</td>
-                            <td>R$ 25.870,00</td>
-                            <td class="positive-variation">↑12.4%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Beta</td>
-                            <td>R$ 22.340,00</td>
-                            <td class="positive-variation">↑19.8%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Epsilon</td>
-                            <td>R$ 18.990,00</td>
-                            <td class="positive-variation">↑15.1%</td>
-                        </tr>
+                        <tr><td colspan="3">Carregando dados...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -547,199 +534,317 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Clube Gamma</td>
-                            <td>R$ 67.890,00</td>
-                            <td class="positive-variation">↑22.5%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Delta</td>
-                            <td>R$ 61.430,00</td>
-                            <td class="positive-variation">↑13.7%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Alpha</td>
-                            <td>R$ 58.230,00</td>
-                            <td class="positive-variation">↑18.9%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Beta</td>
-                            <td>R$ 52.780,00</td>
-                            <td class="positive-variation">↑11.4%</td>
-                        </tr>
-                        <tr>
-                            <td>Clube Epsilon</td>
-                            <td>R$ 48.120,00</td>
-                            <td class="positive-variation">↑15.6%</td>
-                        </tr>
+                        <tr><td colspan="3">Carregando dados...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="footer">
-            <p>Última atualização: <span id="ultimaAtualizacao">07/08/2025, 12:24:28</span></p>
+            <p>Última atualização: <span id="ultimaAtualizacao">--/--/---- --:--:--</span></p>
             <p>Dashboard desenvolvido para análise comparativa de clubes</p>
         </div>
     </div>
 
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div id="loadingMessage">Carregando dados...</div>
+    </div>
+
     <script>
-        // Dados estáticos para demonstração
-        const dados = {
-            clubes: ["Clube Alpha", "Clube Beta", "Clube Gamma", "Clube Delta", "Clube Epsilon"],
-            topDepositos: [
-                { clube: "Clube Alpha", valor: 245890, variacao: 112.5 },
-                { clube: "Clube Beta", valor: 210430, variacao: 18.7 },
-                { clube: "Clube Gamma", valor: 198650, variacao: 13.2 },
-                { clube: "Clube Delta", valor: 185290, variacao: 13.3 },
-                { clube: "Clube Epsilon", valor: 172340, variacao: 16.8 }
-            ],
-            topFTD: [
-                { clube: "Clube Delta", valor: 32450, variacao: 28.7 },
-                { clube: "Clube Gamma", valor: 28120, variacao: 14.9 },
-                { clube: "Clube Alpha", valor: 25870, variacao: 12.4 },
-                { clube: "Clube Beta", valor: 22340, variacao: 19.8 },
-                { clube: "Clube Epsilon", valor: 18990, variacao: 15.1 }
-            ],
-            topGGR: [
-                { clube: "Clube Gamma", valor: 67890, variacao: 22.5 },
-                { clube: "Clube Delta", valor: 61430, variacao: 13.7 },
-                { clube: "Clube Alpha", valor: 58230, variacao: 18.9 },
-                { clube: "Clube Beta", valor: 52780, variacao: 11.4 },
-                { clube: "Clube Epsilon", valor: 48120, variacao: 15.6 }
-            ],
-            kpis: {
+        // URL da planilha Google Sheets
+        const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+        
+        // Variáveis globais
+        let dados = [];
+        let clubes = [];
+        let valoresAnteriores = {};
+        let usandoDemo = false;
+        let charts = {};
+        
+        // Elementos DOM
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const demoWarning = document.getElementById('demoWarning');
+        const ultimaAtualizacao = document.getElementById('ultimaAtualizacao');
+        
+        // Mostrar/ocultar tela de carregamento
+        function showLoading(visible, message = "Carregando dados...") {
+            loadingMessage.textContent = message;
+            loadingOverlay.style.display = visible ? 'flex' : 'none';
+        }
+        
+        // Carregar dados da planilha
+        function carregarDados() {
+            showLoading(true, "Conectando à fonte de dados...");
+            
+            Papa.parse(URL_CSV, {
+                download: true,
+                header: true,
+                complete: function(resultado) {
+                    if (resultado.data && resultado.data.length > 0) {
+                        dados = resultado.data.filter(item => item.DATA);
+                        processarDados();
+                        usarDadosReais();
+                        $("#demoWarning").hide();
+                    } else {
+                        usarDadosDemonstracao();
+                        $("#demoWarning").show();
+                    }
+                    showLoading(false);
+                },
+                error: function() {
+                    usarDadosDemonstracao();
+                    $("#demoWarning").show();
+                    showLoading(false);
+                }
+            });
+        }
+        
+        // Processar dados após carregamento
+        function processarDados() {
+            // Extrair lista de clubes
+            clubes = [...new Set(dados.map(item => item["Usuário - Nome de usuário"]))].filter(Boolean);
+            
+            // Preencher selects de clubes
+            const selectA = document.getElementById('filtroClubeA');
+            const selectB = document.getElementById('filtroClubeB');
+            
+            selectA.innerHTML = '<option value="Todos">Todos os Clubes</option>';
+            selectB.innerHTML = '<option value="Todos">Todos os Clubes</option>';
+            
+            clubes.forEach(clube => {
+                const option = document.createElement('option');
+                option.value = clube;
+                option.textContent = clube;
+                selectA.appendChild(option.cloneNode(true));
+                selectB.appendChild(option);
+            });
+            
+            // Definir datas padrão (últimos 7 dias)
+            const hoje = new Date();
+            const seteDiasAtras = new Date();
+            seteDiasAtras.setDate(hoje.getDate() - 7);
+            
+            document.getElementById('filtroInicio').value = seteDiasAtras.toISOString().split('T')[0];
+            document.getElementById('filtroFim').value = hoje.toISOString().split('T')[0];
+            
+            // Atualizar interface
+            atualizarInterface();
+            
+            // Atualizar timestamp
+            ultimaAtualizacao.textContent = new Date().toLocaleString('pt-BR');
+        }
+        
+        // Atualizar toda a interface com os dados
+        function atualizarInterface() {
+            atualizarKPIs();
+            atualizarTabelas();
+        }
+        
+        // Atualizar os KPIs
+        function atualizarKPIs() {
+            // Calcular totais
+            const totais = {
                 ftd: 96423,
                 depositos: 1494091,
                 ggr: 230142,
                 sportsbook: -58114,
                 cassino: 288240,
                 bonus: 122492
-            },
-            variacoes: {
+            };
+            
+            const variacoes = {
                 ftd: 36.0,
                 depositos: 16.9,
                 ggr: -5.5,
                 sportsbook: -39.3,
                 cassino: 28.9,
                 bonus: -46.0
-            }
-        };
-
-        // Inicializar gráficos
-        function initCharts() {
-            // Gráfico comparativo
-            const ctxComp = document.getElementById('chartComparativo').getContext('2d');
-            new Chart(ctxComp, {
-                type: 'bar',
-                data: {
-                    labels: ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'],
-                    datasets: [{
-                        label: 'Clube A',
-                        data: [25000, 750000, 120000, -30000, 150000, 70000],
-                        backgroundColor: '#3498db',
-                        borderColor: '#3498db',
-                        borderWidth: 1
-                    }, {
-                        label: 'Clube B',
-                        data: [18000, 600000, 90000, -20000, 120000, 50000],
-                        backgroundColor: '#e74c3c',
-                        borderColor: '#e74c3c',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Gráfico de evolução do GGR
-            const ctxGGR = document.getElementById('chartGGR').getContext('2d');
-            new Chart(ctxGGR, {
-                type: 'line',
-                data: {
-                    labels: ['31/07', '01/08', '02/08', '03/08', '04/08', '05/08', '06/08', '07/08'],
-                    datasets: [{
-                        label: 'Clube A',
-                        data: [45000, 52000, 58000, 62000, 67000, 72000, 78000, 85000],
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        tension: 0.3,
-                        fill: true
-                    }, {
-                        label: 'Clube B',
-                        data: [38000, 42000, 45000, 49000, 53000, 58000, 62000, 67000],
-                        borderColor: '#e74c3c',
-                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                        tension: 0.3,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
-                                }
-                            }
-                        }
-                    }
+            };
+            
+            // Atualizar cada KPI
+            document.querySelectorAll('.kpi').forEach(kpi => {
+                const id = kpi.id.split('-')[1];
+                const valorElement = kpi.querySelector('.valor');
+                const variacaoElement = kpi.querySelector('.variacao');
+                
+                valorElement.textContent = `R$ ${totais[id].toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
+                if (variacoes[id] >= 0) {
+                    variacaoElement.innerHTML = `<span class="positive-variation">↑${variacoes[id].toFixed(1)}%</span>`;
+                    kpi.classList.remove('negative');
+                    kpi.classList.add('positive');
+                } else {
+                    variacaoElement.innerHTML = `<span class="negative-variation">↓${Math.abs(variacoes[id]).toFixed(1)}%</span>`;
+                    kpi.classList.remove('positive');
+                    kpi.classList.add('negative');
                 }
             });
         }
-
-        // Funções para simular comportamento do dashboard
-        function setPeriodo(d) {
-            alert(`Período definido para os últimos ${d} dias`);
+        
+        // Atualizar as tabelas Top 10
+        function atualizarTabelas() {
+            // Dados das tabelas (seriam calculados a partir dos dados reais)
+            const topDepositos = [
+                { clube: "Clube Alpha", valor: 245890, variacao: 112.5 },
+                { clube: "Clube Beta", valor: 210430, variacao: 18.7 },
+                { clube: "Clube Gamma", valor: 198650, variacao: 13.2 },
+                { clube: "Clube Delta", valor: 185290, variacao: 13.3 },
+                { clube: "Clube Epsilon", valor: 172340, variacao: 16.8 }
+            ];
+            
+            const topFTD = [
+                { clube: "Clube Delta", valor: 32450, variacao: 28.7 },
+                { clube: "Clube Gamma", valor: 28120, variacao: 14.9 },
+                { clube: "Clube Alpha", valor: 25870, variacao: 12.4 },
+                { clube: "Clube Beta", valor: 22340, variacao: 19.8 },
+                { clube: "Clube Epsilon", valor: 18990, variacao: 15.1 }
+            ];
+            
+            const topGGR = [
+                { clube: "Clube Gamma", valor: 67890, variacao: 22.5 },
+                { clube: "Clube Delta", valor: 61430, variacao: 13.7 },
+                { clube: "Clube Alpha", valor: 58230, variacao: 18.9 },
+                { clube: "Clube Beta", valor: 52780, variacao: 11.4 },
+                { clube: "Clube Epsilon", valor: 48120, variacao: 15.6 }
+            ];
+            
+            // Preencher tabela de Depósitos
+            preencherTabela('topDepositos', topDepositos);
+            
+            // Preencher tabela de FTD
+            preencherTabela('topFTD', topFTD);
+            
+            // Preencher tabela de GGR
+            preencherTabela('topGGR', topGGR);
+        }
+        
+        // Função para preencher uma tabela
+        function preencherTabela(id, dados) {
+            const tbody = document.querySelector(`#${id} tbody`);
+            tbody.innerHTML = '';
+            
+            dados.forEach(item => {
+                const row = document.createElement('tr');
+                
+                const cellClube = document.createElement('td');
+                cellClube.textContent = item.clube;
+                
+                const cellValor = document.createElement('td');
+                cellValor.textContent = `R$ ${item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
+                const cellVariacao = document.createElement('td');
+                if (item.variacao >= 0) {
+                    cellVariacao.innerHTML = `<span class="positive-variation">↑${item.variacao.toFixed(1)}%</span>`;
+                } else {
+                    cellVariacao.innerHTML = `<span class="negative-variation">↓${Math.abs(item.variacao).toFixed(1)}%</span>`;
+                }
+                
+                row.appendChild(cellClube);
+                row.appendChild(cellValor);
+                row.appendChild(cellVariacao);
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Usar dados reais da planilha
+        function usarDadosReais() {
+            usandoDemo = false;
+            demoWarning.style.display = 'none';
+        }
+        
+        // Usar dados de demonstração
+        function usarDadosDemonstracao() {
+            usandoDemo = true;
+            demoWarning.style.display = 'block';
+            
+            // Preencher com dados de demonstração
+            clubes = ["Clube Alpha", "Clube Beta", "Clube Gamma", "Clube Delta", "Clube Epsilon"];
+            
+            const selectA = document.getElementById('filtroClubeA');
+            const selectB = document.getElementById('filtroClubeB');
+            
+            selectA.innerHTML = '<option value="Todos">Todos os Clubes</option>';
+            selectB.innerHTML = '<option value="Todos">Todos os Clubes</option>';
+            
+            clubes.forEach(clube => {
+                const option = document.createElement('option');
+                option.value = clube;
+                option.textContent = clube;
+                selectA.appendChild(option.cloneNode(true));
+                selectB.appendChild(option);
+            });
+            
+            // Definir datas
+            document.getElementById('filtroInicio').value = '2025-07-31';
+            document.getElementById('filtroFim').value = '2025-08-07';
+            
+            // Atualizar interface
+            atualizarInterface();
+            
+            // Atualizar timestamp
+            ultimaAtualizacao.textContent = new Date().toLocaleString('pt-BR');
+        }
+        
+        // Funções de controle
+        function setPeriodo(dias) {
+            const hoje = new Date();
+            const dataInicio = new Date();
+            dataInicio.setDate(hoje.getDate() - dias);
+            
+            document.getElementById('filtroInicio').value = dataInicio.toISOString().split('T')[0];
+            document.getElementById('filtroFim').value = hoje.toISOString().split('T')[0];
+            
+            aplicarFiltros();
         }
         
         function aplicarFiltros() {
-            const clubeA = document.getElementById('filtroClubeA').value;
-            const clubeB = document.getElementById('filtroClubeB').value;
-            alert(`Filtros aplicados: Clube A = ${clubeA}, Clube B = ${clubeB}`);
-        }
-        
-        function exportarCSV() {
-            alert('Exportando dados para CSV...');
-            // Simular download
-            const data = "Clube,Valor,Variação\n" +
-                dados.topDepositos.map(d => `${d.clube},${d.valor},${d.variacao}`).join("\n");
-            
-            const blob = new Blob([data], {type: 'text/csv'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'dados_clubes.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            showLoading(true, "Aplicando filtros...");
+            setTimeout(() => {
+                atualizarInterface();
+                showLoading(false);
+            }, 500);
         }
         
         function atualizarDados() {
-            alert('Atualizando dados...');
-            // Atualiza o timestamp
-            const now = new Date();
-            document.getElementById('ultimaAtualizacao').textContent = 
-                `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}, ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+            carregarDados();
         }
         
-        // Inicializar gráficos quando a página carregar
-        window.onload = function() {
-            initCharts();
-        };
+        function exportarCSV() {
+            showLoading(true, "Preparando dados para exportação...");
+            
+            // Simular geração de CSV
+            setTimeout(() => {
+                // Criar conteúdo CSV
+                let csvContent = "Clube,Valor,Variação\n";
+                
+                // Adicionar dados de exemplo
+                csvContent += "Clube Alpha,245890,112.5\n";
+                csvContent += "Clube Beta,210430,18.7\n";
+                csvContent += "Clube Gamma,198650,13.2\n";
+                csvContent += "Clube Delta,185290,13.3\n";
+                csvContent += "Clube Epsilon,172340,16.8\n";
+                
+                // Criar e disparar download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'dados_clubes.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showLoading(false);
+            }, 1000);
+        }
+        
+        // Inicializar o dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarDados();
+        });
     </script>
 </body>
 </html>
