@@ -617,6 +617,7 @@
             $("#loadingOverlay").css("display", on ? "flex" : "none");
         }
 
+        // FUNÇÃO DE CRIAÇÃO DO GRÁFICO AJUSTADA
         function criarGrafico(ctx, labelA, labelB, colorA, colorB, type='line'){
             return new Chart(ctx, {
                 type: type,
@@ -651,12 +652,23 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'top', labels: { color: '#ecf0f1', font: { size: 14 } } },
+                        legend: { 
+                          position: 'top', 
+                          labels: { 
+                            color: '#ecf0f1', 
+                            font: { size: 14 },
+                            filter: function(item, chart) {
+                                // Oculta a legenda do segundo item se o rótulo for vazio
+                                return item.text !== "";
+                            } 
+                          } 
+                        },
                         tooltip: {
                             callbacks: {
                                 label: ctx => {
-                                    if(ctx.parsed.y === 0 && ctx.dataset.label === "Clube B"){
-                                        return null; // Oculta o tooltip se o valor for 0 (no caso de não ter clube B)
+                                    // Oculta o tooltip se o rótulo for vazio
+                                    if(ctx.dataset.label === "" || (ctx.parsed.y === 0 && ctx.dataset.label === "Clube B")){
+                                        return null;
                                     }
                                     return `${ctx.dataset.label}: R$ ${ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
                                 }
@@ -760,7 +772,6 @@
             let opts = '<option value="Todos">Todos os Clubes</option>' +
                        clubes.map(c => `<option>${c}</option>`).join('');
             
-            // Opção de "Nenhum" para o Clube B
             let optsClubeB = '<option value="Nenhum">Nenhum</option>' + opts;
 
             $("#filtroClubeA").html(opts).val(clubes[0] || "Clube Alpha");
@@ -820,7 +831,6 @@
             let dadosFiltrados = dados.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim));
             
             let dadosClubeA = obterDadosDoClube(dadosFiltrados, clubeA);
-            // Se o clube B for "Nenhum", não filtre os dados, use um array vazio
             let dadosClubeB = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosFiltrados, clubeB) : [];
 
             atualizarKPIs(dadosClubeA, dadosClubeB);
@@ -873,15 +883,25 @@
             let dadosAgrupadosA = agrupaPorData(dadosA);
             let dadosAgrupadosB = dadosB.length > 0 ? agrupaPorData(dadosB) : {};
             let datas = [...new Set([...Object.keys(dadosAgrupadosA), ...Object.keys(dadosAgrupadosB)])].sort();
-            
+
+            const isClubeBSelecionado = nomeB !== "Nenhum";
+            const corClubeB = isClubeBSelecionado ? "#e74c3c" : "rgba(0,0,0,0)";
+            const labelClubeB = isClubeBSelecionado ? nomeB : "";
+
             function upd(chartId, campoDados){
                 let chart = charts[chartId];
                 chart.data.labels = datas;
+
                 chart.data.datasets[0].label = nomeA;
-                chart.data.datasets[1].label = nomeB !== "Nenhum" ? nomeB : "";
                 chart.data.datasets[0].data = datas.map(d => dadosAgrupadosA[d] ? dadosAgrupadosA[d][campoDados] : 0);
-                // Se o clube B não for selecionado, os dados dele serão todos zero
+                
+                chart.data.datasets[1].label = labelClubeB;
+                chart.data.datasets[1].borderColor = corClubeB;
+                chart.data.datasets[1].backgroundColor = isClubeBSelecionado ? chart.config.type === 'bar' ? corClubeB + 'CC' : 'transparent' : "rgba(0,0,0,0)";
+                chart.data.datasets[1].pointBackgroundColor = corClubeB;
+                chart.data.datasets[1].pointRadius = isClubeBSelecionado ? 4 : 0;
                 chart.data.datasets[1].data = datas.map(d => dadosAgrupadosB[d] ? dadosAgrupadosB[d][campoDados] : 0);
+                
                 chart.update();
             }
 
@@ -894,7 +914,9 @@
             // Atualizar gráfico comparativo
             charts.chartComparativo.data.labels = ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'];
             charts.chartComparativo.data.datasets[0].label = nomeA;
-            charts.chartComparativo.data.datasets[1].label = nomeB !== "Nenhum" ? nomeB : "";
+            charts.chartComparativo.data.datasets[1].label = labelClubeB;
+            charts.chartComparativo.data.datasets[1].backgroundColor = isClubeBSelecionado ? "#e74c3c" + 'CC' : 'rgba(0,0,0,0)';
+            charts.chartComparativo.data.datasets[1].borderColor = corClubeB;
 
             let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(d[field]) || 0), 0);
             
@@ -907,8 +929,7 @@
                 somador(dadosA, "Cálculo - bônus convertidos")
             ];
 
-            // Se o clube B for "Nenhum", preenche com zeros
-            charts.chartComparativo.data.datasets[1].data = nomeB !== "Nenhum" ? [
+            charts.chartComparativo.data.datasets[1].data = isClubeBSelecionado ? [
                 somador(dadosB, "Usuário - FTD-Montante"),
                 somador(dadosB, "Usuário - Depósitos"),
                 somador(dadosB, "Cálculo - GGR"),
