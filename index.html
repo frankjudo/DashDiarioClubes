@@ -654,7 +654,12 @@
                         legend: { position: 'top', labels: { color: '#ecf0f1', font: { size: 14 } } },
                         tooltip: {
                             callbacks: {
-                                label: ctx => `${ctx.dataset.label}: R$ ${ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
+                                label: ctx => {
+                                    if(ctx.parsed.y === 0 && ctx.dataset.label === "Clube B"){
+                                        return null; // Oculta o tooltip se o valor for 0 (no caso de não ter clube B)
+                                    }
+                                    return `${ctx.dataset.label}: R$ ${ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                                }
                             },
                             backgroundColor: 'rgba(26, 37, 47, 0.9)',
                             titleColor: '#3498db',
@@ -754,11 +759,12 @@
             let clubes = [...new Set(dados.map(d => d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"]))];
             let opts = '<option value="Todos">Todos os Clubes</option>' +
                        clubes.map(c => `<option>${c}</option>`).join('');
-            $("#filtroClubeA, #filtroClubeB").html(opts).val("Todos");
             
-            // Setar valores padrão
-            $("#filtroClubeA").val(clubes[0] || "Clube Alpha");
-            $("#filtroClubeB").val(clubes[1] || "Clube Beta");
+            // Opção de "Nenhum" para o Clube B
+            let optsClubeB = '<option value="Nenhum">Nenhum</option>' + opts;
+
+            $("#filtroClubeA").html(opts).val(clubes[0] || "Clube Alpha");
+            $("#filtroClubeB").html(optsClubeB).val("Nenhum");
             
             // Iniciar com últimos 7 dias
             let hoje = new Date();
@@ -802,9 +808,9 @@
             carregar();
         }
 
-        // FUNÇÕES OTIMIZADAS
-        //--------------------
-
+        // FUNÇÕES OTIMIZADAS E AJUSTADAS
+        //--------------------------------
+        
         function atualizar(){
             let ini = $("#filtroInicio").val();
             let fim = $("#filtroFim").val();
@@ -814,7 +820,8 @@
             let dadosFiltrados = dados.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim));
             
             let dadosClubeA = obterDadosDoClube(dadosFiltrados, clubeA);
-            let dadosClubeB = clubeA !== clubeB ? obterDadosDoClube(dadosFiltrados, clubeB) : [];
+            // Se o clube B for "Nenhum", não filtre os dados, use um array vazio
+            let dadosClubeB = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosFiltrados, clubeB) : [];
 
             atualizarKPIs(dadosClubeA, dadosClubeB);
             atualizarGraficos(dadosClubeA, dadosClubeB, clubeA, clubeB);
@@ -864,15 +871,16 @@
             };
 
             let dadosAgrupadosA = agrupaPorData(dadosA);
-            let dadosAgrupadosB = agrupaPorData(dadosB);
+            let dadosAgrupadosB = dadosB.length > 0 ? agrupaPorData(dadosB) : {};
             let datas = [...new Set([...Object.keys(dadosAgrupadosA), ...Object.keys(dadosAgrupadosB)])].sort();
             
             function upd(chartId, campoDados){
                 let chart = charts[chartId];
                 chart.data.labels = datas;
                 chart.data.datasets[0].label = nomeA;
-                chart.data.datasets[1].label = nomeB;
+                chart.data.datasets[1].label = nomeB !== "Nenhum" ? nomeB : "";
                 chart.data.datasets[0].data = datas.map(d => dadosAgrupadosA[d] ? dadosAgrupadosA[d][campoDados] : 0);
+                // Se o clube B não for selecionado, os dados dele serão todos zero
                 chart.data.datasets[1].data = datas.map(d => dadosAgrupadosB[d] ? dadosAgrupadosB[d][campoDados] : 0);
                 chart.update();
             }
@@ -886,24 +894,28 @@
             // Atualizar gráfico comparativo
             charts.chartComparativo.data.labels = ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'];
             charts.chartComparativo.data.datasets[0].label = nomeA;
-            charts.chartComparativo.data.datasets[1].label = nomeB;
-            charts.chartComparativo.data.datasets[0].data = [
-                agrupaPorData(dadosA, "Usuário - FTD-Montante"),
-                agrupaPorData(dadosA, "Usuário - Depósitos"),
-                agrupaPorData(dadosA, "Cálculo - GGR"),
-                agrupaPorData(dadosA, "Sportsbook - GGR"),
-                agrupaPorData(dadosA, "Cassino - GGR"),
-                agrupaPorData(dadosA, "Cálculo - bônus convertidos")
-            ].map(obj => Object.values(obj).reduce((s,v) => s + v, 0)); // Somar todos os valores agrupados
+            charts.chartComparativo.data.datasets[1].label = nomeB !== "Nenhum" ? nomeB : "";
 
-            charts.chartComparativo.data.datasets[1].data = [
-                agrupaPorData(dadosB, "Usuário - FTD-Montante"),
-                agrupaPorData(dadosB, "Usuário - Depósitos"),
-                agrupaPorData(dadosB, "Cálculo - GGR"),
-                agrupaPorData(dadosB, "Sportsbook - GGR"),
-                agrupaPorData(dadosB, "Cassino - GGR"),
-                agrupaPorData(dadosB, "Cálculo - bônus convertidos")
-            ].map(obj => Object.values(obj).reduce((s,v) => s + v, 0)); // Somar todos os valores agrupados
+            let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(d[field]) || 0), 0);
+            
+            charts.chartComparativo.data.datasets[0].data = [
+                somador(dadosA, "Usuário - FTD-Montante"),
+                somador(dadosA, "Usuário - Depósitos"),
+                somador(dadosA, "Cálculo - GGR"),
+                somador(dadosA, "Sportsbook - GGR"),
+                somador(dadosA, "Cassino - GGR"),
+                somador(dadosA, "Cálculo - bônus convertidos")
+            ];
+
+            // Se o clube B for "Nenhum", preenche com zeros
+            charts.chartComparativo.data.datasets[1].data = nomeB !== "Nenhum" ? [
+                somador(dadosB, "Usuário - FTD-Montante"),
+                somador(dadosB, "Usuário - Depósitos"),
+                somador(dadosB, "Cálculo - GGR"),
+                somador(dadosB, "Sportsbook - GGR"),
+                somador(dadosB, "Cassino - GGR"),
+                somador(dadosB, "Cálculo - bônus convertidos")
+            ] : [0, 0, 0, 0, 0, 0];
 
             charts.chartComparativo.update();
         }
