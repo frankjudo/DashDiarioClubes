@@ -638,7 +638,7 @@
     <script>
         const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
         let dados = [], charts = {}, usandoDemo = false;
-        let valoresAnteriores = {};
+        let valoresAnteriores = {}; // Esta variável não será mais usada para variação, mas pode ser útil para outras animações
 
         // Dados de demonstração com informações adicionais
         const dadosDemo = [
@@ -746,6 +746,8 @@
             let variacao = 0;
             if (anterior !== undefined && anterior !== 0) {
                 variacao = ((novo - anterior) / anterior) * 100;
+            } else if (novo > 0 && anterior === 0) {
+                variacao = 100; // Variação de 100% se o anterior for zero e o novo for maior que zero
             }
             
             let variacaoText = variacao >= 0 ? 
@@ -754,7 +756,7 @@
             varEl.html(variacaoText);
             
             $(sel).removeClass("positive negative")
-                .addClass(novo >= 0 ? "positive" : "negative");
+                .addClass(novo >= anterior ? "positive" : "negative");
             
             let ant = parseFloat(el.text().replace(/[^\d]/g, '')) || 0;
             let diff = (novo - ant) / 30;
@@ -770,8 +772,6 @@
                 }
                 el.text("R$ " + cur.toLocaleString('pt-BR', {minimumFractionDigits: 2}));
             }, 20);
-            
-            valoresAnteriores[sel] = novo;
         }
 
         function carregar(){
@@ -809,7 +809,6 @@
             
             let optsClubeB = '<option value="Nenhum">Nenhum</option>' + opts;
 
-            // AJUSTE: O valor padrão do Clube A agora é "Todos"
             $("#filtroClubeA").html(opts).val("Todos");
             $("#filtroClubeB").html(optsClubeB).val("Nenhum");
             
@@ -828,9 +827,8 @@
             charts.chartSportsbook = criarGrafico($("#chartSportsbook")[0], "Clube A Sportsbook", "Clube B Sportsbook", "#3498db", "#e74c3c");
             charts.chartCassino = criarGrafico($("#chartCassino")[0], "Clube A Cassino", "Clube B Cassino", "#3498db", "#e74c3c");
             
-            // Inicializar valores anteriores para KPIs
-            const kpis = ['#kpi-ftd', '#kpi-depositos', '#kpi-ggr', '#kpi-sportsbook', '#kpi-cassino', '#kpi-bonus'];
-            kpis.forEach(kpi => valoresAnteriores[kpi] = 0);
+            // A variável valoresAnteriores não é mais usada para o cálculo de variação.
+            // Ela agora só é usada na animação.
             
             atualizar();
             showLoading(false);
@@ -855,20 +853,36 @@
             carregar();
         }
 
+        // --- FUNÇÃO ATUALIZADA PARA CÁLCULO REAL DE VARIAÇÃO ---
         function atualizar(){
             let ini = $("#filtroInicio").val();
             let fim = $("#filtroFim").val();
+
+            // Calcular a duração do período e a data de início do período anterior
+            const duracao = new Date(fim) - new Date(ini);
+            const fimAnterior = new Date(ini);
+            fimAnterior.setDate(fimAnterior.getDate() - 1);
+            const iniAnterior = new Date(fimAnterior.getTime() - duracao);
+            
+            const iniAnteriorStr = iniAnterior.toISOString().slice(0,10);
+            const fimAnteriorStr = fimAnterior.toISOString().slice(0,10);
+            
+            // Filtrar os dados para o período atual e o período anterior
+            let dadosFiltradosAtual = dados.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim));
+            let dadosFiltradosAnterior = dados.filter(d => d.DATA >= iniAnteriorStr && d.DATA <= fimAnteriorStr);
+            
             let clubeA = $("#filtroClubeA").val();
             let clubeB = $("#filtroClubeB").val();
             
-            let dadosFiltrados = dados.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim));
+            let dadosClubeA_Atual = obterDadosDoClube(dadosFiltradosAtual, clubeA);
+            let dadosClubeB_Atual = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosFiltradosAtual, clubeB) : [];
             
-            let dadosClubeA = obterDadosDoClube(dadosFiltrados, clubeA);
-            let dadosClubeB = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosFiltrados, clubeB) : [];
+            let dadosClubeA_Anterior = obterDadosDoClube(dadosFiltradosAnterior, clubeA);
+            let dadosClubeB_Anterior = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosFiltradosAnterior, clubeB) : [];
 
-            atualizarKPIs(dadosClubeA, dadosClubeB);
-            atualizarGraficos(dadosClubeA, dadosClubeB, clubeA, clubeB);
-            atualizarTabelas(dadosFiltrados);
+            atualizarKPIs(dadosClubeA_Atual, dadosClubeB_Atual, dadosClubeA_Anterior, dadosClubeB_Anterior);
+            atualizarGraficos(dadosClubeA_Atual, dadosClubeB_Atual, clubeA, clubeB);
+            atualizarTabelas(dadosFiltradosAtual, dadosFiltradosAnterior);
             
             $("#ultimaAtualizacao").text(new Date().toLocaleString('pt-BR'));
         }
@@ -880,22 +894,30 @@
             return dadosBase.filter(d => d["Usuário - Nome de username"] === nomeClube || d["Usuário - Nome de usuário"] === nomeClube);
         }
         
-        function atualizarKPIs(dadosA, dadosB) {
+        // --- FUNÇÃO ATUALIZADA PARA CÁLCULO REAL DE VARIAÇÃO ---
+        function atualizarKPIs(dadosA_Atual, dadosB_Atual, dadosA_Anterior, dadosB_Anterior) {
             let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(d[field]) || 0), 0);
             
-            let totalFTD = somador(dadosA, "Usuário - FTD-Montante") + somador(dadosB, "Usuário - FTD-Montante");
-            let totalDepositos = somador(dadosA, "Usuário - Depósitos") + somador(dadosB, "Usuário - Depósitos");
-            let totalGGR = somador(dadosA, "Cálculo - GGR") + somador(dadosB, "Cálculo - GGR");
-            let totalSportsbook = somador(dadosA, "Sportsbook - GGR") + somador(dadosB, "Sportsbook - GGR");
-            let totalCassino = somador(dadosA, "Cassino - GGR") + somador(dadosB, "Cassino - GGR");
-            let totalBonus = somador(dadosA, "Cálculo - bônus convertidos") + somador(dadosB, "Cálculo - bônus convertidos");
+            let totalFTD_Atual = somador(dadosA_Atual, "Usuário - FTD-Montante") + somador(dadosB_Atual, "Usuário - FTD-Montante");
+            let totalDepositos_Atual = somador(dadosA_Atual, "Usuário - Depósitos") + somador(dadosB_Atual, "Usuário - Depósitos");
+            let totalGGR_Atual = somador(dadosA_Atual, "Cálculo - GGR") + somador(dadosB_Atual, "Cálculo - GGR");
+            let totalSportsbook_Atual = somador(dadosA_Atual, "Sportsbook - GGR") + somador(dadosB_Atual, "Sportsbook - GGR");
+            let totalCassino_Atual = somador(dadosA_Atual, "Cassino - GGR") + somador(dadosB_Atual, "Cassino - GGR");
+            let totalBonus_Atual = somador(dadosA_Atual, "Cálculo - bônus convertidos") + somador(dadosB_Atual, "Cálculo - bônus convertidos");
 
-            animarKPI("#kpi-ftd", totalFTD, valoresAnteriores["#kpi-ftd"]);
-            animarKPI("#kpi-depositos", totalDepositos, valoresAnteriores["#kpi-depositos"]);
-            animarKPI("#kpi-ggr", totalGGR, valoresAnteriores["#kpi-ggr"]);
-            animarKPI("#kpi-sportsbook", totalSportsbook, valoresAnteriores["#kpi-sportsbook"]);
-            animarKPI("#kpi-cassino", totalCassino, valoresAnteriores["#kpi-cassino"]);
-            animarKPI("#kpi-bonus", totalBonus, valoresAnteriores["#kpi-bonus"]);
+            let totalFTD_Anterior = somador(dadosA_Anterior, "Usuário - FTD-Montante") + somador(dadosB_Anterior, "Usuário - FTD-Montante");
+            let totalDepositos_Anterior = somador(dadosA_Anterior, "Usuário - Depósitos") + somador(dadosB_Anterior, "Usuário - Depósitos");
+            let totalGGR_Anterior = somador(dadosA_Anterior, "Cálculo - GGR") + somador(dadosB_Anterior, "Cálculo - GGR");
+            let totalSportsbook_Anterior = somador(dadosA_Anterior, "Sportsbook - GGR") + somador(dadosB_Anterior, "Sportsbook - GGR");
+            let totalCassino_Anterior = somador(dadosA_Anterior, "Cassino - GGR") + somador(dadosB_Anterior, "Cassino - GGR");
+            let totalBonus_Anterior = somador(dadosA_Anterior, "Cálculo - bônus convertidos") + somador(dadosB_Anterior, "Cálculo - bônus convertidos");
+            
+            animarKPI("#kpi-ftd", totalFTD_Atual, totalFTD_Anterior);
+            animarKPI("#kpi-depositos", totalDepositos_Atual, totalDepositos_Anterior);
+            animarKPI("#kpi-ggr", totalGGR_Atual, totalGGR_Anterior);
+            animarKPI("#kpi-sportsbook", totalSportsbook_Atual, totalSportsbook_Anterior);
+            animarKPI("#kpi-cassino", totalCassino_Atual, totalCassino_Anterior);
+            animarKPI("#kpi-bonus", totalBonus_Atual, totalBonus_Anterior);
         }
 
         function atualizarGraficos(dadosA, dadosB, nomeA, nomeB) {
@@ -974,24 +996,42 @@
             charts.chartComparativo.update();
         }
 
-        function atualizarTabelas(dadosBase) {
+        // --- FUNÇÃO ATUALIZADA PARA CÁLCULO REAL DE VARIAÇÃO ---
+        function atualizarTabelas(dadosBase_Atual, dadosBase_Anterior) {
             function preenche(id, field) {
-                let mapaValores = dadosBase.reduce((acc, d) => {
+                let mapaValoresAtual = dadosBase_Atual.reduce((acc, d) => {
+                    let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
+                    let valor = parseFloat(d[field]) || 0;
+                    acc[clube] = (acc[clube] || 0) + valor;
+                    return acc;
+                }, {});
+
+                let mapaValoresAnterior = dadosBase_Anterior.reduce((acc, d) => {
                     let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
                     let valor = parseFloat(d[field]) || 0;
                     acc[clube] = (acc[clube] || 0) + valor;
                     return acc;
                 }, {});
                 
-                let top10 = Object.entries(mapaValores).sort((a, b) => b[1] - a[1]).slice(0, 10);
+                let top10 = Object.entries(mapaValoresAtual).sort((a, b) => b[1] - a[1]).slice(0, 10);
                 
                 let html = top10.map(item => {
-                    let variacao = (Math.random() * 20 - 5).toFixed(1); // Simulação
+                    let clube = item[0];
+                    let valorAtual = item[1];
+                    let valorAnterior = mapaValoresAnterior[clube] || 0;
+                    
+                    let variacao = 0;
+                    if (valorAnterior !== 0) {
+                        variacao = ((valorAtual - valorAnterior) / valorAnterior) * 100;
+                    } else if (valorAtual > 0) {
+                        variacao = 100;
+                    }
+
                     let corVariacao = variacao >= 0 ? '#2ecc70' : '#e74c3c';
                     return `<tr>
-                        <td>${item[0]}</td>
-                        <td>R$ ${item[1].toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                        <td style="color:${corVariacao}">${variacao >= 0 ? '+' : ''}${variacao}%</td>
+                        <td>${clube}</td>
+                        <td>R$ ${valorAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td style="color:${corVariacao}">${variacao >= 0 ? '+' : ''}${variacao.toFixed(1)}%</td>
                     </tr>`;
                 }).join('');
 
