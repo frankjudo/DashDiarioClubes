@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-s21.291,00ale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Dashboard Comparativo de Clubes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
@@ -762,7 +762,6 @@
         function carregar(){
             showLoading(true, "Conectando à fonte de dados...");
             
-            // Quebra de cache para garantir que os dados mais recentes são sempre carregados
             const urlComCacheBuster = URL_CSV + '&' + new Date().getTime();
             Papa.parse(urlComCacheBuster, {
                 download: true,
@@ -771,14 +770,14 @@
                     if (r.data && r.data.length > 0) {
                         dados = r.data.filter(x => x.DATA);
                     } else {
-                         // Apenas loga o erro, sem carregar dados de demonstração que podem estar desatualizados
                         console.error("Dados não encontrados na planilha do Google Sheets. Não é possível carregar o painel.");
+                        dados = [];
                     }
                     init();
                 },
                 error: function() {
-                     // Apenas loga o erro, sem carregar dados de demonstração que podem estar desatualizados
                     console.error("Erro ao carregar a planilha. Verifique a URL e a conexão.");
+                    dados = [];
                     init();
                 }
             });
