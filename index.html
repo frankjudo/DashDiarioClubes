@@ -832,13 +832,13 @@
             let ini = $("#filtroInicio").val();
             let fim = $("#filtroFim").val();
 
-            // --- NOVA LÓGICA DE VARIAÇÃO DENTRO DO PERÍODO ---
+            // --- LÓGICA ATUALIZADA PARA CALCULAR VARIAÇÃO: ÚLTIMO DIA vs PRIMEIRO DIA ---
             
-            // O valor do 'novo' período é o total do período selecionado
             let dadosFiltradosAtual = dados.filter(d => d.DATA >= ini && d.DATA <= fim);
             
-            // O valor do 'anterior' período é a soma apenas do primeiro dia
+            // Pega os dados do primeiro e do último dia do período
             let dadosPrimeiroDia = dados.filter(d => d.DATA === ini);
+            let dadosUltimoDia = dados.filter(d => d.DATA === fim);
             
             let clubeA = $("#filtroClubeA").val();
             let clubeB = $("#filtroClubeB").val();
@@ -849,7 +849,10 @@
             let dadosClubeA_PrimeiroDia = obterDadosDoClube(dadosPrimeiroDia, clubeA);
             let dadosClubeB_PrimeiroDia = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosPrimeiroDia, clubeB) : [];
 
-            atualizarKPIs(dadosClubeA_Atual, dadosClubeB_Atual, dadosClubeA_PrimeiroDia, dadosClubeB_PrimeiroDia);
+            let dadosClubeA_UltimoDia = obterDadosDoClube(dadosUltimoDia, clubeA);
+            let dadosClubeB_UltimoDia = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosUltimoDia, clubeB) : [];
+
+            atualizarKPIs(dadosClubeA_UltimoDia, dadosClubeB_UltimoDia, dadosClubeA_PrimeiroDia, dadosClubeB_PrimeiroDia);
             atualizarGraficos(dadosClubeA_Atual, dadosClubeB_Atual, clubeA, clubeB);
             atualizarTabelas(dadosFiltradosAtual, dadosPrimeiroDia);
             
@@ -863,15 +866,15 @@
             return dadosBase.filter(d => d["Usuário - Nome de username"] === nomeClube || d["Usuário - Nome de usuário"] === nomeClube);
         }
         
-        function atualizarKPIs(dadosA_Atual, dadosB_Atual, dadosA_PrimeiroDia, dadosB_PrimeiroDia) {
+        function atualizarKPIs(dadosA_UltimoDia, dadosB_UltimoDia, dadosA_PrimeiroDia, dadosB_PrimeiroDia) {
             let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(d[field]) || 0), 0);
             
-            let totalFTD_Atual = somador(dadosA_Atual, "Usuário - FTD-Montante") + somador(dadosB_Atual, "Usuário - FTD-Montante");
-            let totalDepositos_Atual = somador(dadosA_Atual, "Usuário - Depósitos") + somador(dadosB_Atual, "Usuário - Depósitos");
-            let totalGGR_Atual = somador(dadosA_Atual, "Cálculo - GGR") + somador(dadosB_Atual, "Cálculo - GGR");
-            let totalSportsbook_Atual = somador(dadosA_Atual, "Sportsbook - GGR") + somador(dadosB_Atual, "Sportsbook - GGR");
-            let totalCassino_Atual = somador(dadosA_Atual, "Cassino - GGR") + somador(dadosB_Atual, "Cassino - GGR");
-            let totalBonus_Atual = somador(dadosA_Atual, "Cálculo - bônus convertidos") + somador(dadosB_Atual, "Cálculo - bônus convertidos");
+            let totalFTD_UltimoDia = somador(dadosA_UltimoDia, "Usuário - FTD-Montante") + somador(dadosB_UltimoDia, "Usuário - FTD-Montante");
+            let totalDepositos_UltimoDia = somador(dadosA_UltimoDia, "Usuário - Depósitos") + somador(dadosB_UltimoDia, "Usuário - Depósitos");
+            let totalGGR_UltimoDia = somador(dadosA_UltimoDia, "Cálculo - GGR") + somador(dadosB_UltimoDia, "Cálculo - GGR");
+            let totalSportsbook_UltimoDia = somador(dadosA_UltimoDia, "Sportsbook - GGR") + somador(dadosB_UltimoDia, "Sportsbook - GGR");
+            let totalCassino_UltimoDia = somador(dadosA_UltimoDia, "Cassino - GGR") + somador(dadosB_UltimoDia, "Cassino - GGR");
+            let totalBonus_UltimoDia = somador(dadosA_UltimoDia, "Cálculo - bônus convertidos") + somador(dadosB_UltimoDia, "Cálculo - bônus convertidos");
 
             let totalFTD_PrimeiroDia = somador(dadosA_PrimeiroDia, "Usuário - FTD-Montante") + somador(dadosB_PrimeiroDia, "Usuário - FTD-Montante");
             let totalDepositos_PrimeiroDia = somador(dadosA_PrimeiroDia, "Usuário - Depósitos") + somador(dadosB_PrimeiroDia, "Usuário - Depósitos");
@@ -880,12 +883,12 @@
             let totalCassino_PrimeiroDia = somador(dadosA_PrimeiroDia, "Cassino - GGR") + somador(dadosB_PrimeiroDia, "Cassino - GGR");
             let totalBonus_PrimeiroDia = somador(dadosA_PrimeiroDia, "Cálculo - bônus convertidos") + somador(dadosB_PrimeiroDia, "Cálculo - bônus convertidos");
             
-            animarKPI("#kpi-ftd", totalFTD_Atual, totalFTD_PrimeiroDia);
-            animarKPI("#kpi-depositos", totalDepositos_Atual, totalDepositos_PrimeiroDia);
-            animarKPI("#kpi-ggr", totalGGR_Atual, totalGGR_PrimeiroDia);
-            animarKPI("#kpi-sportsbook", totalSportsbook_Atual, totalSportsbook_PrimeiroDia);
-            animarKPI("#kpi-cassino", totalCassino_Atual, totalCassino_PrimeiroDia);
-            animarKPI("#kpi-bonus", totalBonus_Atual, totalBonus_PrimeiroDia);
+            animarKPI("#kpi-ftd", totalFTD_UltimoDia, totalFTD_PrimeiroDia);
+            animarKPI("#kpi-depositos", totalDepositos_UltimoDia, totalDepositos_PrimeiroDia);
+            animarKPI("#kpi-ggr", totalGGR_UltimoDia, totalGGR_PrimeiroDia);
+            animarKPI("#kpi-sportsbook", totalSportsbook_UltimoDia, totalSportsbook_PrimeiroDia);
+            animarKPI("#kpi-cassino", totalCassino_UltimoDia, totalCassino_PrimeiroDia);
+            animarKPI("#kpi-bonus", totalBonus_UltimoDia, totalBonus_PrimeiroDia);
         }
 
         function atualizarGraficos(dadosA, dadosB, nomeA, nomeB) {
