@@ -639,13 +639,6 @@
         const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
         let dados = [], charts = {};
         
-        // --- HARDCODED DATA FOR COMPARISON PERIOD (DAY 6) TO ENSURE CORRECT CALCULATION ---
-        // This is a temporary measure to fix the cache issue.
-        const dadosAnterioresHardcoded = [
-            {"DATA": "2025-08-06", "Usuário - Nome de usuário": "romub@programa.bet", "Usuário - FTD-Montante": "20719.40", "Usuário - Depósitos": "217346.00", "Cálculo - GGR": "59884.00", "Sportsbook - GGR": "10946.00", "Cassino - GGR": "48941.00", "Cálculo - bônus convertidos": "5092.00"},
-            // Adicione os outros dados do dia 6 aqui se necessário para testes específicos de clube.
-        ];
-        
         function showLoading(on, msg="Carregando dados..."){
             $("#loadingMessage").text(msg);
             $("#loadingOverlay").css("display", on ? "flex" : "none");
@@ -839,22 +832,13 @@
             let ini = $("#filtroInicio").val();
             let fim = $("#filtroFim").val();
 
-            const duracao = new Date(fim).getTime() - new Date(ini).getTime();
-            const iniAnterior = new Date(new Date(ini).getTime() - duracao);
-            const fimAnterior = new Date(new Date(fim).getTime() - duracao);
+            // --- NOVA LÓGICA DE VARIAÇÃO DENTRO DO PERÍODO ---
             
-            const iniAnteriorStr = iniAnterior.toISOString().slice(0,10);
-            const fimAnteriorStr = fimAnterior.toISOString().slice(0,10);
-            
-            console.log("--- DEBUG DE DADOS ---");
-            console.log(`Período Atual: de ${ini} até ${fim}`);
-            console.log(`Período de Comparação: de ${iniAnteriorStr} até ${fimAnteriorStr}`);
-            
+            // O valor do 'novo' período é o total do período selecionado
             let dadosFiltradosAtual = dados.filter(d => d.DATA >= ini && d.DATA <= fim);
             
-            // --- CÓDIGO CORRIGIDO PARA FORÇAR A VARIAÇÃO REAL ---
-            // Em vez de filtrar, usamos os valores fixos do dia 6 de agosto que já sabemos serem os corretos.
-            let dadosFiltradosAnterior = dados.filter(d => d.DATA === '2025-08-06');
+            // O valor do 'anterior' período é a soma apenas do primeiro dia
+            let dadosPrimeiroDia = dados.filter(d => d.DATA === ini);
             
             let clubeA = $("#filtroClubeA").val();
             let clubeB = $("#filtroClubeB").val();
@@ -862,12 +846,12 @@
             let dadosClubeA_Atual = obterDadosDoClube(dadosFiltradosAtual, clubeA);
             let dadosClubeB_Atual = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosFiltradosAtual, clubeB) : [];
             
-            let dadosClubeA_Anterior = obterDadosDoClube(dadosFiltradosAnterior, clubeA);
-            let dadosClubeB_Anterior = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosFiltradosAnterior, clubeB) : [];
+            let dadosClubeA_PrimeiroDia = obterDadosDoClube(dadosPrimeiroDia, clubeA);
+            let dadosClubeB_PrimeiroDia = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosPrimeiroDia, clubeB) : [];
 
-            atualizarKPIs(dadosClubeA_Atual, dadosClubeB_Atual, dadosClubeA_Anterior, dadosClubeB_Anterior);
+            atualizarKPIs(dadosClubeA_Atual, dadosClubeB_Atual, dadosClubeA_PrimeiroDia, dadosClubeB_PrimeiroDia);
             atualizarGraficos(dadosClubeA_Atual, dadosClubeB_Atual, clubeA, clubeB);
-            atualizarTabelas(dadosFiltradosAtual, dadosFiltradosAnterior);
+            atualizarTabelas(dadosFiltradosAtual, dadosPrimeiroDia);
             
             $("#ultimaAtualizacao").text(new Date().toLocaleString('pt-BR'));
         }
@@ -879,7 +863,7 @@
             return dadosBase.filter(d => d["Usuário - Nome de username"] === nomeClube || d["Usuário - Nome de usuário"] === nomeClube);
         }
         
-        function atualizarKPIs(dadosA_Atual, dadosB_Atual, dadosA_Anterior, dadosB_Anterior) {
+        function atualizarKPIs(dadosA_Atual, dadosB_Atual, dadosA_PrimeiroDia, dadosB_PrimeiroDia) {
             let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(d[field]) || 0), 0);
             
             let totalFTD_Atual = somador(dadosA_Atual, "Usuário - FTD-Montante") + somador(dadosB_Atual, "Usuário - FTD-Montante");
@@ -889,30 +873,19 @@
             let totalCassino_Atual = somador(dadosA_Atual, "Cassino - GGR") + somador(dadosB_Atual, "Cassino - GGR");
             let totalBonus_Atual = somador(dadosA_Atual, "Cálculo - bônus convertidos") + somador(dadosB_Atual, "Cálculo - bônus convertidos");
 
-            let totalFTD_Anterior = somador(dadosA_Anterior, "Usuário - FTD-Montante") + somador(dadosB_Anterior, "Usuário - FTD-Montante");
-            let totalDepositos_Anterior = somador(dadosA_Anterior, "Usuário - Depósitos") + somador(dadosB_Anterior, "Usuário - Depósitos");
-            let totalGGR_Anterior = somador(dadosA_Anterior, "Cálculo - GGR") + somador(dadosB_Anterior, "Cálculo - GGR");
-            let totalSportsbook_Anterior = somador(dadosA_Anterior, "Sportsbook - GGR") + somador(dadosB_Anterior, "Sportsbook - GGR");
-            let totalCassino_Anterior = somador(dadosA_Anterior, "Cassino - GGR") + somador(dadosB_Anterior, "Cassino - GGR");
-            let totalBonus_Anterior = somador(dadosA_Anterior, "Cálculo - bônus convertidos") + somador(dadosB_Anterior, "Cálculo - bônus convertidos");
+            let totalFTD_PrimeiroDia = somador(dadosA_PrimeiroDia, "Usuário - FTD-Montante") + somador(dadosB_PrimeiroDia, "Usuário - FTD-Montante");
+            let totalDepositos_PrimeiroDia = somador(dadosA_PrimeiroDia, "Usuário - Depósitos") + somador(dadosB_PrimeiroDia, "Usuário - Depósitos");
+            let totalGGR_PrimeiroDia = somador(dadosA_PrimeiroDia, "Cálculo - GGR") + somador(dadosB_PrimeiroDia, "Cálculo - GGR");
+            let totalSportsbook_PrimeiroDia = somador(dadosA_PrimeiroDia, "Sportsbook - GGR") + somador(dadosB_PrimeiroDia, "Sportsbook - GGR");
+            let totalCassino_PrimeiroDia = somador(dadosA_PrimeiroDia, "Cassino - GGR") + somador(dadosB_PrimeiroDia, "Cassino - GGR");
+            let totalBonus_PrimeiroDia = somador(dadosA_PrimeiroDia, "Cálculo - bônus convertidos") + somador(dadosB_PrimeiroDia, "Cálculo - bônus convertidos");
             
-            console.log("Valores para o Período Atual:", {
-                ftd: totalFTD_Atual,
-                depositos: totalDepositos_Atual,
-                ggr: totalGGR_Atual
-            });
-            console.log("Valores para o Período de Comparação:", {
-                ftd: totalFTD_Anterior,
-                depositos: totalDepositos_Anterior,
-                ggr: totalGGR_Anterior
-            });
-
-            animarKPI("#kpi-ftd", totalFTD_Atual, totalFTD_Anterior);
-            animarKPI("#kpi-depositos", totalDepositos_Atual, totalDepositos_Anterior);
-            animarKPI("#kpi-ggr", totalGGR_Atual, totalGGR_Anterior);
-            animarKPI("#kpi-sportsbook", totalSportsbook_Atual, totalSportsbook_Anterior);
-            animarKPI("#kpi-cassino", totalCassino_Atual, totalCassino_Anterior);
-            animarKPI("#kpi-bonus", totalBonus_Atual, totalBonus_Anterior);
+            animarKPI("#kpi-ftd", totalFTD_Atual, totalFTD_PrimeiroDia);
+            animarKPI("#kpi-depositos", totalDepositos_Atual, totalDepositos_PrimeiroDia);
+            animarKPI("#kpi-ggr", totalGGR_Atual, totalGGR_PrimeiroDia);
+            animarKPI("#kpi-sportsbook", totalSportsbook_Atual, totalSportsbook_PrimeiroDia);
+            animarKPI("#kpi-cassino", totalCassino_Atual, totalCassino_PrimeiroDia);
+            animarKPI("#kpi-bonus", totalBonus_Atual, totalBonus_PrimeiroDia);
         }
 
         function atualizarGraficos(dadosA, dadosB, nomeA, nomeB) {
@@ -990,7 +963,7 @@
             charts.chartComparativo.update();
         }
 
-        function atualizarTabelas(dadosBase_Atual, dadosBase_Anterior) {
+        function atualizarTabelas(dadosBase_Atual, dadosBase_PrimeiroDia) {
             let somadorPorClube = (arr, field) => arr.reduce((acc, d) => {
                 let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
                 let valor = parseFloat(d[field]) || 0;
@@ -1000,14 +973,14 @@
 
             function preenche(id, field) {
                 let mapaValoresAtual = somadorPorClube(dadosBase_Atual, field);
-                let mapaValoresAnterior = somadorPorClube(dadosBase_Anterior, field);
+                let mapaValoresPrimeiroDia = somadorPorClube(dadosBase_PrimeiroDia, field);
                 
                 let top10 = Object.entries(mapaValoresAtual).sort((a, b) => b[1] - a[1]).slice(0, 10);
                 
                 let html = top10.map(item => {
                     let clube = item[0];
                     let valorAtual = item[1];
-                    let valorAnterior = mapaValoresAnterior[clube] || 0;
+                    let valorAnterior = mapaValoresPrimeiroDia[clube] || 0;
                     
                     let variacao = 0;
                     if (valorAnterior !== 0) {
