@@ -880,6 +880,100 @@
             return dadosBase.filter(d => d["Usuário - Nome de username"] === nomeClube || d["Usuário - Nome de usuário"] === nomeClube);
         }
         
+        function atualizarKPIs(dadosA, dadosB) {
+            let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(d[field]) || 0), 0);
+            
+            let totalFTD = somador(dadosA, "Usuário - FTD-Montante") + somador(dadosB, "Usuário - FTD-Montante");
+            let totalDepositos = somador(dadosA, "Usuário - Depósitos") + somador(dadosB, "Usuário - Depósitos");
+            let totalGGR = somador(dadosA, "Cálculo - GGR") + somador(dadosB, "Cálculo - GGR");
+            let totalSportsbook = somador(dadosA, "Sportsbook - GGR") + somador(dadosB, "Sportsbook - GGR");
+            let totalCassino = somador(dadosA, "Cassino - GGR") + somador(dadosB, "Cassino - GGR");
+            let totalBonus = somador(dadosA, "Cálculo - bônus convertidos") + somador(dadosB, "Cálculo - bônus convertidos");
+
+            animarKPI("#kpi-ftd", totalFTD, valoresAnteriores["#kpi-ftd"]);
+            animarKPI("#kpi-depositos", totalDepositos, valoresAnteriores["#kpi-depositos"]);
+            animarKPI("#kpi-ggr", totalGGR, valoresAnteriores["#kpi-ggr"]);
+            animarKPI("#kpi-sportsbook", totalSportsbook, valoresAnteriores["#kpi-sportsbook"]);
+            animarKPI("#kpi-cassino", totalCassino, valoresAnteriores["#kpi-cassino"]);
+            animarKPI("#kpi-bonus", totalBonus, valoresAnteriores["#kpi-bonus"]);
+        }
+
+        function atualizarGraficos(dadosA, dadosB, nomeA, nomeB) {
+            let agrupaPorData = arr => {
+                let out = {};
+                arr.forEach(d => {
+                    out[d.DATA] = out[d.DATA] || { ggr: 0, dep: 0, ftd: 0, sb: 0, cs: 0, bo: 0 };
+                    out[d.DATA].ggr += parseFloat(d["Cálculo - GGR"]) || 0;
+                    out[d.DATA].dep += parseFloat(d["Usuário - Depósitos"]) || 0;
+                    out[d.DATA].ftd += parseFloat(d["Usuário - FTD-Montante"]) || 0;
+                    out[d.DATA].sb += parseFloat(d["Sportsbook - GGR"]) || 0;
+                    out[d.DATA].cs += parseFloat(d["Cassino - GGR"]) || 0;
+                    out[d.DATA].bo += parseFloat(d["Cálculo - bônus convertidos"]) || 0;
+                });
+                return out;
+            };
+
+            let dadosAgrupadosA = agrupaPorData(dadosA);
+            let dadosAgrupadosB = dadosB.length > 0 ? agrupaPorData(dadosB) : {};
+            let datas = [...new Set([...Object.keys(dadosAgrupadosA), ...Object.keys(dadosAgrupadosB)])].sort();
+
+            const isClubeBSelecionado = nomeB !== "Nenhum";
+            const corClubeB = isClubeBSelecionado ? "#e74c3c" : "rgba(0,0,0,0)";
+            const labelClubeB = isClubeBSelecionado ? nomeB : "";
+
+            function upd(chartId, campoDados){
+                let chart = charts[chartId];
+                chart.data.labels = datas;
+
+                chart.data.datasets[0].label = nomeA;
+                chart.data.datasets[0].data = datas.map(d => dadosAgrupadosA[d] ? dadosAgrupadosA[d][campoDados] : 0);
+                
+                chart.data.datasets[1].label = labelClubeB;
+                chart.data.datasets[1].borderColor = corClubeB;
+                chart.data.datasets[1].backgroundColor = isClubeBSelecionado ? chart.config.type === 'bar' ? corClubeB + 'CC' : 'transparent' : "rgba(0,0,0,0)";
+                chart.data.datasets[1].pointBackgroundColor = corClubeB;
+                chart.data.datasets[1].pointRadius = isClubeBSelecionado ? 4 : 0;
+                chart.data.datasets[1].data = datas.map(d => dadosAgrupadosB[d] ? dadosAgrupadosB[d][campoDados] : 0);
+                
+                chart.update();
+            }
+
+            upd("chartGGR", "ggr");
+            upd("chartDepositos", "dep");
+            upd("chartFTD", "ftd");
+            upd("chartSportsbook", "sb");
+            upd("chartCassino", "cs");
+            
+            // Atualizar gráfico comparativo
+            charts.chartComparativo.data.labels = ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'];
+            charts.chartComparativo.data.datasets[0].label = nomeA;
+            charts.chartComparativo.data.datasets[1].label = labelClubeB;
+            charts.chartComparativo.data.datasets[1].backgroundColor = isClubeBSelecionado ? "#e74c3c" + 'CC' : 'rgba(0,0,0,0)';
+            charts.chartComparativo.data.datasets[1].borderColor = corClubeB;
+
+            let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(d[field]) || 0), 0);
+            
+            charts.chartComparativo.data.datasets[0].data = [
+                somador(dadosA, "Usuário - FTD-Montante"),
+                somador(dadosA, "Usuário - Depósitos"),
+                somador(dadosA, "Cálculo - GGR"),
+                somador(dadosA, "Sportsbook - GGR"),
+                somador(dadosA, "Cassino - GGR"),
+                somador(dadosA, "Cálculo - bônus convertidos")
+            ];
+
+            charts.chartComparativo.data.datasets[1].data = isClubeBSelecionado ? [
+                somador(dadosB, "Usuário - FTD-Montante"),
+                somador(dadosB, "Usuário - Depósitos"),
+                somador(dadosB, "Cálculo - GGR"),
+                somador(dadosB, "Sportsbook - GGR"),
+                somador(dadosB, "Cassino - GGR"),
+                somador(dadosB, "Cálculo - bônus convertidos")
+            ] : [0, 0, 0, 0, 0, 0];
+
+            charts.chartComparativo.update();
+        }
+
         function atualizarTabelas(dadosBase) {
             function preenche(id, field) {
                 let mapaValores = dadosBase.reduce((acc, d) => {
