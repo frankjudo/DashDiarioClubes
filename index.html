@@ -40,6 +40,50 @@
             min-height: 100vh;
             padding: 20px;
         }
+
+        /* --- Estilo para o Modo Claro --- */
+        body.light-mode {
+            background: #f4f7f9;
+            color: #2c3e50;
+        }
+        body.light-mode .kpi, body.light-mode .controls, body.light-mode .chart-container, body.light-mode .table-container, body.light-mode .footer, body.light-mode header {
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: none;
+            border: 1px solid #e0e6ed;
+        }
+        body.light-mode header h1 {
+            background: linear-gradient(to right, var(--secondary), var(--info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        body.light-mode h3, body.light-mode label, body.light-mode .valor {
+            color: #2c3e50;
+        }
+        body.light-mode .btn-period, body.light-mode .btn-apply, body.light-mode .btn-export, body.light-mode .btn-mode {
+            background: #e0e6ed;
+            color: #2c3e50;
+        }
+        body.light-mode table th {
+            background: #e0e6ed;
+        }
+        body.light-mode table tr:hover {
+            background: #f7f9fa;
+        }
+        body.light-mode .variacao {
+            color: #616e7c;
+        }
+        body.light-mode .positive, body.light-mode .negative {
+            border-left: 5px solid;
+        }
+        body.light-mode .positive { border-left-color: #2ecc71; }
+        body.light-mode .negative { border-left-color: #e74c3c; }
+        body.light-mode input, body.light-mode select {
+            background: #f7f9fa;
+            border: 1px solid #e0e6ed;
+            color: #2c3e50;
+        }
+        /* --- Fim do Estilo do Modo Claro --- */
         
         .container {
             max-width: 1800px;
