@@ -636,24 +636,9 @@
     </div>
 
     <script>
-        const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+        const URL_CSV = "Relatório Diário CLubes (3).xlsx - Dados.csv";
         let dados = [], charts = {}, usandoDemo = false;
-        let valoresAnteriores = {}; // Esta variável não será mais usada para variação, mas pode ser útil para outras animações
-
-        // Dados de demonstração com informações adicionais
-        const dadosDemo = [
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "romub@programa.bet", "Usuário - FTD-Montante": "1500", "Usuário - Depósitos": "1500", "Cálculo - GGR": "3200", "Sportsbook - GGR": "1800", "Cassino - GGR": "1400", "Cálculo - bônus convertidos": "500"},
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "ciseleiot123@gmail.com", "Usuário - FTD-Montante": "2200", "Usuário - Depósitos": "2200", "Cálculo - GGR": "4800", "Sportsbook - GGR": "2800", "Cassino - GGR": "2000", "Cálculo - bônus convertidos": "800"},
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "betextraok@gmail.com", "Usuário - FTD-Montante": "800", "Usuário - Depósitos": "800", "Cálculo - GGR": "1800", "Sportsbook - GGR": "1000", "Cassino - GGR": "800", "Cálculo - bônus convertidos": "300"},
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "glabova22@gmail.com", "Usuário - FTD-Montante": "3000", "Usuário - Depósitos": "3000", "Cálculo - GGR": "6500", "Sportsbook - GGR": "3800", "Cassino - GGR": "2700", "Cálculo - bônus convertidos": "1200"},
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "gabaiei@meartsa.net", "Usuário - FTD-Montante": "2700", "Usuário - Depósitos": "2700", "Cálculo - GGR": "5900", "Sportsbook - GGR": "3500", "Cassino - GGR": "2400", "Cálculo - bônus convertidos": "1100"},
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "lucasfarshia@maizmabet.net", "Usuário - FTD-Montante": "3300", "Usuário - Depósitos": "3300", "Cálculo - GGR": "7100", "Sportsbook - GGR": "4200", "Cassino - GGR": "2900", "Cálculo - bônus convertidos": "1300"},
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "falso.makos@jax-co.com", "Usuário - FTD-Montante": "1100", "Usuário - Depósitos": "1100", "Cálculo - GGR": "2400", "Sportsbook - GGR": "1400", "Cassino - GGR": "1000", "Cálculo - bônus convertidos": "400"},
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "aerassd@gmail.com", "Usuário - FTD-Montante": "950", "Usuário - Depósitos": "950", "Cálculo - GGR": "2100", "Sportsbook - GGR": "1200", "Cassino - GGR": "900", "Cálculo - bônus convertidos": "350"},
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "cvbetsports@gmail.com", "Usuário - FTD-Montante": "1100", "Usuário - Depósitos": "1100", "Cálculo - GGR": "2400", "Sportsbook - GGR": "1400", "Cassino - GGR": "1000", "Cálculo - bônus convertidos": "400"},
-            {"DATA": "2023-10-01", "Usuário - Nome de usuário": "clubegremiumidot@gmail.com", "Usuário - FTD-Montante": "3000", "Usuário - Depósitos": "3000", "Cálculo - GGR": "6500", "Sportsbook - GGR": "3800", "Cassino - GGR": "2700", "Cálculo - bônus convertidos": "1200"}
-        ];
-
+        
         function showLoading(on, msg="Carregando dados..."){
             $("#loadingMessage").text(msg);
             $("#loadingOverlay").css("display", on ? "flex" : "none");
@@ -747,7 +732,7 @@
             if (anterior !== undefined && anterior !== 0) {
                 variacao = ((novo - anterior) / anterior) * 100;
             } else if (novo > 0 && anterior === 0) {
-                variacao = 100; // Variação de 100% se o anterior for zero e o novo for maior que zero
+                variacao = 100;
             }
             
             let variacaoText = variacao >= 0 ? 
@@ -786,6 +771,7 @@
                         usandoDemo = false;
                         $("#demoWarning").hide();
                     } else {
+                        console.error("Dados não encontrados no CSV. Carregando dados de demonstração.");
                         dados = dadosDemo;
                         usandoDemo = true;
                         $("#demoWarning").show();
@@ -793,6 +779,7 @@
                     init();
                 },
                 error: function() {
+                    console.error("Erro ao carregar o CSV. Verifique o caminho do arquivo ou a URL. Carregando dados de demonstração.");
                     dados = dadosDemo;
                     usandoDemo = true;
                     $("#demoWarning").show();
@@ -802,7 +789,6 @@
         }
 
         function init(){
-            // Preencher selects
             let clubes = [...new Set(dados.map(d => d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"]))];
             let opts = '<option value="Todos">Todos os Clubes</option>' +
                        clubes.map(c => `<option>${c}</option>`).join('');
@@ -812,14 +798,12 @@
             $("#filtroClubeA").html(opts).val("Todos");
             $("#filtroClubeB").html(optsClubeB).val("Nenhum");
             
-            // Iniciar com últimos 7 dias
             let hoje = new Date();
             let ini = new Date();
-            ini.setDate(hoje.getDate() - 7);
+            ini.setDate(hoje.getDate() - 1); // Definir o filtro inicial para Ontem
             $("#filtroInicio").val(ini.toISOString().slice(0,10));
             $("#filtroFim").val(hoje.toISOString().slice(0,10));
             
-            // Inicializar gráficos
             charts.chartComparativo = criarGrafico($("#chartComparativo")[0], "Clube A", "Clube B", "#3498db", "#e74c3c", 'bar');
             charts.chartGGR = criarGrafico($("#chartGGR")[0], "Clube A GGR", "Clube B GGR", "#3498db", "#e74c3c");
             charts.chartDepositos = criarGrafico($("#chartDepositos")[0], "Clube A Depósitos", "Clube B Depósitos", "#3498db", "#e74c3c");
@@ -827,13 +811,9 @@
             charts.chartSportsbook = criarGrafico($("#chartSportsbook")[0], "Clube A Sportsbook", "Clube B Sportsbook", "#3498db", "#e74c3c");
             charts.chartCassino = criarGrafico($("#chartCassino")[0], "Clube A Cassino", "Clube B Cassino", "#3498db", "#e74c3c");
             
-            // A variável valoresAnteriores não é mais usada para o cálculo de variação.
-            // Ela agora só é usada na animação.
-            
             atualizar();
             showLoading(false);
             
-            // Atualizar automaticamente a cada 5 minutos
             setInterval(atualizarDados, 300000);
         }
 
@@ -853,22 +833,24 @@
             carregar();
         }
 
-        // --- FUNÇÃO ATUALIZADA PARA CÁLCULO REAL DE VARIAÇÃO ---
         function atualizar(){
             let ini = $("#filtroInicio").val();
             let fim = $("#filtroFim").val();
 
-            // Calcular a duração do período e a data de início do período anterior
+            // Lógica para obter a duração e o período anterior
             const duracao = new Date(fim) - new Date(ini);
-            const fimAnterior = new Date(ini);
-            fimAnterior.setDate(fimAnterior.getDate() - 1);
-            const iniAnterior = new Date(fimAnterior.getTime() - duracao);
+            const iniAnterior = new Date(new Date(ini).getTime() - duracao);
+            const fimAnterior = new Date(new Date(fim).getTime() - duracao);
             
             const iniAnteriorStr = iniAnterior.toISOString().slice(0,10);
             const fimAnteriorStr = fimAnterior.toISOString().slice(0,10);
             
+            console.log("--- DEBUG DE DADOS ---");
+            console.log(`Período Atual: de ${ini} até ${fim}`);
+            console.log(`Período de Comparação: de ${iniAnteriorStr} até ${fimAnteriorStr}`);
+            
             // Filtrar os dados para o período atual e o período anterior
-            let dadosFiltradosAtual = dados.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim));
+            let dadosFiltradosAtual = dados.filter(d => d.DATA >= ini && d.DATA <= fim);
             let dadosFiltradosAnterior = dados.filter(d => d.DATA >= iniAnteriorStr && d.DATA <= fimAnteriorStr);
             
             let clubeA = $("#filtroClubeA").val();
@@ -894,7 +876,6 @@
             return dadosBase.filter(d => d["Usuário - Nome de username"] === nomeClube || d["Usuário - Nome de usuário"] === nomeClube);
         }
         
-        // --- FUNÇÃO ATUALIZADA PARA CÁLCULO REAL DE VARIAÇÃO ---
         function atualizarKPIs(dadosA_Atual, dadosB_Atual, dadosA_Anterior, dadosB_Anterior) {
             let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(d[field]) || 0), 0);
             
@@ -912,6 +893,17 @@
             let totalCassino_Anterior = somador(dadosA_Anterior, "Cassino - GGR") + somador(dadosB_Anterior, "Cassino - GGR");
             let totalBonus_Anterior = somador(dadosA_Anterior, "Cálculo - bônus convertidos") + somador(dadosB_Anterior, "Cálculo - bônus convertidos");
             
+            console.log("Valores para o Período Atual:", {
+                ftd: totalFTD_Atual,
+                depositos: totalDepositos_Atual,
+                ggr: totalGGR_Atual
+            });
+            console.log("Valores para o Período de Comparação:", {
+                ftd: totalFTD_Anterior,
+                depositos: totalDepositos_Anterior,
+                ggr: totalGGR_Anterior
+            });
+
             animarKPI("#kpi-ftd", totalFTD_Atual, totalFTD_Anterior);
             animarKPI("#kpi-depositos", totalDepositos_Atual, totalDepositos_Anterior);
             animarKPI("#kpi-ggr", totalGGR_Atual, totalGGR_Anterior);
@@ -966,7 +958,6 @@
             upd("chartSportsbook", "sb");
             upd("chartCassino", "cs");
             
-            // Atualizar gráfico comparativo
             charts.chartComparativo.data.labels = ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'];
             charts.chartComparativo.data.datasets[0].label = nomeA;
             charts.chartComparativo.data.datasets[1].label = labelClubeB;
@@ -996,22 +987,17 @@
             charts.chartComparativo.update();
         }
 
-        // --- FUNÇÃO ATUALIZADA PARA CÁLCULO REAL DE VARIAÇÃO ---
         function atualizarTabelas(dadosBase_Atual, dadosBase_Anterior) {
-            function preenche(id, field) {
-                let mapaValoresAtual = dadosBase_Atual.reduce((acc, d) => {
-                    let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
-                    let valor = parseFloat(d[field]) || 0;
-                    acc[clube] = (acc[clube] || 0) + valor;
-                    return acc;
-                }, {});
+            let somadorPorClube = (arr, field) => arr.reduce((acc, d) => {
+                let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
+                let valor = parseFloat(d[field]) || 0;
+                acc[clube] = (acc[clube] || 0) + valor;
+                return acc;
+            }, {});
 
-                let mapaValoresAnterior = dadosBase_Anterior.reduce((acc, d) => {
-                    let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
-                    let valor = parseFloat(d[field]) || 0;
-                    acc[clube] = (acc[clube] || 0) + valor;
-                    return acc;
-                }, {});
+            function preenche(id, field) {
+                let mapaValoresAtual = somadorPorClube(dadosBase_Atual, field);
+                let mapaValoresAnterior = somadorPorClube(dadosBase_Anterior, field);
                 
                 let top10 = Object.entries(mapaValoresAtual).sort((a, b) => b[1] - a[1]).slice(0, 10);
                 
