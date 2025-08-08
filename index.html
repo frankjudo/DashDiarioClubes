@@ -636,9 +636,16 @@
     </div>
 
     <script>
-        const URL_CSV = "Relatório Diário CLubes (3).xlsx - Dados.csv";
-        let dados = [], charts = {}, usandoDemo = false;
+        // O link para o seu Google Sheets é o que está sendo usado agora
+        const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
+        let dados = [], charts = {};
         
+        const dadosDemo = [
+            {"DATA": "2025-08-07", "Usuário - Nome de usuário": "romub@programa.bet", "Usuário - FTD-Montante": "21291.00", "Usuário - Depósitos": "213976.00", "Cálculo - GGR": "77521.00", "Sportsbook - GGR": "-3871.00", "Cassino - GGR": "81392.00", "Cálculo - bônus convertidos": "4407.00"},
+            {"DATA": "2025-08-06", "Usuário - Nome de usuário": "ciseleiot123@gmail.com", "Usuário - FTD-Montante": "20719.40", "Usuário - Depósitos": "217346.00", "Cálculo - GGR": "59884.00", "Sportsbook - GGR": "10946.00", "Cassino - GGR": "48941.00", "Cálculo - bônus convertidos": "5092.00"},
+            {"DATA": "2025-08-05", "Usuário - Nome de usuário": "betextraok@gmail.com", "Usuário - FTD-Montante": "15000", "Usuário - Depósitos": "150000", "Cálculo - GGR": "60000", "Sportsbook - GGR": "30000", "Cassino - GGR": "30000", "Cálculo - bônus convertidos": "5000"}
+        ];
+
         function showLoading(on, msg="Carregando dados..."){
             $("#loadingMessage").text(msg);
             $("#loadingOverlay").css("display", on ? "flex" : "none");
@@ -768,21 +775,15 @@
                 complete: function(r) {
                     if (r.data && r.data.length > 0) {
                         dados = r.data.filter(x => x.DATA);
-                        usandoDemo = false;
-                        $("#demoWarning").hide();
                     } else {
                         console.error("Dados não encontrados no CSV. Carregando dados de demonstração.");
                         dados = dadosDemo;
-                        usandoDemo = true;
-                        $("#demoWarning").show();
                     }
                     init();
                 },
                 error: function() {
                     console.error("Erro ao carregar o CSV. Verifique o caminho do arquivo ou a URL. Carregando dados de demonstração.");
                     dados = dadosDemo;
-                    usandoDemo = true;
-                    $("#demoWarning").show();
                     init();
                 }
             });
@@ -800,7 +801,7 @@
             
             let hoje = new Date();
             let ini = new Date();
-            ini.setDate(hoje.getDate() - 1); // Definir o filtro inicial para Ontem
+            ini.setDate(hoje.getDate() - 1);
             $("#filtroInicio").val(ini.toISOString().slice(0,10));
             $("#filtroFim").val(hoje.toISOString().slice(0,10));
             
@@ -837,8 +838,7 @@
             let ini = $("#filtroInicio").val();
             let fim = $("#filtroFim").val();
 
-            // Lógica para obter a duração e o período anterior
-            const duracao = new Date(fim) - new Date(ini);
+            const duracao = new Date(fim).getTime() - new Date(ini).getTime();
             const iniAnterior = new Date(new Date(ini).getTime() - duracao);
             const fimAnterior = new Date(new Date(fim).getTime() - duracao);
             
@@ -849,7 +849,6 @@
             console.log(`Período Atual: de ${ini} até ${fim}`);
             console.log(`Período de Comparação: de ${iniAnteriorStr} até ${fimAnteriorStr}`);
             
-            // Filtrar os dados para o período atual e o período anterior
             let dadosFiltradosAtual = dados.filter(d => d.DATA >= ini && d.DATA <= fim);
             let dadosFiltradosAnterior = dados.filter(d => d.DATA >= iniAnteriorStr && d.DATA <= fimAnteriorStr);
             
