@@ -274,19 +274,10 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
+            /* O overflow agora está no elemento pai para melhor visualização */
         }
         
-        .table-container h3 {
-            margin-bottom: 20px;
-            font-size: 1.4rem;
-            color: var(--secondary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        /* --- Início dos Ajustes nas Tabelas --- */
+        /* --- Início dos Ajustes nas Tabelas (mantendo o estilo) --- */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -550,7 +541,6 @@
                         <tr>
                             <th>Clube</th>
                             <th>Valor</th>
-                            <th>Variação</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -579,7 +569,6 @@
                         <tr>
                             <th>Clube</th>
                             <th>Valor</th>
-                            <th>Variação</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -594,7 +583,6 @@
                         <tr>
                             <th>Clube</th>
                             <th>Valor</th>
-                            <th>Variação</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -609,7 +597,6 @@
                         <tr>
                             <th>Clube</th>
                             <th>Valor</th>
-                            <th>Variação</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -624,7 +611,6 @@
                         <tr>
                             <th>Clube</th>
                             <th>Valor</th>
-                            <th>Variação</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -819,7 +805,7 @@
             
             let optsClubeB = '<option value="Nenhum">Nenhum</option>' + opts;
 
-            // Ajuste para definir "Todos os Clubes" como padrão
+            // AJUSTE: O valor padrão do Clube A agora é "Todos"
             $("#filtroClubeA").html(opts).val("Todos");
             $("#filtroClubeB").html(optsClubeB).val("Nenhum");
             
