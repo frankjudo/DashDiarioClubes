@@ -794,10 +794,12 @@
             $("#filtroClubeB").html(optsClubeB).val("Nenhum");
             
             let hoje = new Date();
+            let ontem = new Date();
+            ontem.setDate(hoje.getDate() - 1);
             let ini = new Date();
-            ini.setDate(hoje.getDate() - 1);
+            ini.setDate(ontem.getDate() - 6);
             $("#filtroInicio").val(ini.toISOString().slice(0,10));
-            $("#filtroFim").val(hoje.toISOString().slice(0,10));
+            $("#filtroFim").val(ontem.toISOString().slice(0,10));
             
             charts.chartComparativo = criarGrafico($("#chartComparativo")[0], "Clube A", "Clube B", "#3498db", "#e74c3c", 'bar');
             charts.chartGGR = criarGrafico($("#chartGGR")[0], "Clube A GGR", "Clube B GGR", "#3498db", "#e74c3c");
@@ -816,10 +818,12 @@
         
         function setPeriodo(d){
             let hoje = new Date();
+            let ontem = new Date();
+            ontem.setDate(hoje.getDate() - 1);
             let ini = new Date();
-            ini.setDate(hoje.getDate() - d);
+            ini.setDate(ontem.getDate() - (d-1));
             $("#filtroInicio").val(ini.toISOString().slice(0,10));
-            $("#filtroFim").val(hoje.toISOString().slice(0,10));
+            $("#filtroFim").val(ontem.toISOString().slice(0,10));
             atualizar();
         }
         
@@ -832,11 +836,8 @@
             let ini = $("#filtroInicio").val();
             let fim = $("#filtroFim").val();
 
-            // --- LÓGICA ATUALIZADA PARA CALCULAR VARIAÇÃO: ÚLTIMO DIA vs PRIMEIRO DIA ---
-            
             let dadosFiltradosAtual = dados.filter(d => d.DATA >= ini && d.DATA <= fim);
             
-            // Pega os dados do primeiro e do último dia do período
             let dadosPrimeiroDia = dados.filter(d => d.DATA === ini);
             let dadosUltimoDia = dados.filter(d => d.DATA === fim);
             
