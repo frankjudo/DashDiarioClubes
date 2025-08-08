@@ -636,7 +636,6 @@
     </div>
 
     <script>
-        // O link para o seu Google Sheets é o que está sendo usado agora
         const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
         let dados = [], charts = {};
         
@@ -776,13 +775,13 @@
                     if (r.data && r.data.length > 0) {
                         dados = r.data.filter(x => x.DATA);
                     } else {
-                        console.error("Dados não encontrados no CSV. Carregando dados de demonstração.");
+                        console.error("Dados não encontrados na planilha do Google Sheets. Carregando dados de demonstração.");
                         dados = dadosDemo;
                     }
                     init();
                 },
                 error: function() {
-                    console.error("Erro ao carregar o CSV. Verifique o caminho do arquivo ou a URL. Carregando dados de demonstração.");
+                    console.error("Erro ao carregar a planilha. Verifique a URL e a conexão. Carregando dados de demonstração.");
                     dados = dadosDemo;
                     init();
                 }
