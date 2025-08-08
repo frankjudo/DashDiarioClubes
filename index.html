@@ -839,7 +839,7 @@
             let ontem = new Date();
             ontem.setDate(hoje.getDate() - 1);
             let ini = new Date();
-            ini.setDate(ontem.getDate() - 6);
+            ini.setDate(hoje.getDate() - 2); // De "anteontem"
             $("#filtroInicio").val(ini.toISOString().slice(0,10));
             $("#filtroFim").val(ontem.toISOString().slice(0,10));
             
