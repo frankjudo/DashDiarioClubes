@@ -14,7 +14,7 @@
     :root {
       --primary:#2c3e50; --secondary:#47b3ff; --accent:#ff6b6b; --success:#2ecc71;
       --warning:#f39c12; --info:#9b59b6; --dark:#0f1b25; --light:#ecf0f1; --gray:#a7b1bb; --muted:#8aa0b3;
-      --card:#162635; --card-2:#132230;
+      --card:#142635; --card-2:#112331;
     }
     *{margin:0;padding:0;box-sizing:border-box;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
     body{background:linear-gradient(180deg, var(--dark), #142536 60%, #132130);color:var(--light);min-height:100vh;padding:20px}
@@ -41,7 +41,7 @@
     .btn:hover{filter:brightness(1.05)}
 
     .kpi-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:18px}
-    .kpi{background:linear-gradient(180deg, #142635, #112331);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px}
+    .kpi{background:linear-gradient(180deg, var(--card), var(--card-2));border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px}
     .kpi .head{display:flex;align-items:center;justify-content:space-between}
     .kpi i{font-size:22px;opacity:.9}
     .kpi h4{color:#9fb6c6;font-weight:700;letter-spacing:.2px}
@@ -50,11 +50,11 @@
     .kpi .hint{margin-left:8px;color:#98adbd;font-weight:600}
 
     .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:16px;margin-bottom:18px}
-    .card{background:linear-gradient(180deg, #142635, #112331);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px}
+    .card{background:linear-gradient(180deg, var(--card), var(--card-2));border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px}
     .card h3{display:flex;align-items:center;gap:10px;color:#9fd7ff}
 
     .tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px}
-    .table-container{background:linear-gradient(180deg, #142635, #112331);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px}
+    .table-container{background:linear-gradient(180deg, var(--card), var(--card-2));border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px}
     .table-container h3{display:flex;align-items:baseline;gap:8px;color:#9fd7ff}
     .table-container h3 small{color:#91a9b9;font-weight:600}
     table{width:100%;border-collapse:separate;border-spacing:0 8px;font-variant-numeric:tabular-nums}
@@ -293,47 +293,33 @@
       });
     }
 
-    // helpers para limites "bonitos" e escala compartilhada
+    // --------- ESCALA DINÂMICA POR GRÁFICO (como antes) ----------
     function niceStep(x){
       const exp = Math.pow(10, Math.floor(Math.log10(x || 1)));
       const f = x / exp;
       const nf = (f <= 1) ? 1 : (f <= 2) ? 2 : (f <= 2.5) ? 2.5 : (f <= 5) ? 5 : 10;
       return nf * exp;
     }
-    function sharedScale(values){
-      if(!values.length) return {min:0,max:1};
-      let max = Math.max(...values), min = Math.min(...values);
+    function setDynamicYScale(chart, values){
+      if(!values.length) return;
+      let max = Math.max(...values);
+      let min = Math.min(...values);
+      if(!isFinite(max) || !isFinite(min)) return;
+
       if(min < 0 && max > 0){
         const m = Math.max(Math.abs(min), Math.abs(max));
         const step = niceStep(m * 0.2);
-        const lim = Math.ceil((m*1.1)/step)*step;
-        return {min:-lim,max:lim};
+        chart.options.scales.y.suggestedMax = Math.ceil((m*1.1)/step)*step;
+        chart.options.scales.y.suggestedMin = -chart.options.scales.y.suggestedMax;
       } else {
         const range = Math.max(1, Math.abs(max - min));
         const step = niceStep(range * 0.2);
         const pad = step;
-        return {
-          min: Math.floor((min - pad)/step)*step,
-          max: Math.ceil((max + pad)/step)*step
-        };
+        chart.options.scales.y.suggestedMax = Math.ceil((max + pad)/step)*step;
+        chart.options.scales.y.suggestedMin = Math.floor((min - pad)/step)*step;
       }
     }
-
-    // aplica min/max em todos os gráficos de evolução
-    function applySharedScaleToAll(min, max){
-      const list = [
-        charts.chartGGR,
-        charts.chartDepositos,
-        charts.chartFTD,
-        charts.chartSportsbook,
-        charts.chartCassino
-      ];
-      list.forEach(c=>{
-        if(!c) return;
-        c.options.scales.y.suggestedMin = min;
-        c.options.scales.y.suggestedMax = max;
-      });
-    }
+    // -------------------------------------------------------------
 
     function kpi(sel, valor, anterior, rotulo){
       const card=document.querySelector(sel);
@@ -488,8 +474,6 @@
 
       const isB=nomeB!=="Nenhum"; const corB=isB?"#ff8080":"rgba(0,0,0,0)"; const labB=isB?nomeB:"";
 
-      // monta datasets + coleta todos os valores para escala compartilhada
-      const allValues=[];
       function upd(id,key){
         const c=charts[id];
         const valsA = labels.map(d=>A[d]?.[key]||0);
@@ -503,7 +487,10 @@
         c.data.datasets[1].pointBackgroundColor=corB;
         c.data.datasets[1].data=valsB;
 
-        allValues.push(...valsA, ...valsB);
+        // escala dinâmica por gráfico (aqui!)
+        setDynamicYScale(c, [...valsA, ...valsB]);
+
+        c.update();
       }
 
       upd('chartGGR','ggr');
@@ -512,18 +499,7 @@
       upd('chartSportsbook','sb');
       upd('chartCassino','cs');
 
-      // define escala compartilhada para TODOS os 5 gráficos
-      const {min,max} = sharedScale(allValues);
-      applySharedScaleToAll(min,max);
-
-      // atualiza
-      charts.chartGGR.update();
-      charts.chartDepositos.update();
-      charts.chartFTD.update();
-      charts.chartSportsbook.update();
-      charts.chartCassino.update();
-
-      // Comparativo (barras) — escala própria
+      // Comparativo (barras) — também com escala própria
       const sum=(arr,k)=>arr.reduce((s,d)=>s+N(d[k]),0);
       const sA=[sum(dadosA,"Usuário - FTD-Montante"),sum(dadosA,"Usuário - Depósitos"),sum(dadosA,"Cálculo - GGR"),sum(dadosA,"Sportsbook - GGR"),sum(dadosA,"Cassino - GGR"),sum(dadosA,"Cálculo - bônus convertidos")];
       const sB=isB?[sum(dadosB,"Usuário - FTD-Montante"),sum(dadosB,"Usuário - Depósitos"),sum(dadosB,"Cálculo - GGR"),sum(dadosB,"Sportsbook - GGR"),sum(dadosB,"Cassino - GGR"),sum(dadosB,"Cálculo - bônus convertidos")]:[0,0,0,0,0,0];
@@ -532,10 +508,7 @@
       c.data.datasets[0].label=nomeA; c.data.datasets[0].data=sA;
       c.data.datasets[1].label=labB;  c.data.datasets[1].data=sB;
 
-      // escala própria do comparativo
-      const {min:minC,max:maxC} = sharedScale([...sA, ...sB]);
-      c.options.scales.y.suggestedMin=minC;
-      c.options.scales.y.suggestedMax=maxC;
+      setDynamicYScale(c, [...sA, ...sB]); // barras com escala própria também
       c.update();
     }
 
