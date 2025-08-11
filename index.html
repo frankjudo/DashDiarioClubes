@@ -100,6 +100,14 @@
         <button class="btn btn-util" id="btnExportar"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
         <button class="btn btn-util" id="btnDarkMode"><i class="fa-solid fa-moon"></i> Modo Escuro</button>
         <button class="btn btn-util" id="btnAtualizar"><i class="fa-solid fa-sync"></i> Atualizar</button>
+
+        <!-- Seletor de escala dos gráficos -->
+        <label for="escalaMode" style="margin-left:10px">Escala dos gráficos:</label>
+        <select id="escalaMode">
+          <option value="tipo" selected>Por tipo (recomendado)</option>
+          <option value="auto">Automática por gráfico</option>
+          <option value="global">Única (todos os gráficos)</option>
+        </select>
       </div>
     </div>
 
@@ -179,6 +187,7 @@
     const N=v=>{ if(v==null) return 0; let s=String(v).trim(); if(!s) return 0; s=s.replace(/\s+/g,'').replace(/\./g,'').replace(/,/g,'.'); let n=+s; return Number.isFinite(n)?n:0; };
     const BR=(n,d=2)=> n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
 
+    // Demo mínimo
     const DEMO=[
       {"DATA":"2025-08-10","Usuário - Nome de usuário":"Clube A","Usuário - FTD-Montante":1500,"Usuário - Depósitos":5200,"Cálculo - GGR":3200,"Sportsbook - GGR":1800,"Cassino - GGR":1400,"Cálculo - bônus convertidos":450},
       {"DATA":"2025-08-10","Usuário - Nome de usuário":"Clube B","Usuário - FTD-Montante":900,"Usuário - Depósitos":3800,"Cálculo - GGR":2100,"Sportsbook - GGR":1200,"Cassino - GGR":900,"Cálculo - bônus convertidos":300},
@@ -205,16 +214,56 @@
       });
     }
 
-    // nice step & global scaling
-    function niceStep(x){ const e=Math.pow(10, Math.floor(Math.log10(x||1))); const f=(x/e); const nf=(f<=1)?1:(f<=2)?2:(f<=2.5)?2.5:(f<=5)?5:10; return nf*e; }
-    function applyGlobalScale(chartsArr, values){
-      if(!values.length){ chartsArr.forEach(c=>{delete c.options.scales.y.suggestedMin; delete c.options.scales.y.suggestedMax; c.update();}); return; }
+    // ----- Escalas -----
+    function niceStep(x){ const e=Math.pow(10, Math.floor(Math.log10(x||1))); const f=(x/e);
+      const nf=(f<=1)?1:(f<=2)?2:(f<=2.5)?2.5:(f<=5)?5:10; return nf*e; }
+
+    function scaleTo(chartsArr, values){
+      if(!values.length){ chartsArr.forEach(c=>{ delete c.options.scales.y.suggestedMin; delete c.options.scales.y.suggestedMax; c.update(); }); return; }
       let min=Math.min(...values), max=Math.max(...values);
       if(min===Infinity||max===-Infinity){min=0;max=1;}
       let smin, smax;
-      if(min<0 && max>0){ const m=Math.max(Math.abs(min),Math.abs(max)); const step=niceStep(m*0.2); smax=Math.ceil((m*1.05)/step)*step; smin=-smax; }
-      else{ const range=Math.max(1,Math.abs(max-min)); const step=niceStep(range*0.2); smax=Math.ceil((max+step)/step)*step; smin=Math.floor((min-step)/step)*step; }
+      if(min<0 && max>0){
+        const m=Math.max(Math.abs(min),Math.abs(max));
+        const step=niceStep(m*0.2);
+        smax=Math.ceil((m*1.05)/step)*step; smin=-smax;
+      }else{
+        const range=Math.max(1,Math.abs(max-min));
+        const step=niceStep(range*0.2);
+        smax=Math.ceil((max+step)/step)*step; smin=Math.floor((min-step)/step)*step;
+      }
       chartsArr.forEach(c=>{ c.options.scales.y.suggestedMin=smin; c.options.scales.y.suggestedMax=smax; c.update(); });
+    }
+
+    function applyScaleMode(mode, series){
+      const evolCharts = [charts.ggr, charts.dep, charts.ftd, charts.sb, charts.cs];
+
+      if(mode === 'auto'){
+        evolCharts.forEach(c=>{
+          delete c.options.scales.y.suggestedMin;
+          delete c.options.scales.y.suggestedMax;
+          c.update();
+        });
+        return;
+      }
+
+      if(mode === 'global'){
+        const allVals = [].concat(series.ggrA, series.ggrB, series.depA, series.depB,
+                                   series.ftdA, series.ftdB, series.sbA, series.sbB,
+                                   series.csA, series.csB);
+        scaleTo(evolCharts, allVals);
+        return;
+      }
+
+      // 'tipo' (recomendado): financeiros x menores
+      const finCharts = [charts.dep, charts.ggr, charts.cs];
+      const finVals   = [].concat(series.depA, series.depB, series.ggrA, series.ggrB, series.csA, series.csB);
+
+      const smallCharts = [charts.ftd, charts.sb];
+      const smallVals   = [].concat(series.ftdA, series.ftdB, series.sbA, series.sbB);
+
+      scaleTo(finCharts, finVals);
+      scaleTo(smallCharts, smallVals);
     }
 
     function setKPI(id, val, prev, label){
@@ -276,6 +325,7 @@
       $('btnAtualizar').onclick=carregar;
       $('eliminarSuprema').onchange=atualizar;
       $('eliminarToni').onchange=atualizar;
+      $('escalaMode').addEventListener('change', atualizar);
     }
 
     function setPeriodo(dias){
@@ -300,7 +350,7 @@
       const prevIniStr=fmtISO(prevIni), prevFimStr=fmtISO(prevFim);
       const rotulo=`vs ${prevIniStr} – ${prevFimStr}`;
 
-      // filtros "suprema" / "toni"
+      // filtros extras
       let base=[...dados];
       if(document.getElementById('eliminarSuprema').checked) base=base.filter(d=>!CLUBES_SUPREMA.includes(name(d)));
       if(document.getElementById('eliminarToni').checked) base=base.filter(d=>name(d)!==CLUBE_TONI);
@@ -365,9 +415,16 @@
       const r4=upd('sb','sb',clubeA);
       const r5=upd('cs','cs',clubeA);
 
-      // ***** ESCALA GLOBAL ÚNICA PARA TODOS OS GRÁFICOS DE EVOLUÇÃO *****
-      const allVals=[...r1.vA,...r1.vB,...r2.vA,...r2.vB,...r3.vA,...r3.vB,...r4.vA,...r4.vB,...r5.vA,...r5.vB];
-      applyGlobalScale([charts.ggr,charts.dep,charts.ftd,charts.sb,charts.cs], allVals);
+      // ----- ESCALAS conforme seletor -----
+      const series = {
+        ggrA: r1.vA, ggrB: r1.vB,
+        depA: r2.vA, depB: r2.vB,
+        ftdA: r3.vA, ftdB: r3.vB,
+        sbA:  r4.vA, sbB:  r4.vB,
+        csA:  r5.vA, csB:  r5.vB,
+      };
+      const mode = document.getElementById('escalaMode').value; // 'tipo' | 'auto' | 'global'
+      applyScaleMode(mode, series);
 
       // Comparativo (barras) – escala própria
       const sA=[FTD,DEP,GGR,SB,CS,BN];
@@ -378,13 +435,13 @@
       charts.comp.update();
 
       // Tabelas
-      atualizarTabelas(atual,anterior,rotulo);
+      atualizarTabelas(atual,anterior);
 
       const now=new Date().toLocaleString('pt-BR');
       document.getElementById('ultimaAtualizacao').textContent='Atualizado em '+now;
     }
 
-    function atualizarTabelas(dadosAtual,dadosAnterior,label){
+    function atualizarTabelas(dadosAtual,dadosAnterior){
       function fill(id,campo){
         const name=d=>d["Usuário - Nome de usuário"]||d["Usuário - Nome de username"];
         const sumBy=(arr)=>arr.reduce((acc,d)=>{const k=name(d); acc[k]=(acc[k]||0)+N(d[campo]); return acc;}, {});
