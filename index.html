@@ -686,6 +686,7 @@
     </div>
 
     <script>
+        // URL da planilha fornecida
         const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
         let dados = [], charts = {};
         
@@ -699,6 +700,70 @@
         ];
         
         const CLUBE_TONI = 'crisslots123@gmail.com';
+        
+        // Dados de demonstração para quando a planilha não estiver disponível
+        const DADOS_DEMO = [
+            {
+                "Data": "2025-08-10",
+                "Usuário - Nome de usuário": "Clube A",
+                "Usuário - FTD-Montante": 1500,
+                "Usuário - Depósitos": 5200,
+                "Cálculo - GGR": 3200,
+                "Sportsbook - GGR": 1800,
+                "Cassino - GGR": 1400,
+                "Cálculo - bônus convertidos": 450
+            },
+            {
+                "Data": "2025-08-10",
+                "Usuário - Nome de usuário": "Clube B",
+                "Usuário - FTD-Montante": 900,
+                "Usuário - Depósitos": 3800,
+                "Cálculo - GGR": 2100,
+                "Sportsbook - GGR": 1200,
+                "Cassino - GGR": 900,
+                "Cálculo - bônus convertidos": 300
+            },
+            {
+                "Data": "2025-08-09",
+                "Usuário - Nome de usuário": "Clube A",
+                "Usuário - FTD-Montante": 1200,
+                "Usuário - Depósitos": 4800,
+                "Cálculo - GGR": 2900,
+                "Sportsbook - GGR": 1600,
+                "Cassino - GGR": 1300,
+                "Cálculo - bônus convertidos": 420
+            },
+            {
+                "Data": "2025-08-09",
+                "Usuário - Nome de usuário": "Clube B",
+                "Usuário - FTD-Montante": 850,
+                "Usuário - Depósitos": 3500,
+                "Cálculo - GGR": 1900,
+                "Sportsbook - GGR": 1100,
+                "Cassino - GGR": 800,
+                "Cálculo - bônus convertidos": 280
+            },
+            {
+                "Data": "2025-08-08",
+                "Usuário - Nome de usuário": "Clube A",
+                "Usuário - FTD-Montante": 1100,
+                "Usuário - Depósitos": 4500,
+                "Cálculo - GGR": 2700,
+                "Sportsbook - GGR": 1500,
+                "Cassino - GGR": 1200,
+                "Cálculo - bônus convertidos": 400
+            },
+            {
+                "Data": "2025-08-08",
+                "Usuário - Nome de usuário": "Clube B",
+                "Usuário - FTD-Montante": 800,
+                "Usuário - Depósitos": 3200,
+                "Cálculo - GGR": 1800,
+                "Sportsbook - GGR": 1000,
+                "Cassino - GGR": 800,
+                "Cálculo - bônus convertidos": 250
+            }
+        ];
         
         function showLoading(on, msg="Carregando dados..."){
             $("#loadingMessage").text(msg);
@@ -823,35 +888,34 @@
         function carregar(){
             showLoading(true, "Conectando à fonte de dados...");
             
-            const urlComCacheBuster = URL_CSV + '&' + new Date().getTime();
-            Papa.parse(urlComCacheBuster, {
+            // Tente carregar dados da planilha
+            Papa.parse(URL_CSV, {
                 download: true,
                 header: true,
                 complete: function(r) {
                     if (r.data && r.data.length > 0) {
-                        dados = r.data.filter(x => x.DATA);
-                        // --- VERIFICACAO DE DADOS ---
-                        let somaVerificacao = dados.filter(d => 
-                            new Date(d.DATA) >= new Date('2025-07-01') && new Date(d.DATA) <= new Date('2025-08-10')
-                        ).reduce((s, d) => s + (parseFloat(d["Usuário - FTD-Montante"]) || 0), 0);
-                        console.log(`Verificação: A soma total de FTD do período 01/07 a 10/08 é R$ ${somaVerificacao:,.2f}`);
-                        // --- FIM DA VERIFICAÇÃO DE DADOS ---
+                        dados = r.data.filter(x => x.Data); // Corrigido para "Data"
+                        init();
                     } else {
-                        console.error("Dados não encontrados na planilha do Google Sheets. Não é possível carregar o painel.");
-                        dados = [];
+                        // Fallback para dados demo
+                        console.warn("Usando dados de demonstração");
+                        dados = DADOS_DEMO;
+                        $("#demoWarning").show();
+                        init();
                     }
-                    init();
                 },
                 error: function() {
-                    console.error("Erro ao carregar a planilha. Verifique a URL e a conexão.");
-                    dados = [];
+                    // Fallback para dados demo em caso de erro
+                    console.warn("Erro ao carregar dados, usando demonstração");
+                    dados = DADOS_DEMO;
+                    $("#demoWarning").show();
                     init();
                 }
             });
         }
 
         function init(){
-            let clubes = [...new Set(dados.map(d => d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"]))];
+            let clubes = [...new Set(dados.map(d => d["Usuário - Nome de usuário"]))];
             let opts = '<option value="Todos">Todos os Clubes</option>' +
                        clubes.map(c => `<option>${c}</option>`).join('');
             
@@ -860,14 +924,14 @@
             $("#filtroClubeA").html(opts).val("Todos");
             $("#filtroClubeB").html(optsClubeB).val("Nenhum");
             
+            // Definir datas padrão
             let hoje = new Date();
             let ontem = new Date();
             ontem.setDate(hoje.getDate() - 1);
-            let anteontem = new Date();
-            anteontem.setDate(hoje.getDate() - 2);
-            $("#filtroInicio").val(anteontem.toISOString().slice(0,10));
+            $("#filtroInicio").val(ontem.toISOString().slice(0,10));
             $("#filtroFim").val(ontem.toISOString().slice(0,10));
             
+            // Criar gráficos
             charts.chartComparativo = criarGrafico($("#chartComparativo")[0], "Clube A", "Clube B", "#3498db", "#e74c3c", 'bar');
             charts.chartGGR = criarGrafico($("#chartGGR")[0], "Clube A GGR", "Clube B GGR", "#3498db", "#e74c3c");
             charts.chartDepositos = criarGrafico($("#chartDepositos")[0], "Clube A Depósitos", "Clube B Depósitos", "#3498db", "#e74c3c");
@@ -878,6 +942,7 @@
             atualizar();
             showLoading(false);
             
+            // Atualizar a cada 5 minutos
             setInterval(atualizarDados, 300000);
         }
 
@@ -908,21 +973,21 @@
             const eliminarSuprema = $("#eliminarSuprema").is(":checked");
             if (eliminarSuprema) {
                 dadosBase = dadosBase.filter(d => 
-                    !CLUBES_SUPREMA_LIST.includes(d["Usuário - Nome de usuário"] || d["Usuário - Nome de username"])
+                    !CLUBES_SUPREMA_LIST.includes(d["Usuário - Nome de usuário"])
                 );
             }
             
             const eliminarToni = $("#eliminarToni").is(":checked");
             if (eliminarToni) {
                  dadosBase = dadosBase.filter(d => 
-                    (d["Usuário - Nome de usuário"] || d["Usuário - Nome de username"]) !== CLUBE_TONI
+                    d["Usuário - Nome de usuário"] !== CLUBE_TONI
                 );
             }
             
-            let dadosFiltradosAtual = dadosBase.filter(d => d.DATA >= ini && d.DATA <= fim);
+            let dadosFiltradosAtual = dadosBase.filter(d => d.Data >= ini && d.Data <= fim);
             
-            let dadosPrimeiroDia = dadosBase.filter(d => d.DATA === ini);
-            let dadosUltimoDia = dadosBase.filter(d => d.DATA === fim);
+            let dadosPrimeiroDia = dadosBase.filter(d => d.Data === ini);
+            let dadosUltimoDia = dadosBase.filter(d => d.Data === fim);
             
             let clubeA = $("#filtroClubeA").val();
             let clubeB = $("#filtroClubeB").val();
@@ -947,7 +1012,7 @@
             if (nomeClube === "Todos") {
                 return dadosBase;
             }
-            return dadosBase.filter(d => d["Usuário - Nome de username"] === nomeClube || d["Usuário - Nome de usuário"] === nomeClube);
+            return dadosBase.filter(d => d["Usuário - Nome de usuário"] === nomeClube);
         }
         
         function atualizarKPIs(dadosA_UltimoDia, dadosB_UltimoDia, dadosA_PrimeiroDia, dadosB_PrimeiroDia) {
@@ -979,13 +1044,13 @@
             let agrupaPorData = arr => {
                 let out = {};
                 arr.forEach(d => {
-                    out[d.DATA] = out[d.DATA] || { ggr: 0, dep: 0, ftd: 0, sb: 0, cs: 0, bo: 0 };
-                    out[d.DATA].ggr += parseFloat(d["Cálculo - GGR"]) || 0;
-                    out[d.DATA].dep += parseFloat(d["Usuário - Depósitos"]) || 0;
-                    out[d.DATA].ftd += parseFloat(d["Usuário - FTD-Montante"]) || 0;
-                    out[d.DATA].sb += parseFloat(d["Sportsbook - GGR"]) || 0;
-                    out[d.DATA].cs += parseFloat(d["Cassino - GGR"]) || 0;
-                    out[d.DATA].bo += parseFloat(d["Cálculo - bônus convertidos"]) || 0;
+                    out[d.Data] = out[d.Data] || { ggr: 0, dep: 0, ftd: 0, sb: 0, cs: 0, bo: 0 };
+                    out[d.Data].ggr += parseFloat(d["Cálculo - GGR"]) || 0;
+                    out[d.Data].dep += parseFloat(d["Usuário - Depósitos"]) || 0;
+                    out[d.Data].ftd += parseFloat(d["Usuário - FTD-Montante"]) || 0;
+                    out[d.Data].sb += parseFloat(d["Sportsbook - GGR"]) || 0;
+                    out[d.Data].cs += parseFloat(d["Cassino - GGR"]) || 0;
+                    out[d.Data].bo += parseFloat(d["Cálculo - bônus convertidos"]) || 0;
                 });
                 return out;
             };
@@ -1052,7 +1117,7 @@
 
         function atualizarTabelas(dadosBase_Atual, dadosBase_PrimeiroDia) {
             let somadorPorClube = (arr, field) => arr.reduce((acc, d) => {
-                let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
+                let clube = d["Usuário - Nome de usuário"];
                 let valor = parseFloat(d[field]) || 0;
                 acc[clube] = (acc[clube] || 0) + valor;
                 return acc;
