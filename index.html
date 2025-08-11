@@ -830,6 +830,12 @@
                 complete: function(r) {
                     if (r.data && r.data.length > 0) {
                         dados = r.data.filter(x => x.DATA);
+                        // --- VERIFICAÇÃO DE DADOS ---
+                        let somaVerificacao = dados.filter(d => 
+                            new Date(d.DATA) >= new Date('2025-07-01') && new Date(d.DATA) <= new Date('2025-08-10')
+                        ).reduce((s, d) => s + (parseFloat(d["Usuário - FTD-Montante"]) || 0), 0);
+                        console.log(`Verificação: A soma total de FTD do período 01/07 a 10/08 é R$ ${somaVerificacao:,.2f}`);
+                        // --- FIM DA VERIFICAÇÃO DE DADOS ---
                     } else {
                         console.error("Dados não encontrados na planilha do Google Sheets. Não é possível carregar o painel.");
                         dados = [];
@@ -909,7 +915,7 @@
             const eliminarToni = $("#eliminarToni").is(":checked");
             if (eliminarToni) {
                  dadosBase = dadosBase.filter(d => 
-                    !CLUBE_TONI.includes(d["Usuário - Nome de usuário"] || d["Usuário - Nome de username"])
+                    (d["Usuário - Nome de usuário"] || d["Usuário - Nome de username"]) !== CLUBE_TONI
                 );
             }
             
