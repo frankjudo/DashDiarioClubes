@@ -498,6 +498,10 @@
                         <input type="checkbox" id="eliminarSuprema" onchange="atualizar()">
                         <label for="eliminarSuprema">Eliminar Clubes Suprema</label>
                     </div>
+                     <div class="eliminar-toni">
+                        <input type="checkbox" id="eliminarToni" onchange="atualizar()">
+                        <label for="eliminarToni">Eliminar TONI</label>
+                    </div>
                     <button class="btn-export" onclick="exportarCSV()">
                         <i class="fas fa-file-csv"></i> Exportar CSV
                     </button>
@@ -685,7 +689,6 @@
         const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
         let dados = [], charts = {};
         
-        // Lista de clubes a serem eliminados
         const CLUBES_SUPREMA_LIST = [
             'romulo@xpgames.bet',
             'lucasfarinha@maximabet.net',
@@ -694,6 +697,8 @@
             'tropadogg@gmail.com',
             'galeradoinsta@gmail.com'
         ];
+        
+        const CLUBE_TONI = 'crisslots123@gmail.com';
         
         function showLoading(on, msg="Carregando dados..."){
             $("#loadingMessage").text(msg);
@@ -892,11 +897,19 @@
             let ini = $("#filtroInicio").val();
             let fim = $("#filtroFim").val();
 
-            // Lógica para filtrar a partir da lista
             let dadosBase = [...dados];
-            if ($("#eliminarSuprema").is(":checked")) {
+
+            const eliminarSuprema = $("#eliminarSuprema").is(":checked");
+            if (eliminarSuprema) {
                 dadosBase = dadosBase.filter(d => 
                     !CLUBES_SUPREMA_LIST.includes(d["Usuário - Nome de usuário"] || d["Usuário - Nome de username"])
+                );
+            }
+            
+            const eliminarToni = $("#eliminarToni").is(":checked");
+            if (eliminarToni) {
+                 dadosBase = dadosBase.filter(d => 
+                    !CLUBE_TONI.includes(d["Usuário - Nome de usuário"] || d["Usuário - Nome de username"])
                 );
             }
             
