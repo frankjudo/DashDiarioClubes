@@ -39,9 +39,19 @@
     .kpi .vl{font-size:24px;font-weight:900;margin-top:8px}
     .kpi .var{margin-top:8px;font-weight:800}
     .up{color:#8affc4} .down{color:#ff9e9e} .flat{color:#cdd9e1}
-    .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:12px;margin-bottom:16px}
+    
+    /* ########## CORREÇÃO APLICADA AQUI ########## */
+    .charts{
+      display:grid;
+      /* Força a grade a ter sempre 3 colunas, evitando que se estiquem */
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+      margin-bottom:16px
+    }
+
     .card{padding:14px}
     .card h3{margin:0 0 12px;color:#9fd7ff;font-size:16px;display:flex;gap:8px;align-items:center}
+    
     .tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:12px}
     .table{padding:14px}
     .table h3{margin:0 0 10px;color:#9fd7ff;font-size:16px}
@@ -57,7 +67,13 @@
     .pill.down{border-color:rgba(231,76,60,.35);background:rgba(231,76,60,.12);color:#ff9e9e}
     .pill.flat{border-color:rgba(185,197,205,.35);background:rgba(185,197,205,.12);color:#cdd9e1}
     .muted{color:var(--muted)}
-    @media (max-width:1000px){.charts{grid-template-columns:1fr}}
+    
+    /* Ajuste para telas menores: os gráficos e tabelas viram uma única coluna */
+    @media (max-width:1200px){
+      .charts, .tables {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -101,7 +117,6 @@
         <button class="btn btn-util" id="btnDarkMode"><i class="fa-solid fa-moon"></i> Modo Escuro</button>
         <button class="btn btn-util" id="btnAtualizar"><i class="fa-solid fa-sync"></i> Atualizar</button>
 
-        <!-- Seletor de escala dos gráficos -->
         <label for="escalaMode" style="margin-left:10px">Escala dos gráficos:</label>
         <select id="escalaMode">
           <option value="tipo" selected>Por tipo (recomendado)</option>
@@ -111,7 +126,6 @@
       </div>
     </div>
 
-    <!-- KPIs -->
     <div class="kpis">
       <div class="kpi" id="kpi-ftd">
         <div class="hd"><h4>FTD</h4><i class="fa-solid fa-user-plus" style="color:#8affc4"></i></div>
@@ -145,7 +159,6 @@
       </div>
     </div>
 
-    <!-- GRÁFICOS -->
     <div class="charts">
       <div class="card"><h3><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3><canvas id="chartComparativo"></canvas></div>
       <div class="card"><h3><i class="fa-solid fa-chart-line"></i> Evolução do GGR</h3><canvas id="chartGGR"></canvas></div>
@@ -155,7 +168,6 @@
       <div class="card"><h3><i class="fa-solid fa-dice"></i> Evolução do Cassino</h3><canvas id="chartCassino"></canvas></div>
     </div>
 
-    <!-- TABELAS -->
     <div class="tables">
       <div class="table"><h3><i class="fa-solid fa-trophy"></i> Top 10 Depósitos (vs período anterior)</h3>
         <table id="topDepositos"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3" class="muted">Carregando...</td></tr></tbody></table>
@@ -249,8 +261,8 @@
 
       if(mode === 'global'){
         const allVals = [].concat(series.ggrA, series.ggrB, series.depA, series.depB,
-                                   series.ftdA, series.ftdB, series.sbA, series.sbB,
-                                   series.csA, series.csB);
+                                  series.ftdA, series.ftdB, series.sbA, series.sbB,
+                                  series.csA, series.csB);
         scaleTo(evolCharts, allVals);
         return;
       }
