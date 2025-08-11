@@ -517,6 +517,8 @@
 
         <div class="kpi-container">
             <div class="kpi positive" id="kpi-ftd">
+                <i class="fa-solid fa-user-plus" style="color:#2ecc71"></i>
+                <h3>FTD</h3>
                 <div class="valor">R$ 0</div>
                 <div class="variacao">+0.0%</div>
             </div>
@@ -828,7 +830,7 @@
                 complete: function(r) {
                     if (r.data && r.data.length > 0) {
                         dados = r.data.filter(x => x.DATA);
-                        // --- VERIFICACAO DE DADOS ---
+                        // --- VERIFICAÇÃO DE DADOS ---
                         let somaVerificacao = dados.filter(d => 
                             new Date(d.DATA) >= new Date('2025-07-01') && new Date(d.DATA) <= new Date('2025-08-10')
                         ).reduce((s, d) => s + (parseFloat(d["Usuário - FTD-Montante"]) || 0), 0);
