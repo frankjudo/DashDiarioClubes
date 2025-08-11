@@ -860,7 +860,6 @@
             $("#filtroClubeA").html(opts).val("Todos");
             $("#filtroClubeB").html(optsClubeB).val("Nenhum");
             
-            // --- CÓDIGO CORRIGIDO ---
             let hoje = new Date();
             let ontem = new Date();
             ontem.setDate(hoje.getDate() - 1);
@@ -868,7 +867,6 @@
             anteontem.setDate(hoje.getDate() - 2);
             $("#filtroInicio").val(anteontem.toISOString().slice(0,10));
             $("#filtroFim").val(ontem.toISOString().slice(0,10));
-            // --- FIM DO CÓDIGO CORRIGIDO ---
             
             charts.chartComparativo = criarGrafico($("#chartComparativo")[0], "Clube A", "Clube B", "#3498db", "#e74c3c", 'bar');
             charts.chartGGR = criarGrafico($("#chartGGR")[0], "Clube A GGR", "Clube B GGR", "#3498db", "#e74c3c");
