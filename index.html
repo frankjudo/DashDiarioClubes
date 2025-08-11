@@ -24,7 +24,7 @@
     }
     body.light-mode header h1{background:linear-gradient(to right,var(--secondary),var(--info));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
     body.light-mode h3, body.light-mode label, body.light-mode .valor{color:#2c3e50}
-    body.light-mode .btn-period, body.light-mode .btn-apply, body.light-mode .btn-export, body.light-mode .btn-mode{background:#e0e6ed;color:#2c3e50}
+    body.light-mode .btn-period, body.light-mode .btn-apply, body.light-mode .btn-export, body-light-mode .btn-mode{background:#e0e6ed;color:#2c3e50}
     body.light-mode table th{background:#e0e6ed}
     body.light-mode table tr:hover{background:#f7f9fa}
     body.light-mode .variacao{color:#616e7c}
@@ -62,6 +62,7 @@
     .kpi h3{font-size:1.3rem;margin-bottom:10px;color:var(--gray)}
     .kpi .valor{font-size:1.8rem;font-weight:700}
     .kpi .variacao{font-size:.9rem;margin-top:8px;font-weight:600}
+    .kpi .variacao .hint{opacity:.7;font-weight:500;margin-left:6px;font-size:.85em}
     .positive{border-left:5px solid var(--success)}
     .negative{border-left:5px solid var(--accent)}
 
@@ -316,7 +317,7 @@
       return Number.isFinite(n) ? n : 0;
     };
 
-    // --- VALIDAÇÃO (console) ---
+    // --- VALIDAÇÃO (console) opcional ---
     const EXPECTED = {
       ftd:        375329.3,
       depositos:  6453433.97,
@@ -346,7 +347,7 @@
       });
       console.groupEnd();
     }
-    // ----------------------------
+    // ------------------------------------
 
     // Demo
     const DADOS_DEMO = [
@@ -383,23 +384,25 @@
       });
     }
 
-    function animarKPI(sel, novo, anterior){
-      let el = document.querySelector(sel + " .valor");
-      let varEl = document.querySelector(sel + " .variacao");
-      let variacao = 0;
-      if (anterior !== undefined && anterior !== 0) variacao = ((novo - anterior) / anterior) * 100;
-      else if (novo > 0 && anterior === 0) variacao = 100;
-      varEl.innerHTML = variacao >= 0
-        ? `<span style="color:#2ecc71">+${variacao.toFixed(1)}%</span>`
-        : `<span style="color:#e74c3c">${variacao.toFixed(1)}%</span>`;
+    // KPI com rótulo de comparação
+    function animarKPI(sel, novo, anterior, label='vs período anterior'){
+      const el = document.querySelector(sel + " .valor");
+      const varEl = document.querySelector(sel + " .variacao");
 
-      let kpi = document.querySelector(sel);
+      let variacao = 0;
+      if (Number.isFinite(anterior) && anterior !== 0) variacao = ((novo - anterior)/anterior)*100;
+      else if (novo > 0) variacao = 100;
+
+      const cor = variacao >= 0 ? '#2ecc71' : '#e74c3c';
+      varEl.innerHTML = `<span style="color:${cor}">${variacao>=0?'+':''}${variacao.toFixed(1)}%</span><span class="hint">${label}</span>`;
+
+      const kpi = document.querySelector(sel);
       kpi.classList.remove("positive","negative");
       kpi.classList.add(novo >= (anterior ?? 0) ? "positive" : "negative");
 
       let ant = parseFloat(el.textContent.replace(/[^\d]/g,'')) || 0;
       let diff = (novo - ant) / 30, cur = ant, pass = 0;
-      let h = setInterval(()=>{
+      const h = setInterval(()=>{
         cur += diff; pass++;
         if (pass >= 30){ clearInterval(h); cur = novo; }
         el.textContent = "R$ " + cur.toLocaleString('pt-BR',{minimumFractionDigits:2});
@@ -417,7 +420,6 @@
               .filter(x => x.DATA || x.Data)
               .map(x => {
                 if (x.Data && !x.DATA) x.DATA = x.Data;
-                // normaliza campo de clube
                 if (!x["Usuário - Nome de usuário"] && x["Usuário - Nome de username"]) {
                   x["Usuário - Nome de usuário"] = x["Usuário - Nome de username"];
                 }
@@ -479,8 +481,21 @@
     function atualizarDados(){ showLoading(true,"Atualizando dados..."); carregar(); }
 
     function atualizar(){
-      let ini = document.getElementById("filtroInicio").value;
-      let fim = document.getElementById("filtroFim").value;
+      const ini = document.getElementById("filtroInicio").value;
+      const fim = document.getElementById("filtroFim").value;
+
+      // helpers de data
+      const parseISO = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+      const fmtISO   = d => new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+
+      const iniDate = parseISO(ini);
+      const fimDate = parseISO(fim);
+      const days = Math.round((fimDate - iniDate)/86400000) + 1;
+
+      const prevFim  = new Date(iniDate); prevFim.setDate(prevFim.getDate()-1);
+      const prevIni  = new Date(prevFim); prevIni.setDate(prevIni.getDate()-(days-1));
+      const prevIniStr = fmtISO(prevIni);
+      const prevFimStr = fmtISO(prevFim);
 
       const nomeClubeOf = d => d["Usuário - Nome de usuário"] || d["Usuário - Nome de username"];
 
@@ -493,22 +508,27 @@
         base = base.filter(d => nomeClubeOf(d) !== CLUBE_TONI);
       }
 
-      let atual       = base.filter(d => (d.DATA >= ini && d.DATA <= fim));
-      let primeiroDia = base.filter(d => d.DATA === ini);
+      // períodos
+      const atual       = base.filter(d => d.DATA >= ini && d.DATA <= fim);
+      const anterior    = base.filter(d => d.DATA >= prevIniStr && d.DATA <= prevFimStr);
 
-      let clubeA = document.getElementById("filtroClubeA").value;
-      let clubeB = document.getElementById("filtroClubeB").value;
+      const clubeA = document.getElementById("filtroClubeA").value;
+      const clubeB = document.getElementById("filtroClubeB").value;
 
-      let A_atual = obterDadosDoClube(atual, clubeA);
-      let B_atual = (clubeB !== "Nenhum" && clubeA !== clubeB) ? obterDadosDoClube(atual, clubeB) : [];
+      const A_atual = obterDadosDoClube(atual,   clubeA);
+      const B_atual = (clubeB !== "Nenhum" && clubeA !== clubeB) ? obterDadosDoClube(atual,   clubeB) : [];
 
-      // KPIs = soma do PERÍODO
-      atualizarKPIsPeriodo(A_atual, B_atual);
+      const A_prev  = obterDadosDoClube(anterior,clubeA);
+      const B_prev  = (clubeB !== "Nenhum" && clubeA !== clubeB) ? obterDadosDoClube(anterior,clubeB) : [];
 
-      // Gráficos
+      // KPIs = soma do PERÍODO (vs período anterior)
+      atualizarKPIsPeriodo(A_atual, B_atual, A_prev, B_prev, `vs ${prevIniStr} – ${prevFimStr}`);
+
+      // Gráficos (só período atual)
       atualizarGraficos(A_atual, B_atual, clubeA, clubeB);
 
-      // Tabelas
+      // Tabelas (período atual e primeiro dia do atual)
+      const primeiroDia = base.filter(d => d.DATA === ini);
       atualizarTabelas(atual, primeiroDia);
 
       document.getElementById("ultimaAtualizacao").textContent = new Date().toLocaleString('pt-BR');
@@ -519,33 +539,36 @@
       return dadosBase.filter(d => (d["Usuário - Nome de usuário"] === nomeClube) || (d["Usuário - Nome de username"] === nomeClube));
     }
 
-    // === KPIs por PERÍODO (usa parser N) ===
-    function atualizarKPIsPeriodo(dadosA_Periodo, dadosB_Periodo){
+    // === KPIs por PERÍODO (usa parser N) com comparação ===
+    function atualizarKPIsPeriodo(dadosA_Periodo, dadosB_Periodo, dadosA_Prev=[], dadosB_Prev=[], label='vs período anterior'){
       const somar = (arr, campo) => arr.reduce((s,d)=> s + N(d[campo]), 0);
 
-      const totalFTD     = somar(dadosA_Periodo,"Usuário - FTD-Montante")      + somar(dadosB_Periodo,"Usuário - FTD-Montante");
-      const totalDepos   = somar(dadosA_Periodo,"Usuário - Depósitos")         + somar(dadosB_Periodo,"Usuário - Depósitos");
-      const totalGGR     = somar(dadosA_Periodo,"Cálculo - GGR")               + somar(dadosB_Periodo,"Cálculo - GGR");
-      const totalSports  = somar(dadosA_Periodo,"Sportsbook - GGR")            + somar(dadosB_Periodo,"Sportsbook - GGR");
-      const totalCassino = somar(dadosA_Periodo,"Cassino - GGR")               + somar(dadosB_Periodo,"Cassino - GGR");
-      const totalBonus   = somar(dadosA_Periodo,"Cálculo - bônus convertidos") + somar(dadosB_Periodo,"Cálculo - bônus convertidos");
+      // atuais
+      const ftd     = somar(dadosA_Periodo,"Usuário - FTD-Montante")      + somar(dadosB_Periodo,"Usuário - FTD-Montante");
+      const depos   = somar(dadosA_Periodo,"Usuário - Depósitos")         + somar(dadosB_Periodo,"Usuário - Depósitos");
+      const ggr     = somar(dadosA_Periodo,"Cálculo - GGR")               + somar(dadosB_Periodo,"Cálculo - GGR");
+      const sb      = somar(dadosA_Periodo,"Sportsbook - GGR")            + somar(dadosB_Periodo,"Sportsbook - GGR");
+      const cs      = somar(dadosA_Periodo,"Cassino - GGR")               + somar(dadosB_Periodo,"Cassino - GGR");
+      const bonus   = somar(dadosA_Periodo,"Cálculo - bônus convertidos") + somar(dadosB_Periodo,"Cálculo - bônus convertidos");
 
-      // valida no console com seus números
-      validateTotals({
-        ftd:        totalFTD,
-        depositos:  totalDepos,
-        ggr:        totalGGR,
-        sportsbook: totalSports,
-        cassino:    totalCassino,
-        bonus:      totalBonus
-      });
+      // anteriores
+      const ftdPrev   = somar(dadosA_Prev,"Usuário - FTD-Montante")      + somar(dadosB_Prev,"Usuário - FTD-Montante");
+      const deposPrev = somar(dadosA_Prev,"Usuário - Depósitos")         + somar(dadosB_Prev,"Usuário - Depósitos");
+      const ggrPrev   = somar(dadosA_Prev,"Cálculo - GGR")               + somar(dadosB_Prev,"Cálculo - GGR");
+      const sbPrev    = somar(dadosA_Prev,"Sportsbook - GGR")            + somar(dadosB_Prev,"Sportsbook - GGR");
+      const csPrev    = somar(dadosA_Prev,"Cassino - GGR")               + somar(dadosB_Prev,"Cassino - GGR");
+      const bonusPrev = somar(dadosA_Prev,"Cálculo - bônus convertidos") + somar(dadosB_Prev,"Cálculo - bônus convertidos");
 
-      animarKPI("#kpi-ftd",        totalFTD);
-      animarKPI("#kpi-depositos",  totalDepos);
-      animarKPI("#kpi-ggr",        totalGGR);
-      animarKPI("#kpi-sportsbook", totalSports);
-      animarKPI("#kpi-cassino",    totalCassino);
-      animarKPI("#kpi-bonus",      totalBonus);
+      // validador no console (opcional)
+      validateTotals({ ftd, depositos:depos, ggr, sportsbook:sb, cassino:cs, bonus });
+
+      // joga nos cards
+      animarKPI("#kpi-ftd",        ftd,   ftdPrev,   label);
+      animarKPI("#kpi-depositos",  depos, deposPrev, label);
+      animarKPI("#kpi-ggr",        ggr,   ggrPrev,   label);
+      animarKPI("#kpi-sportsbook", sb,    sbPrev,    label);
+      animarKPI("#kpi-cassino",    cs,    csPrev,    label);
+      animarKPI("#kpi-bonus",      bonus, bonusPrev, label);
     }
 
     function atualizarGraficos(dadosA, dadosB, nomeA, nomeB){
