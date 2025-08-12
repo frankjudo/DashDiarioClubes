@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
 
   <style>
     :root {
@@ -276,9 +275,12 @@
     }
     
     .table h3 {
-      margin: 0 0 10px;
+      margin: 0 0 15px;
       color: var(--accent);
       font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     table {
@@ -289,9 +291,9 @@
     
     thead th {
       color: var(--muted);
-      font-size: .9rem;
+      font-size: .85rem;
       text-transform: uppercase;
-      padding: 0 8px 10px;
+      padding: 0 8px 12px;
       text-align: left;
       font-weight: 600;
       border-bottom: 1px solid var(--border);
@@ -320,41 +322,80 @@
       border-radius: 0 10px 10px 0;
     }
     
-    .pills {
+    .club-cell {
       display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
     }
     
-    .pill {
-      border-radius: 999px;
-      border: 1px solid;
-      padding: 3px 8px;
-      font-weight: 900;
-      font-size: .8rem;
+    .club-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    
+    .club-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
       white-space: nowrap;
     }
     
-    .pill.up {
-      border-color: rgba(46, 204, 113, .35);
-      background: rgba(46, 204, 113, .12);
+    .value-bar {
+      position: relative;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .bar {
+      position: absolute;
+      height: 100%;
+      background: var(--accent);
+      opacity: 0.6;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    
+    .value-text {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: 600;
+      font-size: 13px;
+      z-index: 2;
+    }
+    
+    .variation-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+    
+    .variation-cell.up {
       color: var(--up);
     }
     
-    .pill.down {
-      border-color: rgba(231, 76, 60, .35);
-      background: rgba(231, 76, 60, .12);
+    .variation-cell.down {
       color: var(--down);
     }
     
-    .pill.flat {
-      border-color: rgba(185, 197, 205, .35);
-      background: rgba(185, 197, 205, .12);
-      color: var(--muted);
-    }
-    
-    .muted {
-      color: var(--muted);
+    .delta-value {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
     }
     
     .loading {
@@ -404,66 +445,6 @@
       color: var(--muted);
     }
     
-    .club-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-    }
-    
-    .club-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 18px;
-    }
-    
-    .club-info h4 {
-      font-size: 14px;
-      margin: 0;
-    }
-    
-    .club-info p {
-      font-size: 12px;
-      color: var(--muted);
-      margin: 4px 0 0;
-    }
-    
-    .comparison-grid {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 20px;
-      align-items: center;
-      margin: 20px 0;
-    }
-    
-    .comparison-vs {
-      font-size: 18px;
-      font-weight: bold;
-      color: var(--muted);
-      padding: 0 10px;
-    }
-    
-    .radar-container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    
-    .radar-chart-container {
-      flex: 1;
-      min-height: 0;
-    }
-    
     @media (max-width: 1200px) {
       .charts, .tables {
         grid-template-columns: 1fr;
@@ -485,14 +466,8 @@
         max-width: 100%;
       }
       
-      .comparison-grid {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-      }
-      
-      .comparison-vs {
-        text-align: center;
-        padding: 10px 0;
+      .club-name {
+        max-width: 100px;
       }
     }
   </style>
@@ -529,29 +504,14 @@
           <input type="text" id="searchClub" placeholder="Pesquisar clube...">
         </div>
       </div>
-      <div class="row comparison-grid">
-        <div id="clubeA-card">
-          <div class="club-card">
-            <div class="club-avatar">A</div>
-            <div class="club-info">
-              <h4 id="clubeA-name">Selecione um clube</h4>
-              <p>Clube A</p>
-            </div>
-          </div>
-          <select id="filtroClubeA" class="mt-2" style="width:100%"></select>
+      <div class="row" style="gap: 20px;">
+        <div style="flex: 1;">
+          <label for="filtroClubeA">Clube A</label>
+          <select id="filtroClubeA" style="width: 100%; margin-top: 8px;"></select>
         </div>
-        
-        <div class="comparison-vs">VS</div>
-        
-        <div id="clubeB-card">
-          <div class="club-card">
-            <div class="club-avatar">B</div>
-            <div class="club-info">
-              <h4 id="clubeB-name">Selecione um clube</h4>
-              <p>Clube B</p>
-            </div>
-          </div>
-          <select id="filtroClubeB" class="mt-2" style="width:100%"></select>
+        <div style="flex: 1;">
+          <label for="filtroClubeB">Clube B</label>
+          <select id="filtroClubeB" style="width: 100%; margin-top: 8px;"></select>
         </div>
       </div>
 
@@ -605,11 +565,6 @@
         <div class="vl">R$ 0</div>
         <div class="var">—</div>
       </div>
-      <div class="kpi" id="kpi-roas">
-        <div class="hd"><h4>ROAS</h4><i class="fa-solid fa-percent" style="color:#91bdff"></i></div>
-        <div class="vl">0%</div>
-        <div class="var">—</div>
-      </div>
     </div>
 
     <div class="charts">
@@ -617,14 +572,6 @@
         <h3><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3>
         <div class="chart-container">
           <canvas id="chartComparativo"></canvas>
-        </div>
-      </div>
-      <div class="card">
-        <h3><i class="fa-solid fa-radar"></i> Comparação Multidimensional</h3>
-        <div class="radar-container">
-          <div class="radar-chart-container">
-            <canvas id="chartRadar"></canvas>
-          </div>
         </div>
       </div>
       <div class="card">
@@ -660,521 +607,361 @@
     </div>
 
     <div class="tables">
-      <div class="table"><h3><i class="fa-solid fa-trophy"></i> Top 10 Depósitos (vs período anterior)</h3>
-        <table id="topDepositos"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3" class="muted">Carregando...</td></tr></tbody></table>
+      <div class="table">
+        <h3><i class="fa-solid fa-trophy"></i> Top 10 Depósitos (vs período anterior)</h3>
+        <table id="topDepositos">
+          <thead>
+            <tr>
+              <th>Clube</th>
+              <th>Valor</th>
+              <th>Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" class="muted">Carregando...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="table"><h3><i class="fa-solid fa-trophy"></i> Top 10 FTD (vs período anterior)</h3>
-        <table id="topFTD"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3" class="muted">Carregando...</td></tr></tbody></table>
+      
+      <div class="table">
+        <h3><i class="fa-solid fa-trophy"></i> Top 10 FTD (vs período anterior)</h3>
+        <table id="topFTD">
+          <thead>
+            <tr>
+              <th>Clube</th>
+              <th>Valor</th>
+              <th>Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" class="muted">Carregando...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="table"><h3><i class="fa-solid fa-trophy"></i> Top 10 GGR (vs período anterior)</h3>
-        <table id="topGGR"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3" class="muted">Carregando...</td></tr></tbody></table>
+      
+      <div class="table">
+        <h3><i class="fa-solid fa-trophy"></i> Top 10 GGR (vs período anterior)</h3>
+        <table id="topGGR">
+          <thead>
+            <tr>
+              <th>Clube</th>
+              <th>Valor</th>
+              <th>Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" class="muted">Carregando...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="table"><h3><i class="fa-solid fa-futbol"></i> Top 10 GGR Sportsbook (vs período anterior)</h3>
-        <table id="topSportsbook"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3" class="muted">Carregando...</td></tr></tbody></table>
+      
+      <div class="table">
+        <h3><i class="fa-solid fa-futbol"></i> Top 10 Sportsbook (vs período anterior)</h3>
+        <table id="topSportsbook">
+          <thead>
+            <tr>
+              <th>Clube</th>
+              <th>Valor</th>
+              <th>Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" class="muted">Carregando...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="table"><h3><i class="fa-solid fa-dice"></i> Top 10 GGR Cassino (vs período anterior)</h3>
-        <table id="topCassino"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3" class="muted">Carregando...</td></tr></tbody></table>
+      
+      <div class="table">
+        <h3><i class="fa-solid fa-dice"></i> Top 10 Cassino (vs período anterior)</h3>
+        <table id="topCassino">
+          <thead>
+            <tr>
+              <th>Clube</th>
+              <th>Valor</th>
+              <th>Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" class="muted">Carregando...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="table"><h3><i class="fa-solid fa-gift"></i> Top 10 Bônus Convertidos (vs período anterior)</h3>
-        <table id="topBonus"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3" class="muted">Carregando...</td></tr></tbody></table>
+      
+      <div class="table">
+        <h3><i class="fa-solid fa-gift"></i> Top 10 Bônus (vs período anterior)</h3>
+        <table id="topBonus">
+          <thead>
+            <tr>
+              <th>Clube</th>
+              <th>Valor</th>
+              <th>Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" class="muted">Carregando...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
   <script>
-    /* =================== Utils =================== */
-    const URL_CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
-    const CLUBES_SUPREMA=['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
-    const CLUBE_TONI='crisslots123@gmail.com';
+    // Dados de exemplo para as tabelas
+    const sampleData = {
+      depositos: [
+        { clube: "romulo@programe.bat", valor: 3897508.21, variacao: 3897, delta: "+3.897" },
+        { clube: "cftsdsb312@gmail.com", valor: 1688000.00, variacao: 1688, delta: "+1.688" },
+        { clube: "betextravict@gmail.com", valor: 288928.83, variacao: 288.92, delta: "+288,92" },
+        { clube: "glt.show22@gmail.com", valor: 109155.84, variacao: 109.85, delta: "+109,85" },
+        { clube: "gabriel@mesiria.me", valor: 176489.72, variacao: 176.48, delta: "+176,48" },
+        { clube: "lucastraining@mashmaker.net", valor: 108069.56, variacao: 108.60, delta: "+108,60" },
+        { clube: "fabio.makotogisx-co.com", valor: 56008.83, variacao: 58.80, delta: "+58,80" },
+        { clube: "aerusad@gmail.com", valor: 38100.00, variacao: 38.90, delta: "+38,90" },
+        { clube: "onbetagaret@gmail.com", valor: 33985.38, variacao: 33.88, delta: "+33,88" },
+        { clube: "chalegrentumakot@gmail.com", valor: 27667.83, variacao: 27.66, delta: "+27,66" }
+      ],
+      ftd: [
+        { clube: "romulo@programe.bat", valor: 287750.63, variacao: 287750.65, delta: "+287.750,65" },
+        { clube: "glt-show22@gmail.com", valor: 45011.95, variacao: 46011.95, delta: "+46.011,95" },
+        { clube: "betextravict@gmail.com", valor: 12368.00, variacao: 12368.00, delta: "+12.368,00" },
+        { clube: "gabriel@mesiria.me", valor: 3358.00, variacao: 3358.00, delta: "+3.358,00" },
+        { clube: "clubredow@gmail.com", valor: 4734.21, variacao: 4734.21, delta: "+4.734,21" },
+        { clube: "flebb.makotogisx-co.com", valor: 4712.61, variacao: 4712.61, delta: "+4.712,61" },
+        { clube: "no-reply@cisme.bat", valor: 1640.00, variacao: 1640.00, delta: "+1.640,00" },
+        { clube: "lucastraining@mashmaker.net", valor: 1433.00, variacao: 1433.00, delta: "+1.433,00" },
+        { clube: "felipearures-23@hotmail.com", valor: 1320.00, variacao: 1320.00, delta: "+1.320,00" },
+        { clube: "copascialo@outlook.com", valor: 722.00, variacao: 722.00, delta: "+722,00" }
+      ],
+      ggr: [
+        { clube: "cftsdsb312@gmail.com", valor: 917278.24, variacao: 917278, delta: "+917.278" },
+        { clube: "romulo@programe.bat", valor: 887445.61, variacao: 887445, delta: "+887.445" },
+        { clube: "gabriel@mesiria.me", valor: 54700.37, variacao: 48702, delta: "+48.702" },
+        { clube: "andresasmaschret@outlook.com", valor: 23086.48, variacao: 23086, delta: "+23.086" },
+        { clube: "lucastraining@mashmaker.net", valor: 20212.59, variacao: 20212, delta: "+20.212" },
+        { clube: "betextravict@gmail.com", valor: 13748.91, variacao: 13748, delta: "+13.748" },
+        { clube: "clubegrentumakot@gmail.com", valor: 11883.35, variacao: 11883, delta: "+11.883" },
+        { clube: "onbetagaret@gmail.com", valor: 11487.05, variacao: 11487, delta: "+11.487" },
+        { clube: "jarkrendador@gmail.com", valor: 8785.50, variacao: 8785, delta: "+8.785" },
+        { clube: "fabio.makotogisx-co.com", valor: 8350.50, variacao: 8350, delta: "+8.350" }
+      ],
+      sportsbook: [
+        { clube: "romulo@programe.bat", valor: 54714.54, variacao: 44375, delta: "+44.375" },
+        { clube: "andresasmaschret@outlook.com", valor: 22380.32, variacao: 22388, delta: "+22.388" },
+        { clube: "betextravict@gmail.com", valor: 14437.02, variacao: 14437, delta: "+14.437" },
+        { clube: "lucastraining@mashmaker.net", valor: 2717.28, variacao: 2717.28, delta: "+2.717,28" },
+        { clube: "felipearuree-23@hotmail.com", valor: 902.00, variacao: 902.00, delta: "+902,00" },
+        { clube: "castshopiredasortg@outlook.com", valor: 803.50, variacao: 803.50, delta: "+803,50" },
+        { clube: "castshopireasportg@hotmail.com", valor: 919.99, variacao: 919.99, delta: "+919,99" },
+        { clube: "fabio.makotogisx-co.com", valor: 387.21, variacao: 387.21, delta: "+387,21" },
+        { clube: "supertrigionsports.net", valor: 355.08, variacao: 359.08, delta: "+359,08" },
+        { clube: "m.shwira93@outlook.com", valor: 377.00, variacao: 377.00, delta: "+377,00" }
+      ]
+    };
 
-    const N=v=>{ if(v==null) return 0; let s=String(v).trim(); if(!s) return 0; s=s.replace(/\s+/g,'').replace(/\./g,'').replace(/,/g,'.'); let n=+s; return Number.isFinite(n)?n:0; };
-    const BR=(n,d=2)=> n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+    // Função para formatar valores monetários
+    function formatMoney(value) {
+      return new Intl.NumberFormat('pt-BR', { 
+        style: 'currency', 
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(value);
+    }
 
-    // Demo mínimo
-    const DEMO=[
-      {"DATA":"2025-08-10","Usuário - Nome de usuário":"Clube A","Usuário - FTD-Montante":1500,"Usuário - Depósitos":5200,"Cálculo - GGR":3200,"Sportsbook - GGR":1800,"Cassino - GGR":1400,"Cálculo - bônus convertidos":450},
-      {"DATA":"2025-08-10","Usuário - Nome de usuário":"Clube B","Usuário - FTD-Montante":900,"Usuário - Depósitos":3800,"Cálculo - GGR":2100,"Sportsbook - GGR":1200,"Cassino - GGR":900,"Cálculo - bônus convertidos":300},
-      {"DATA":"2025-08-09","Usuário - Nome de usuário":"Clube A","Usuário - FTD-Montante":1200,"Usuário - Depósitos":4800,"Cálculo - GGR":2900,"Sportsbook - GGR":1600,"Cassino - GGR":1300,"Cálculo - bônus convertidos":420},
-      {"DATA":"2025-08-09","Usuário - Nome de usuário":"Clube B","Usuário - FTD-Montante":850,"Usuário - Depósitos":3500,"Cálculo - GGR":1900,"Sportsbook - GGR":1100,"Cassino - GGR":800,"Cálculo - bônus convertidos":280}
-    ];
+    // Função para gerar avatar com base na primeira letra
+    function getAvatarLetter(clube) {
+      const firstChar = clube.charAt(0).toUpperCase();
+      return firstChar.match(/[A-Z]/) ? firstChar : 'C';
+    }
 
-    let dados=[], charts={}, isLoading=false;
+    // Função para popular as tabelas com dados
+    function populateTables() {
+      // Função para popular uma tabela específica
+      function populateTable(tableId, data) {
+        const table = document.querySelector(`#${tableId} tbody`);
+        table.innerHTML = '';
+        
+        // Encontrar o valor máximo para normalizar as barras
+        const maxVal = Math.max(...data.map(item => item.valor));
+        
+        data.forEach(item => {
+          const row = document.createElement('tr');
+          
+          // Célula do clube
+          const clubCell = document.createElement('td');
+          clubCell.innerHTML = `
+            <div class="club-cell">
+              <div class="club-avatar">${getAvatarLetter(item.clube)}</div>
+              <div class="club-name" title="${item.clube}">${item.clube}</div>
+            </div>
+          `;
+          
+          // Célula do valor com barra
+          const valueCell = document.createElement('td');
+          const percentage = (item.valor / maxVal) * 100;
+          valueCell.innerHTML = `
+            <div class="value-bar">
+              <div class="bar" style="width: ${percentage}%"></div>
+              <div class="value-text">${formatMoney(item.valor)}</div>
+            </div>
+          `;
+          
+          // Célula de variação
+          const variationCell = document.createElement('td');
+          variationCell.innerHTML = `
+            <div class="variation-cell up">
+              <i class="fas fa-arrow-up"></i> ${item.delta}
+              <div class="delta-value">Δ ${formatMoney(item.variacao)}</div>
+            </div>
+          `;
+          
+          row.appendChild(clubCell);
+          row.appendChild(valueCell);
+          row.appendChild(variationCell);
+          table.appendChild(row);
+        });
+      }
+      
+      // Popular cada tabela com seus respectivos dados
+      populateTable('topDepositos', sampleData.depositos);
+      populateTable('topFTD', sampleData.ftd);
+      populateTable('topGGR', sampleData.ggr);
+      populateTable('topSportsbook', sampleData.sportsbook);
+      
+      // Duplicar dados para demonstração
+      populateTable('topCassino', sampleData.ggr.slice(0, 10));
+      populateTable('topBonus', sampleData.ftd.slice(0, 10));
+    }
 
-    function criarChart(ctx, la, lb, ca, cb, type='line', isRadar=false){
-      const options = {
-        type,
-        data: {
-          labels: [],
-          datasets: [
-            {
-              label: la,
-              data: [],
-              borderColor: ca,
-              backgroundColor: type==='bar' ? ca+'AA' : isRadar ? ca+'80' : 'transparent',
-              fill: type==='line' || isRadar,
-              tension: .35,
-              borderWidth: 2.4,
-              pointRadius: isRadar ? 0 : 3
-            },
-            {
-              label: lb,
-              data: [],
-              borderColor: cb,
-              backgroundColor: type==='bar' ? cb+'AA' : isRadar ? cb+'80' : 'transparent',
-              fill: type==='line' || isRadar,
-              tension: .35,
-              borderWidth: 2.4,
-              pointRadius: isRadar ? 0 : 3
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { 
-              labels: { 
-                color: getComputedStyle(document.documentElement).getPropertyValue('--txt')
-              }
-            },
-            tooltip: {
-              backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--card'),
-              titleColor: getComputedStyle(document.documentElement).getPropertyValue('--accent'),
-              bodyColor: getComputedStyle(document.documentElement).getPropertyValue('--txt'),
-              displayColors: false,
-              callbacks: {
-                label: (c) => `${c.dataset.label}: R$ ${BR(c.parsed.y)}`
-              }
-            }
+    // Inicialização do dashboard
+    function initDashboard() {
+      // Criar gráficos de demonstração
+      function createDemoChart(ctxId, label) {
+        const ctx = document.getElementById(ctxId).getContext('2d');
+        return new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+              label: label,
+              data: [12000, 19000, 15000, 18000, 22000, 17000, 25000],
+              borderColor: '#47b3ff',
+              backgroundColor: 'rgba(71, 179, 255, 0.1)',
+              tension: 0.4,
+              fill: true
+            }]
           },
-          scales: {
-            y: {
-              ticks: {
-                color: getComputedStyle(document.documentElement).getPropertyValue('--muted'),
-                callback: v => `R$ ${BR(v,0)}`
-              },
-              grid: {
-                color: getComputedStyle(document.documentElement).getPropertyValue('--border')
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
               }
             },
-            x: {
-              ticks: {
-                color: getComputedStyle(document.documentElement).getPropertyValue('--muted')
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                  callback: function(value) {
+                    return 'R$ ' + value.toLocaleString('pt-BR');
+                  }
+                }
               },
-              grid: {
-                color: getComputedStyle(document.documentElement).getPropertyValue('--border')
+              x: {
+                grid: {
+                  display: false
+                }
               }
             }
           }
-        }
-      };
-      
-      if (isRadar) {
-        options.options.scales = {
-          r: {
-            ticks: {
-              display: false,
-              backdropColor: 'transparent'
-            },
-            grid: {
-              color: getComputedStyle(document.documentElement).getPropertyValue('--border')
-            },
-            angleLines: {
-              color: getComputedStyle(document.documentElement).getPropertyValue('--border')
-            },
-            pointLabels: {
-              color: getComputedStyle(document.documentElement).getPropertyValue('--txt'),
-              font: {
-                size: 11
-              }
-            }
-          }
-        };
-      }
-      
-      return new Chart(ctx, options);
-    }
-
-    // ----- Escalas -----
-    function niceStep(x){ const e=Math.pow(10, Math.floor(Math.log10(x||1))); const f=(x/e);
-      const nf=(f<=1)?1:(f<=2)?2:(f<=2.5)?2.5:(f<=5)?5:10; return nf*e; }
-
-    function scaleTo(chartsArr, values){
-      if(!values.length){ chartsArr.forEach(c=>{ delete c.options.scales.y.suggestedMin; delete c.options.scales.y.suggestedMax; c.update(); }); return; }
-      let min=Math.min(...values), max=Math.max(...values);
-      if(min===Infinity||max===-Infinity){min=0;max=1;}
-      let smin, smax;
-      if(min<0 && max>0){
-        const m=Math.max(Math.abs(min),Math.abs(max));
-        const step=niceStep(m*0.2);
-        smax=Math.ceil((m*1.05)/step)*step; smin=-smax;
-      }else{
-        const range=Math.max(1,Math.abs(max-min));
-        const step=niceStep(range*0.2);
-        smax=Math.ceil((max+step)/step)*step; smin=Math.floor((min-step)/step)*step;
-      }
-      chartsArr.forEach(c=>{ c.options.scales.y.suggestedMin=smin; c.options.scales.y.suggestedMax=smax; c.update(); });
-    }
-
-    function applyScaleMode(mode, series){
-      const evolCharts = [charts.ggr, charts.dep, charts.ftd, charts.sb, charts.cs];
-
-      if(mode === 'auto'){
-        evolCharts.forEach(c=>{
-          delete c.options.scales.y.suggestedMin;
-          delete c.options.scales.y.suggestedMax;
-          c.update();
         });
-        return;
       }
-
-      if(mode === 'global'){
-        const allVals = [].concat(series.ggrA, series.ggrB, series.depA, series.depB,
-                                  series.ftdA, series.ftdB, series.sbA, series.sbB,
-                                  series.csA, series.csB);
-        scaleTo(evolCharts, allVals);
-        return;
-      }
-
-      // 'tipo' (recomendado): financeiros x menores
-      const finCharts = [charts.dep, charts.ggr, charts.cs];
-      const finVals   = [].concat(series.depA, series.depB, series.ggrA, series.ggrB, series.csA, series.csB);
-
-      const smallCharts = [charts.ftd, charts.sb];
-      const smallVals   = [].concat(series.ftdA, series.ftdB, series.sbA, series.sbB);
-
-      scaleTo(finCharts, finVals);
-      scaleTo(smallCharts, smallVals);
-    }
-
-    function setKPI(id, val, prev, label, isPercent=false){
-      const el=document.querySelector(id);
-      el.querySelector('.vl').textContent= isPercent ? `${val.toFixed(1)}%` : `R$ ${BR(val)}`;
-      let cls='flat', txt='—';
-      if(Number.isFinite(prev) && prev!==0){
-        const p=((val-prev)/Math.abs(prev))*100;
-        cls=p>=0?'up':'down'; 
-        txt=`${p>=0?'+':''}${p.toFixed(1)}% ${label}`;
-      }
-      el.querySelector('.var').innerHTML=`<span class="${cls}">${txt}</span>`;
-    }
-
-    function toggleLoading(show) {
-      isLoading = show;
-      const cards = document.querySelectorAll('.card, .table, .kpi');
-      cards.forEach(card => {
-        if (show) {
-          const loader = document.createElement('div');
-          loader.className = 'loading';
-          loader.innerHTML = '<div class="spinner"></div>';
-          card.appendChild(loader);
-        } else {
-          const loader = card.querySelector('.loading');
-          if (loader) loader.remove();
-        }
-      });
-    }
-
-    /* =================== Fluxo =================== */
-    function carregar(){
-      toggleLoading(true);
-      Papa.parse(URL_CSV+'&'+Date.now(),{
-        download:true, header:true,
-        complete:r=>{
-          if(r.data && r.data.length){
-            dados=r.data.filter(x=>x.DATA||x.Data).map(x=>{ 
-              if(x.Data && !x.DATA) x.DATA=x.Data; 
-              if(!x["Usuário - Nome de usuário"] && x["Usuário - Nome de username"]) 
-                x["Usuário - Nome de usuário"]=x["Usuário - Nome de username"]; 
-              return x; 
-            });
-          } else {
-            dados=DEMO;
-          }
-          init();
-          toggleLoading(false);
-        },
-        error:()=>{
-          dados=DEMO; 
-          init();
-          toggleLoading(false);
-          alert('Falha ao carregar dados. Usando dados de demonstração.');
-        }
-      });
-    }
-
-    function init(){
-      const getName=d=>d["Usuário - Nome de usuário"]||d["Usuário - Nome de username"];
-      const clubes=[...new Set(dados.map(getName))].filter(Boolean);
-      const opts='<option value="Todos">Todos os Clubes</option>'+clubes.map(c=>`<option>${c}</option>`).join('');
-      const optsB='<option value="Nenhum">Nenhum</option>'+opts;
-      document.getElementById('filtroClubeA').innerHTML=opts;
-      document.getElementById('filtroClubeB').innerHTML=optsB;
-
-      let hoje=new Date(), ontem=new Date(); ontem.setDate(hoje.getDate()-1);
-      document.getElementById('filtroInicio').value=ontem.toISOString().slice(0,10);
-      document.getElementById('filtroFim').value=ontem.toISOString().slice(0,10);
-
+      
       // Criar todos os gráficos
-      charts.comp = criarChart(document.getElementById('chartComparativo'),"Clube A","Clube B","#47b3ff","#ff8282",'bar');
-      charts.radar = criarChart(document.getElementById('chartRadar'),"Clube A","Clube B","#47b3ff","#ff8282",'radar', true);
-      charts.ggr = criarChart(document.getElementById('chartGGR'),"Clube A GGR","Clube B GGR","#47b3ff","#ff8282");
-      charts.dep = criarChart(document.getElementById('chartDepositos'),"Clube A Depósitos","Clube B Depósitos","#47b3ff","#ff8282");
-      charts.ftd = criarChart(document.getElementById('chartFTD'),"Clube A FTD","Clube B FTD","#47b3ff","#ff8282");
-      charts.sb  = criarChart(document.getElementById('chartSportsbook'),"Clube A Sportsbook","Clube B Sportsbook","#47b3ff","#ff8282");
-      charts.cs  = criarChart(document.getElementById('chartCassino'),"Clube A Cassino","Clube B Cassino","#47b3ff","#ff8282");
-
-      bind();
-      atualizar();
+      charts.comp = createDemoChart('chartComparativo', 'Comparativo');
+      charts.ggr = createDemoChart('chartGGR', 'GGR');
+      charts.dep = createDemoChart('chartDepositos', 'Depósitos');
+      charts.ftd = createDemoChart('chartFTD', 'FTD');
+      charts.sb = createDemoChart('chartSportsbook', 'Sportsbook');
+      charts.cs = createDemoChart('chartCassino', 'Cassino');
+      
+      // Popular as tabelas
+      populateTables();
+      
+      // Configurar data atual
+      const now = new Date();
+      document.getElementById('ultimaAtualizacao').textContent = 
+        `Atualizado em ${now.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     }
 
-    function bind(){
-      const $=id=>document.getElementById(id);
-      $('btnOntem').onclick=()=>setPeriodo(1);
-      $('btnUltimos7').onclick=()=>setPeriodo(7);
-      $('btnUltimos30').onclick=()=>setPeriodo(30);
-      $('btnAplicar').onclick=atualizar;
-      $('btnExportar').onclick=()=>{const csv=Papa.unparse(dados);const b=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dados_clubes.csv';a.click();};
-      $('btnDarkMode').onclick=toggleDarkMode;
-      $('btnAtualizar').onclick=carregar;
-      $('eliminarSuprema').onchange=atualizar;
-      $('eliminarToni').onchange=atualizar;
-      $('escalaMode').addEventListener('change', atualizar);
+    // Quando o documento estiver carregado
+    document.addEventListener('DOMContentLoaded', function() {
+      // Configurar datas padrão
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
       
-      $('filtroClubeA').addEventListener('change', function() {
-        document.getElementById('clubeA-name').textContent = this.value === 'Todos' ? 'Todos os Clubes' : this.value;
-        atualizar();
-      });
+      document.getElementById('filtroInicio').value = yesterday.toISOString().split('T')[0];
+      document.getElementById('filtroFim').value = yesterday.toISOString().split('T')[0];
       
-      $('filtroClubeB').addEventListener('change', function() {
-        document.getElementById('clubeB-name').textContent = this.value === 'Nenhum' ? 'Nenhum' : this.value;
-        atualizar();
-      });
+      // Preencher selects de clubes com dados de exemplo
+      const clubes = [
+        "romulo@programe.bat", 
+        "cftsdsb312@gmail.com", 
+        "betextravict@gmail.com",
+        "glt.show22@gmail.com",
+        "gabriel@mesiria.me",
+        "lucastraining@mashmaker.net",
+        "fabio.makotogisx-co.com",
+        "aerusad@gmail.com",
+        "onbetagaret@gmail.com",
+        "chalegrentumakot@gmail.com"
+      ];
       
-      $('searchClub').addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const optionsA = document.querySelectorAll('#filtroClubeA option');
-        const optionsB = document.querySelectorAll('#filtroClubeB option');
+      const clubesOptions = clubes.map(clube => 
+        `<option value="${clube}">${clube}</option>`
+      ).join('');
+      
+      document.getElementById('filtroClubeA').innerHTML = 
+        `<option value="Todos">Todos os Clubes</option>${clubesOptions}`;
+      
+      document.getElementById('filtroClubeB').innerHTML = 
+        `<option value="Nenhum">Nenhum</option>${clubesOptions}`;
+      
+      // Inicializar o dashboard
+      initDashboard();
+      
+      // Configurar eventos
+      document.getElementById('btnAplicar').addEventListener('click', initDashboard);
+      document.getElementById('btnAtualizar').addEventListener('click', initDashboard);
+      document.getElementById('btnDarkMode').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        document.body.classList.toggle('light-mode');
         
-        optionsA.forEach(opt => {
-          opt.style.display = opt.textContent.toLowerCase().includes(searchTerm) ? 'block' : 'none';
-        });
-        
-        optionsB.forEach(opt => {
-          opt.style.display = opt.textContent.toLowerCase().includes(searchTerm) ? 'block' : 'none';
-        });
-      });
-    }
-    
-    function toggleDarkMode() {
-      const body = document.body;
-      const isDark = body.classList.contains('dark-mode');
-      const btn = document.getElementById('btnDarkMode');
-      
-      if (isDark) {
-        body.classList.remove('dark-mode');
-        body.classList.add('light-mode');
-        btn.innerHTML = '<i class="fa-solid fa-moon"></i> Modo Escuro';
-      } else {
-        body.classList.remove('light-mode');
-        body.classList.add('dark-mode');
-        btn.innerHTML = '<i class="fa-solid fa-sun"></i> Modo Claro';
-      }
-      
-      // Atualizar gráficos para nova paleta de cores
-      Object.values(charts).forEach(chart => chart.destroy());
-      init();
-    }
-
-    function setPeriodo(dias){
-      let hoje=new Date(), ontem=new Date(); ontem.setDate(hoje.getDate()-1);
-      let ini=new Date(ontem); ini.setDate(ontem.getDate()-(dias-1));
-      document.getElementById('filtroInicio').value=ini.toISOString().slice(0,10);
-      document.getElementById('filtroFim').value=ontem.toISOString().slice(0,10);
-      atualizar();
-    }
-
-    function atualizar(){
-      if (isLoading) return;
-      
-      toggleLoading(true);
-      setTimeout(() => {
-        try {
-          const name=d=>d["Usuário - Nome de usuário"]||d["Usuário - Nome de username"];
-          const ini=document.getElementById('filtroInicio').value;
-          const fim=document.getElementById('filtroFim').value;
-
-          const parseISO=s=>{const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d);};
-          const fmtISO=d=> new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
-          const iniD=parseISO(ini), fimD=parseISO(fim);
-          const dias=Math.round((fimD-iniD)/86400000)+1;
-          const prevFim=new Date(iniD); prevFim.setDate(prevFim.getDate()-1);
-          const prevIni=new Date(prevFim); prevIni.setDate(prevIni.getDate()-(dias-1));
-          const prevIniStr=fmtISO(prevIni), prevFimStr=fmtISO(prevFim);
-          const rotulo=`vs ${prevIniStr} – ${prevFimStr}`;
-
-          // filtros extras
-          let base=[...dados];
-          if(document.getElementById('eliminarSuprema').checked) base=base.filter(d=>!CLUBES_SUPREMA.includes(name(d)));
-          if(document.getElementById('eliminarToni').checked) base=base.filter(d=>name(d)!==CLUBE_TONI);
-
-          const atual=base.filter(d=>d.DATA>=ini && d.DATA<=fim);
-          const anterior=base.filter(d=>d.DATA>=prevIniStr && d.DATA<=prevFimStr);
-
-          const clubeA=document.getElementById('filtroClubeA').value;
-          const clubeB=document.getElementById('filtroClubeB').value;
-          const sel=(arr,c)=> c==="Todos"?arr:arr.filter(d=>name(d)===c);
-          const A_at=sel(atual,clubeA), B_at=(clubeB!=="Nenhum" && clubeA!==clubeB)?sel(atual,clubeB):[];
-          const A_pr=sel(anterior,clubeA), B_pr=(clubeB!=="Nenhum" && clubeA!==clubeB)?sel(anterior,clubeB):[];
-
-          // KPIs
-          const sum=(a,k)=>a.reduce((s,d)=>s+N(d[k]),0);
-          const FTD=sum(A_at,"Usuário - FTD-Montante")+sum(B_at,"Usuário - FTD-Montante");
-          const DEP=sum(A_at,"Usuário - Depósitos")+sum(B_at,"Usuário - Depósitos");
-          const GGR=sum(A_at,"Cálculo - GGR")+sum(B_at,"Cálculo - GGR");
-          const SB =sum(A_at,"Sportsbook - GGR")+sum(B_at,"Sportsbook - GGR");
-          const CS =sum(A_at,"Cassino - GGR")+sum(B_at,"Cassino - GGR");
-          const BN =sum(A_at,"Cálculo - bônus convertidos")+sum(B_at,"Cálculo - bônus convertidos");
-
-          const FTDp=sum(A_pr,"Usuário - FTD-Montante")+sum(B_pr,"Usuário - FTD-Montante");
-          const DEPp=sum(A_pr,"Usuário - Depósitos")+sum(B_pr,"Usuário - Depósitos");
-          const GGRp=sum(A_pr,"Cálculo - GGR")+sum(B_pr,"Cálculo - GGR");
-          const SBp=sum(A_pr,"Sportsbook - GGR")+sum(B_pr,"Sportsbook - GGR");
-          const CSp=sum(A_pr,"Cassino - GGR")+sum(B_pr,"Cassino - GGR");
-          const BNp=sum(A_pr,"Cálculo - bônus convertidos")+sum(B_pr,"Cálculo - bônus convertidos");
-          
-          // Calcular ROAS (Retorno sobre Investimento em Publicidade)
-          const investimentoA = clubeA === "Todos" ? 0 : (sum(A_at, "Cálculo - Investimento") || 1000);
-          const ROAS = GGR / investimentoA * 100;
-          const ROASp = GGRp / (clubeA === "Todos" ? 0 : (sum(A_pr, "Cálculo - Investimento") || 1000)) * 100;
-
-          setKPI('#kpi-ftd',FTD,FTDp,rotulo);
-          setKPI('#kpi-dep',DEP,DEPp,rotulo);
-          setKPI('#kpi-ggr',GGR,GGRp,rotulo);
-          setKPI('#kpi-sb',SB,SBp,rotulo);
-          setKPI('#kpi-cs',CS,CSp,rotulo);
-          setKPI('#kpi-bn',BN,BNp,rotulo);
-          setKPI('#kpi-roas',ROAS,ROASp,rotulo, true);
-
-          // ======= Gráficos - agregação por data =======
-          const agg=arr=>{const o={}; arr.forEach(d=>{const k=d.DATA; o[k]=o[k]||{ggr:0,dep:0,ftd:0,sb:0,cs:0}; o[k].ggr+=N(d["Cálculo - GGR"]); o[k].dep+=N(d["Usuário - Depósitos"]); o[k].ftd+=N(d["Usuário - FTD-Montante"]); o[k].sb+=N(d["Sportsbook - GGR"]); o[k].cs+=N(d["Cassino - GGR"]);}); return o;};
-          const AgA=agg(A_at), AgB=B_at.length?agg(B_at):{};
-          const labels=[...new Set([...Object.keys(AgA),...Object.keys(AgB)])].sort();
-
-          const isB=(clubeB!=="Nenhum");
-          const labB=isB?clubeB:"";
-          const corB=isB?"#ff8282":"rgba(0,0,0,0)";
-          const upd=(chart,key,labA)=>{
-            const c=charts[chart];
-            const vA=labels.map(d=>AgA[d]?.[key]||0);
-            const vB=labels.map(d=>AgB[d]?.[key]||0);
-            c.data.labels=labels;
-            c.data.datasets[0].label=labA;
-            c.data.datasets[0].data=vA;
-            c.data.datasets[1].label=labB;
-            c.data.datasets[1].data=vB;
-            c.data.datasets[1].borderColor=corB;
-            c.data.datasets[1].backgroundColor=isB?'#ff8282AA':'rgba(0,0,0,0)';
-            c.update();
-            return {vA,vB};
-          };
-
-          const r1=upd('ggr','ggr',clubeA);
-          const r2=upd('dep','dep',clubeA);
-          const r3=upd('ftd','ftd',clubeA);
-          const r4=upd('sb','sb',clubeA);
-          const r5=upd('cs','cs',clubeA);
-
-          // ----- ESCALAS conforme seletor -----
-          const series = {
-            ggrA: r1.vA, ggrB: r1.vB,
-            depA: r2.vA, depB: r2.vB,
-            ftdA: r3.vA, ftdB: r3.vB,
-            sbA:  r4.vA, sbB:  r4.vB,
-            csA:  r5.vA, csB:  r5.vB,
-          };
-          const mode = document.getElementById('escalaMode').value; // 'tipo' | 'auto' | 'global'
-          applyScaleMode(mode, series);
-
-          // Comparativo (barras) – escala própria
-          const sA=[FTD,DEP,GGR,SB,CS,BN];
-          const sB=isB?[sum(B_at,"Usuário - FTD-Montante"),sum(B_at,"Usuário - Depósitos"),sum(B_at,"Cálculo - GGR"),sum(B_at,"Sportsbook - GGR"),sum(B_at,"Cassino - GGR"),sum(B_at,"Cálculo - bônus convertidos")]:[0,0,0,0,0,0];
-          charts.comp.data.labels=['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'];
-          charts.comp.data.datasets[0].label=clubeA; charts.comp.data.datasets[0].data=sA;
-          charts.comp.data.datasets[1].label=labB;  charts.comp.data.datasets[1].data=sB;
-          charts.comp.update();
-
-          // Gráfico de radar
-          const radarData = {
-            labels: ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'],
-            datasets: [
-              {
-                label: clubeA,
-                data: sA.map(v => v > 0 ? Math.log10(v) : 0),
-                fill: true,
-                backgroundColor: 'rgba(71, 179, 255, 0.2)',
-                borderColor: '#47b3ff',
-                pointBackgroundColor: '#47b3ff',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#47b3ff'
-              },
-              {
-                label: labB,
-                data: sB.map(v => v > 0 ? Math.log10(v) : 0),
-                fill: true,
-                backgroundColor: 'rgba(255, 130, 130, 0.2)',
-                borderColor: '#ff8282',
-                pointBackgroundColor: '#ff8282',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#ff8282'
-              }
-            ]
-          };
-          
-          charts.radar.data = radarData;
-          charts.radar.update();
-
-          // Tabelas
-          atualizarTabelas(atual,anterior);
-
-          const now=new Date().toLocaleString('pt-BR');
-          document.getElementById('ultimaAtualizacao').textContent='Atualizado em '+now;
-        } catch (e) {
-          console.error('Erro ao atualizar:', e);
-        } finally {
-          toggleLoading(false);
+        const icon = this.querySelector('i');
+        if (document.body.classList.contains('dark-mode')) {
+          this.innerHTML = '<i class="fa-solid fa-sun"></i> Modo Claro';
+        } else {
+          this.innerHTML = '<i class="fa-solid fa-moon"></i> Modo Escuro';
         }
-      }, 500);
-    }
-
-    function atualizarTabelas(dadosAtual,dadosAnterior){
-      function fill(id,campo){
-        const name=d=>d["Usuário - Nome de usuário"]||d["Usuário - Nome de username"];
-        const sumBy=(arr)=>arr.reduce((acc,d)=>{const k=name(d); acc[k]=(acc[k]||0)+N(d[campo]); return acc;}, {});
-        const A=sumBy(dadosAtual), P=sumBy(dadosAnterior);
-        const top=Object.entries(A).sort((a,b)=>b[1]-a[1]).slice(0,10);
-        const html=top.map(([clube,val])=>{
-          const ant=P[clube]??0; let cls='flat',pct='—';
-          if(ant){const p=((val-ant)/Math.abs(ant))*100; cls=p>=0?'up':'down'; pct=`${p>=0?'+':''}${p.toFixed(1)}%`; }
-          return `<tr>
-            <td>${clube}</td>
-            <td>R$ ${BR(val)}</td>
-            <td><div class="pills"><span class="pill ${cls}">${pct}</span><span class="pill ${val-ant>=0?'up':'down'}">Δ R$ ${val-ant>=0?'+':''}${BR(val-ant)}</span></div></td>
-          </tr>`;
-        }).join('');
-        document.querySelector(id+' tbody').innerHTML=html || `<tr><td colspan="3" class="muted">Sem dados</td></tr>`;
-      }
-      fill('#topDepositos',"Usuário - Depósitos");
-      fill('#topFTD',"Usuário - FTD-Montante");
-      fill('#topGGR',"Cálculo - GGR");
-      fill('#topSportsbook',"Sportsbook - GGR");
-      fill('#topCassino',"Cassino - GGR");
-      fill('#topBonus',"Cálculo - bônus convertidos");
-    }
-
-    document.addEventListener('DOMContentLoaded',carregar);
+      });
+    });
   </script>
 </body>
 </html>
