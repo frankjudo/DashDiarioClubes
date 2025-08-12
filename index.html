@@ -445,6 +445,35 @@
       color: var(--muted);
     }
     
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateX(150%);
+      transition: transform 0.3s ease;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .notification.success {
+      background: rgba(46, 204, 113, 0.9);
+    }
+    
+    .notification.error {
+      background: rgba(231, 76, 60, 0.9);
+    }
+    
     @media (max-width: 1200px) {
       .charts, .tables {
         grid-template-columns: 1fr;
@@ -717,59 +746,21 @@
     </div>
   </div>
 
-  <script>
-    // Dados de exemplo para as tabelas
-    const sampleData = {
-      depositos: [
-        { clube: "romulo@programe.bat", valor: 3897508.21, variacao: 3897, delta: "+3.897" },
-        { clube: "cftsdsb312@gmail.com", valor: 1688000.00, variacao: 1688, delta: "+1.688" },
-        { clube: "betextravict@gmail.com", valor: 288928.83, variacao: 288.92, delta: "+288,92" },
-        { clube: "glt.show22@gmail.com", valor: 109155.84, variacao: 109.85, delta: "+109,85" },
-        { clube: "gabriel@mesiria.me", valor: 176489.72, variacao: 176.48, delta: "+176,48" },
-        { clube: "lucastraining@mashmaker.net", valor: 108069.56, variacao: 108.60, delta: "+108,60" },
-        { clube: "fabio.makotogisx-co.com", valor: 56008.83, variacao: 58.80, delta: "+58,80" },
-        { clube: "aerusad@gmail.com", valor: 38100.00, variacao: 38.90, delta: "+38,90" },
-        { clube: "onbetagaret@gmail.com", valor: 33985.38, variacao: 33.88, delta: "+33,88" },
-        { clube: "chalegrentumakot@gmail.com", valor: 27667.83, variacao: 27.66, delta: "+27,66" }
-      ],
-      ftd: [
-        { clube: "romulo@programe.bat", valor: 287750.63, variacao: 287750.65, delta: "+287.750,65" },
-        { clube: "glt-show22@gmail.com", valor: 45011.95, variacao: 46011.95, delta: "+46.011,95" },
-        { clube: "betextravict@gmail.com", valor: 12368.00, variacao: 12368.00, delta: "+12.368,00" },
-        { clube: "gabriel@mesiria.me", valor: 3358.00, variacao: 3358.00, delta: "+3.358,00" },
-        { clube: "clubredow@gmail.com", valor: 4734.21, variacao: 4734.21, delta: "+4.734,21" },
-        { clube: "flebb.makotogisx-co.com", valor: 4712.61, variacao: 4712.61, delta: "+4.712,61" },
-        { clube: "no-reply@cisme.bat", valor: 1640.00, variacao: 1640.00, delta: "+1.640,00" },
-        { clube: "lucastraining@mashmaker.net", valor: 1433.00, variacao: 1433.00, delta: "+1.433,00" },
-        { clube: "felipearures-23@hotmail.com", valor: 1320.00, variacao: 1320.00, delta: "+1.320,00" },
-        { clube: "copascialo@outlook.com", valor: 722.00, variacao: 722.00, delta: "+722,00" }
-      ],
-      ggr: [
-        { clube: "cftsdsb312@gmail.com", valor: 917278.24, variacao: 917278, delta: "+917.278" },
-        { clube: "romulo@programe.bat", valor: 887445.61, variacao: 887445, delta: "+887.445" },
-        { clube: "gabriel@mesiria.me", valor: 54700.37, variacao: 48702, delta: "+48.702" },
-        { clube: "andresasmaschret@outlook.com", valor: 23086.48, variacao: 23086, delta: "+23.086" },
-        { clube: "lucastraining@mashmaker.net", valor: 20212.59, variacao: 20212, delta: "+20.212" },
-        { clube: "betextravict@gmail.com", valor: 13748.91, variacao: 13748, delta: "+13.748" },
-        { clube: "clubegrentumakot@gmail.com", valor: 11883.35, variacao: 11883, delta: "+11.883" },
-        { clube: "onbetagaret@gmail.com", valor: 11487.05, variacao: 11487, delta: "+11.487" },
-        { clube: "jarkrendador@gmail.com", valor: 8785.50, variacao: 8785, delta: "+8.785" },
-        { clube: "fabio.makotogisx-co.com", valor: 8350.50, variacao: 8350, delta: "+8.350" }
-      ],
-      sportsbook: [
-        { clube: "romulo@programe.bat", valor: 54714.54, variacao: 44375, delta: "+44.375" },
-        { clube: "andresasmaschret@outlook.com", valor: 22380.32, variacao: 22388, delta: "+22.388" },
-        { clube: "betextravict@gmail.com", valor: 14437.02, variacao: 14437, delta: "+14.437" },
-        { clube: "lucastraining@mashmaker.net", valor: 2717.28, variacao: 2717.28, delta: "+2.717,28" },
-        { clube: "felipearuree-23@hotmail.com", valor: 902.00, variacao: 902.00, delta: "+902,00" },
-        { clube: "castshopiredasortg@outlook.com", valor: 803.50, variacao: 803.50, delta: "+803,50" },
-        { clube: "castshopireasportg@hotmail.com", valor: 919.99, variacao: 919.99, delta: "+919,99" },
-        { clube: "fabio.makotogisx-co.com", valor: 387.21, variacao: 387.21, delta: "+387,21" },
-        { clube: "supertrigionsports.net", valor: 355.08, variacao: 359.08, delta: "+359,08" },
-        { clube: "m.shwira93@outlook.com", valor: 377.00, variacao: 377.00, delta: "+377,00" }
-      ]
-    };
+  <!-- Notificação -->
+  <div id="notification" class="notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="notificationText">Operação realizada com sucesso!</span>
+  </div>
 
+  <script>
+    // URL do Google Spreadsheet
+    const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
+    
+    // Variáveis globais
+    let allData = [];
+    let filteredData = [];
+    let charts = {};
+    
     // Função para formatar valores monetários
     function formatMoney(value) {
       return new Intl.NumberFormat('pt-BR', { 
@@ -779,160 +770,77 @@
         maximumFractionDigits: 2
       }).format(value);
     }
-
+    
+    // Função para formatar variação percentual
+    function formatVariation(current, previous) {
+      if (previous === 0) return current > 0 ? '+100%' : '0%';
+      const variation = ((current - previous) / previous) * 100;
+      return `${variation > 0 ? '+' : ''}${variation.toFixed(2)}%`;
+    }
+    
     // Função para gerar avatar com base na primeira letra
     function getAvatarLetter(clube) {
       const firstChar = clube.charAt(0).toUpperCase();
       return firstChar.match(/[A-Z]/) ? firstChar : 'C';
     }
-
-    // Função para popular as tabelas com dados
-    function populateTables() {
-      // Função para popular uma tabela específica
-      function populateTable(tableId, data) {
-        const table = document.querySelector(`#${tableId} tbody`);
-        table.innerHTML = '';
-        
-        // Encontrar o valor máximo para normalizar as barras
-        const maxVal = Math.max(...data.map(item => item.valor));
-        
-        data.forEach(item => {
-          const row = document.createElement('tr');
-          
-          // Célula do clube
-          const clubCell = document.createElement('td');
-          clubCell.innerHTML = `
-            <div class="club-cell">
-              <div class="club-avatar">${getAvatarLetter(item.clube)}</div>
-              <div class="club-name" title="${item.clube}">${item.clube}</div>
-            </div>
-          `;
-          
-          // Célula do valor com barra
-          const valueCell = document.createElement('td');
-          const percentage = (item.valor / maxVal) * 100;
-          valueCell.innerHTML = `
-            <div class="value-bar">
-              <div class="bar" style="width: ${percentage}%"></div>
-              <div class="value-text">${formatMoney(item.valor)}</div>
-            </div>
-          `;
-          
-          // Célula de variação
-          const variationCell = document.createElement('td');
-          variationCell.innerHTML = `
-            <div class="variation-cell up">
-              <i class="fas fa-arrow-up"></i> ${item.delta}
-              <div class="delta-value">Δ ${formatMoney(item.variacao)}</div>
-            </div>
-          `;
-          
-          row.appendChild(clubCell);
-          row.appendChild(valueCell);
-          row.appendChild(variationCell);
-          table.appendChild(row);
-        });
-      }
+    
+    // Função para mostrar notificação
+    function showNotification(message, type = 'success') {
+      const notification = document.getElementById('notification');
+      const notificationText = document.getElementById('notificationText');
       
-      // Popular cada tabela com seus respectivos dados
-      populateTable('topDepositos', sampleData.depositos);
-      populateTable('topFTD', sampleData.ftd);
-      populateTable('topGGR', sampleData.ggr);
-      populateTable('topSportsbook', sampleData.sportsbook);
+      notificationText.textContent = message;
+      notification.className = `notification ${type}`;
+      notification.classList.add('show');
       
-      // Duplicar dados para demonstração
-      populateTable('topCassino', sampleData.ggr.slice(0, 10));
-      populateTable('topBonus', sampleData.ftd.slice(0, 10));
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
     }
-
-    // Inicialização do dashboard
-    function initDashboard() {
-      // Criar gráficos de demonstração
-      function createDemoChart(ctxId, label) {
-        const ctx = document.getElementById(ctxId).getContext('2d');
-        return new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-            datasets: [{
-              label: label,
-              data: [12000, 19000, 15000, 18000, 22000, 17000, 25000],
-              borderColor: '#47b3ff',
-              backgroundColor: 'rgba(71, 179, 255, 0.1)',
-              tension: 0.4,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: false
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                grid: {
-                  color: 'rgba(255, 255, 255, 0.1)'
-                },
-                ticks: {
-                  callback: function(value) {
-                    return 'R$ ' + value.toLocaleString('pt-BR');
-                  }
-                }
-              },
-              x: {
-                grid: {
-                  display: false
-                }
-              }
+    
+    // Função para carregar dados do Google Spreadsheet
+    function loadDataFromSpreadsheet() {
+      showNotification('Carregando dados do spreadsheet...', 'success');
+      
+      Papa.parse(SPREADSHEET_URL, {
+        download: true,
+        header: true,
+        dynamicTyping: true,
+        complete: function(results) {
+          allData = results.data.filter(row => row.Data && row.Clube);
+          
+          // Processar datas
+          allData.forEach(row => {
+            const parts = row.Data.split('/');
+            if (parts.length === 3) {
+              row.dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
+            } else {
+              row.dateObj = null;
             }
-          }
-        });
-      }
-      
-      // Criar todos os gráficos
-      charts.comp = createDemoChart('chartComparativo', 'Comparativo');
-      charts.ggr = createDemoChart('chartGGR', 'GGR');
-      charts.dep = createDemoChart('chartDepositos', 'Depósitos');
-      charts.ftd = createDemoChart('chartFTD', 'FTD');
-      charts.sb = createDemoChart('chartSportsbook', 'Sportsbook');
-      charts.cs = createDemoChart('chartCassino', 'Cassino');
-      
-      // Popular as tabelas
-      populateTables();
-      
-      // Configurar data atual
-      const now = new Date();
-      document.getElementById('ultimaAtualizacao').textContent = 
-        `Atualizado em ${now.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+          });
+          
+          // Remover linhas sem data válida
+          allData = allData.filter(row => row.dateObj);
+          
+          // Ordenar por data
+          allData.sort((a, b) => a.dateObj - b.dateObj);
+          
+          // Atualizar interface
+          updateClubSelectors();
+          applyFilters();
+          
+          showNotification('Dados carregados com sucesso!', 'success');
+        },
+        error: function(error) {
+          console.error('Erro ao carregar os dados:', error);
+          showNotification('Erro ao carregar os dados do spreadsheet.', 'error');
+        }
+      });
     }
-
-    // Quando o documento estiver carregado
-    document.addEventListener('DOMContentLoaded', function() {
-      // Configurar datas padrão
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      document.getElementById('filtroInicio').value = yesterday.toISOString().split('T')[0];
-      document.getElementById('filtroFim').value = yesterday.toISOString().split('T')[0];
-      
-      // Preencher selects de clubes com dados de exemplo
-      const clubes = [
-        "romulo@programe.bat", 
-        "cftsdsb312@gmail.com", 
-        "betextravict@gmail.com",
-        "glt.show22@gmail.com",
-        "gabriel@mesiria.me",
-        "lucastraining@mashmaker.net",
-        "fabio.makotogisx-co.com",
-        "aerusad@gmail.com",
-        "onbetagaret@gmail.com",
-        "chalegrentumakot@gmail.com"
-      ];
+    
+    // Função para atualizar os seletores de clubes
+    function updateClubSelectors() {
+      const clubes = [...new Set(allData.map(row => row.Clube))].sort();
       
       const clubesOptions = clubes.map(clube => 
         `<option value="${clube}">${clube}</option>`
@@ -943,13 +851,729 @@
       
       document.getElementById('filtroClubeB').innerHTML = 
         `<option value="Nenhum">Nenhum</option>${clubesOptions}`;
+    }
+    
+    // Função para aplicar filtros
+    function applyFilters() {
+      const startDate = new Date(document.getElementById('filtroInicio').value);
+      const endDate = new Date(document.getElementById('filtroFim').value);
+      const clubeA = document.getElementById('filtroClubeA').value;
+      const clubeB = document.getElementById('filtroClubeB').value;
+      const eliminarSuprema = document.getElementById('eliminarSuprema').checked;
+      const eliminarToni = document.getElementById('eliminarToni').checked;
       
-      // Inicializar o dashboard
-      initDashboard();
+      // Filtrar por período
+      filteredData = allData.filter(row => {
+        return row.dateObj >= startDate && row.dateObj <= endDate;
+      });
+      
+      // Filtrar por clubes
+      if (clubeA !== 'Todos') {
+        filteredData = filteredData.filter(row => row.Clube === clubeA);
+      }
+      
+      if (clubeB !== 'Nenhum') {
+        filteredData = filteredData.filter(row => row.Clube === clubeB);
+      }
+      
+      // Aplicar filtros de exclusão
+      if (eliminarSuprema) {
+        filteredData = filteredData.filter(row => !row.Clube.includes('suprema'));
+      }
+      
+      if (eliminarToni) {
+        filteredData = filteredData.filter(row => !row.Clube.includes('TONI'));
+      }
+      
+      // Atualizar dashboard
+      updateDashboard();
+    }
+    
+    // Função para atualizar o dashboard
+    function updateDashboard() {
+      updateKPIs();
+      updateCharts();
+      updateTables();
+      
+      // Atualizar data de atualização
+      const now = new Date();
+      document.getElementById('ultimaAtualizacao').textContent = 
+        `Atualizado em ${now.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    
+    // Função para atualizar os KPIs
+    function updateKPIs() {
+      // Calcular totais
+      const totals = filteredData.reduce((acc, row) => {
+        acc.ftd += parseFloat(row.FTD) || 0;
+        acc.depositos += parseFloat(row.Depositos) || 0;
+        acc.ggr += parseFloat(row.GGR) || 0;
+        acc.sportsbook += parseFloat(row['Sportsbook GGR']) || 0;
+        acc.cassino += parseFloat(row['Cassino GGR']) || 0;
+        acc.bonus += parseFloat(row['Bônus Convertidos']) || 0;
+        return acc;
+      }, { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 });
+      
+      // Atualizar KPIs
+      document.querySelector('#kpi-ftd .vl').textContent = formatMoney(totals.ftd);
+      document.querySelector('#kpi-dep .vl').textContent = formatMoney(totals.depositos);
+      document.querySelector('#kpi-ggr .vl').textContent = formatMoney(totals.ggr);
+      document.querySelector('#kpi-sb .vl').textContent = formatMoney(totals.sportsbook);
+      document.querySelector('#kpi-cs .vl').textContent = formatMoney(totals.cassino);
+      document.querySelector('#kpi-bn .vl').textContent = formatMoney(totals.bonus);
+      
+      // Calcular variações (comparação com período anterior)
+      const startDate = new Date(document.getElementById('filtroInicio').value);
+      const endDate = new Date(document.getElementById('filtroFim').value);
+      const periodLength = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+      
+      const prevStartDate = new Date(startDate);
+      prevStartDate.setDate(prevStartDate.getDate() - periodLength);
+      const prevEndDate = new Date(startDate);
+      prevEndDate.setDate(prevEndDate.getDate() - 1);
+      
+      const prevData = allData.filter(row => {
+        return row.dateObj >= prevStartDate && row.dateObj <= prevEndDate;
+      });
+      
+      const prevTotals = prevData.reduce((acc, row) => {
+        acc.ftd += parseFloat(row.FTD) || 0;
+        acc.depositos += parseFloat(row.Depositos) || 0;
+        acc.ggr += parseFloat(row.GGR) || 0;
+        acc.sportsbook += parseFloat(row['Sportsbook GGR']) || 0;
+        acc.cassino += parseFloat(row['Cassino GGR']) || 0;
+        acc.bonus += parseFloat(row['Bônus Convertidos']) || 0;
+        return acc;
+      }, { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 });
+      
+      // Atualizar variações
+      document.querySelector('#kpi-ftd .var').innerHTML = 
+        `<i class="fas fa-arrow-${totals.ftd >= prevTotals.ftd ? 'up' : 'down'}"></i> ${formatVariation(totals.ftd, prevTotals.ftd)}`;
+      document.querySelector('#kpi-dep .var').innerHTML = 
+        `<i class="fas fa-arrow-${totals.depositos >= prevTotals.depositos ? 'up' : 'down'}"></i> ${formatVariation(totals.depositos, prevTotals.depositos)}`;
+      document.querySelector('#kpi-ggr .var').innerHTML = 
+        `<i class="fas fa-arrow-${totals.ggr >= prevTotals.ggr ? 'up' : 'down'}"></i> ${formatVariation(totals.ggr, prevTotals.ggr)}`;
+      document.querySelector('#kpi-sb .var').innerHTML = 
+        `<i class="fas fa-arrow-${totals.sportsbook >= prevTotals.sportsbook ? 'up' : 'down'}"></i> ${formatVariation(totals.sportsbook, prevTotals.sportsbook)}`;
+      document.querySelector('#kpi-cs .var').innerHTML = 
+        `<i class="fas fa-arrow-${totals.cassino >= prevTotals.cassino ? 'up' : 'down'}"></i> ${formatVariation(totals.cassino, prevTotals.cassino)}`;
+      document.querySelector('#kpi-bn .var').innerHTML = 
+        `<i class="fas fa-arrow-${totals.bonus >= prevTotals.bonus ? 'up' : 'down'}"></i> ${formatVariation(totals.bonus, prevTotals.bonus)}`;
+    }
+    
+    // Função para atualizar os gráficos
+    function updateCharts() {
+      // Agrupar dados por data
+      const groupedData = {};
+      
+      filteredData.forEach(row => {
+        const dateStr = row.dateObj.toISOString().split('T')[0];
+        
+        if (!groupedData[dateStr]) {
+          groupedData[dateStr] = {
+            date: row.dateObj,
+            ftd: 0,
+            depositos: 0,
+            ggr: 0,
+            sportsbook: 0,
+            cassino: 0,
+            bonus: 0
+          };
+        }
+        
+        groupedData[dateStr].ftd += parseFloat(row.FTD) || 0;
+        groupedData[dateStr].depositos += parseFloat(row.Depositos) || 0;
+        groupedData[dateStr].ggr += parseFloat(row.GGR) || 0;
+        groupedData[dateStr].sportsbook += parseFloat(row['Sportsbook GGR']) || 0;
+        groupedData[dateStr].cassino += parseFloat(row['Cassino GGR']) || 0;
+        groupedData[dateStr].bonus += parseFloat(row['Bônus Convertidos']) || 0;
+      });
+      
+      // Converter para array e ordenar
+      const chartData = Object.values(groupedData).sort((a, b) => a.date - b.date);
+      
+      // Labels para os gráficos
+      const labels = chartData.map(item => {
+        return item.date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      });
+      
+      // Dados para cada gráfico
+      const ftdData = chartData.map(item => item.ftd);
+      const depositosData = chartData.map(item => item.depositos);
+      const ggrData = chartData.map(item => item.ggr);
+      const sportsbookData = chartData.map(item => item.sportsbook);
+      const cassinoData = chartData.map(item => item.cassino);
+      const bonusData = chartData.map(item => item.bonus);
+      
+      // Atualizar gráfico comparativo
+      if (charts.comp) {
+        charts.comp.destroy();
+      }
+      
+      const ctxComp = document.getElementById('chartComparativo').getContext('2d');
+      charts.comp = new Chart(ctxComp, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'FTD',
+              data: ftdData,
+              backgroundColor: 'rgba(46, 204, 113, 0.6)',
+              borderColor: 'rgba(46, 204, 113, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Depósitos',
+              data: depositosData,
+              backgroundColor: 'rgba(243, 156, 18, 0.6)',
+              borderColor: 'rgba(243, 156, 18, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'GGR',
+              data: ggrData,
+              backgroundColor: 'rgba(71, 179, 255, 0.6)',
+              borderColor: 'rgba(71, 179, 255, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--txt')
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted'),
+                callback: function(value) {
+                  return 'R$ ' + value.toLocaleString('pt-BR');
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted')
+              }
+            }
+          }
+        }
+      });
+      
+      // Atualizar gráfico GGR
+      if (charts.ggr) {
+        charts.ggr.destroy();
+      }
+      
+      const ctxGGR = document.getElementById('chartGGR').getContext('2d');
+      charts.ggr = new Chart(ctxGGR, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'GGR',
+            data: ggrData,
+            borderColor: '#47b3ff',
+            backgroundColor: 'rgba(71, 179, 255, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted'),
+                callback: function(value) {
+                  return 'R$ ' + value.toLocaleString('pt-BR');
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted')
+              }
+            }
+          }
+        }
+      });
+      
+      // Atualizar gráfico Depósitos
+      if (charts.dep) {
+        charts.dep.destroy();
+      }
+      
+      const ctxDep = document.getElementById('chartDepositos').getContext('2d');
+      charts.dep = new Chart(ctxDep, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Depósitos',
+            data: depositosData,
+            borderColor: '#ffd389',
+            backgroundColor: 'rgba(255, 211, 137, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted'),
+                callback: function(value) {
+                  return 'R$ ' + value.toLocaleString('pt-BR');
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted')
+              }
+            }
+          }
+        }
+      });
+      
+      // Atualizar gráfico FTD
+      if (charts.ftd) {
+        charts.ftd.destroy();
+      }
+      
+      const ctxFTD = document.getElementById('chartFTD').getContext('2d');
+      charts.ftd = new Chart(ctxFTD, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'FTD',
+            data: ftdData,
+            borderColor: '#2ecc71',
+            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted'),
+                callback: function(value) {
+                  return 'R$ ' + value.toLocaleString('pt-BR');
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted')
+              }
+            }
+          }
+        }
+      });
+      
+      // Atualizar gráfico Sportsbook
+      if (charts.sb) {
+        charts.sb.destroy();
+      }
+      
+      const ctxSB = document.getElementById('chartSportsbook').getContext('2d');
+      charts.sb = new Chart(ctxSB, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Sportsbook GGR',
+            data: sportsbookData,
+            borderColor: '#d7b2ff',
+            backgroundColor: 'rgba(215, 178, 255, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted'),
+                callback: function(value) {
+                  return 'R$ ' + value.toLocaleString('pt-BR');
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted')
+              }
+            }
+          }
+        }
+      });
+      
+      // Atualizar gráfico Cassino
+      if (charts.cs) {
+        charts.cs.destroy();
+      }
+      
+      const ctxCS = document.getElementById('chartCassino').getContext('2d');
+      charts.cs = new Chart(ctxCS, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Cassino GGR',
+            data: cassinoData,
+            borderColor: '#ff9e9e',
+            backgroundColor: 'rgba(255, 158, 158, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted'),
+                callback: function(value) {
+                  return 'R$ ' + value.toLocaleString('pt-BR');
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--muted')
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Função para atualizar as tabelas
+    function updateTables() {
+      // Agrupar dados por clube
+      const clubData = {};
+      
+      filteredData.forEach(row => {
+        if (!clubData[row.Clube]) {
+          clubData[row.Clube] = {
+            clube: row.Clube,
+            ftd: 0,
+            depositos: 0,
+            ggr: 0,
+            sportsbook: 0,
+            cassino: 0,
+            bonus: 0
+          };
+        }
+        
+        clubData[row.Clube].ftd += parseFloat(row.FTD) || 0;
+        clubData[row.Clube].depositos += parseFloat(row.Depositos) || 0;
+        clubData[row.Clube].ggr += parseFloat(row.GGR) || 0;
+        clubData[row.Clube].sportsbook += parseFloat(row['Sportsbook GGR']) || 0;
+        clubData[row.Clube].cassino += parseFloat(row['Cassino GGR']) || 0;
+        clubData[row.Clube].bonus += parseFloat(row['Bônus Convertidos']) || 0;
+      });
+      
+      // Converter para array
+      const clubArray = Object.values(clubData);
+      
+      // Calcular variações (comparação com período anterior)
+      const startDate = new Date(document.getElementById('filtroInicio').value);
+      const endDate = new Date(document.getElementById('filtroFim').value);
+      const periodLength = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+      
+      const prevStartDate = new Date(startDate);
+      prevStartDate.setDate(prevStartDate.getDate() - periodLength);
+      const prevEndDate = new Date(startDate);
+      prevEndDate.setDate(prevEndDate.getDate() - 1);
+      
+      const prevData = allData.filter(row => {
+        return row.dateObj >= prevStartDate && row.dateObj <= prevEndDate;
+      });
+      
+      const prevClubData = {};
+      
+      prevData.forEach(row => {
+        if (!prevClubData[row.Clube]) {
+          prevClubData[row.Clube] = {
+            ftd: 0,
+            depositos: 0,
+            ggr: 0,
+            sportsbook: 0,
+            cassino: 0,
+            bonus: 0
+          };
+        }
+        
+        prevClubData[row.Clube].ftd += parseFloat(row.FTD) || 0;
+        prevClubData[row.Clube].depositos += parseFloat(row.Depositos) || 0;
+        prevClubData[row.Clube].ggr += parseFloat(row.GGR) || 0;
+        prevClubData[row.Clube].sportsbook += parseFloat(row['Sportsbook GGR']) || 0;
+        prevClubData[row.Clube].cassino += parseFloat(row['Cassino GGR']) || 0;
+        prevClubData[row.Clube].bonus += parseFloat(row['Bônus Convertidos']) || 0;
+      });
+      
+      // Adicionar variações aos dados atuais
+      clubArray.forEach(club => {
+        const prevClub = prevClubData[club.clube] || {
+          ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0
+        };
+        
+        club.ftdVariation = club.ftd - prevClub.ftd;
+        club.depositosVariation = club.depositos - prevClub.depositos;
+        club.ggrVariation = club.ggr - prevClub.ggr;
+        club.sportsbookVariation = club.sportsbook - prevClub.sportsbook;
+        club.cassinoVariation = club.cassino - prevClub.cassino;
+        club.bonusVariation = club.bonus - prevClub.bonus;
+      });
+      
+      // Ordenar e limitar para top 10
+      const topDepositos = [...clubArray]
+        .sort((a, b) => b.depositos - a.depositos)
+        .slice(0, 10);
+      
+      const topFTD = [...clubArray]
+        .sort((a, b) => b.ftd - a.ftd)
+        .slice(0, 10);
+      
+      const topGGR = [...clubArray]
+        .sort((a, b) => b.ggr - a.ggr)
+        .slice(0, 10);
+      
+      const topSportsbook = [...clubArray]
+        .sort((a, b) => b.sportsbook - a.sportsbook)
+        .slice(0, 10);
+      
+      const topCassino = [...clubArray]
+        .sort((a, b) => b.cassino - a.cassino)
+        .slice(0, 10);
+      
+      const topBonus = [...clubArray]
+        .sort((a, b) => b.bonus - a.bonus)
+        .slice(0, 10);
+      
+      // Atualizar tabela de depósitos
+      updateTable('topDepositos', topDepositos, 'depositos', 'depositosVariation');
+      
+      // Atualizar tabela de FTD
+      updateTable('topFTD', topFTD, 'ftd', 'ftdVariation');
+      
+      // Atualizar tabela de GGR
+      updateTable('topGGR', topGGR, 'ggr', 'ggrVariation');
+      
+      // Atualizar tabela de Sportsbook
+      updateTable('topSportsbook', topSportsbook, 'sportsbook', 'sportsbookVariation');
+      
+      // Atualizar tabela de Cassino
+      updateTable('topCassino', topCassino, 'cassino', 'cassinoVariation');
+      
+      // Atualizar tabela de Bônus
+      updateTable('topBonus', topBonus, 'bonus', 'bonusVariation');
+    }
+    
+    // Função para atualizar uma tabela específica
+    function updateTable(tableId, data, valueField, variationField) {
+      const table = document.querySelector(`#${tableId} tbody`);
+      table.innerHTML = '';
+      
+      // Encontrar o valor máximo para normalizar as barras
+      const maxVal = Math.max(...data.map(item => item[valueField]));
+      
+      data.forEach(item => {
+        const row = document.createElement('tr');
+        
+        // Célula do clube
+        const clubCell = document.createElement('td');
+        clubCell.innerHTML = `
+          <div class="club-cell">
+            <div class="club-avatar">${getAvatarLetter(item.clube)}</div>
+            <div class="club-name" title="${item.clube}">${item.clube}</div>
+          </div>
+        `;
+        
+        // Célula do valor com barra
+        const valueCell = document.createElement('td');
+        const percentage = (item[valueField] / maxVal) * 100;
+        valueCell.innerHTML = `
+          <div class="value-bar">
+            <div class="bar" style="width: ${percentage}%"></div>
+            <div class="value-text">${formatMoney(item[valueField])}</div>
+          </div>
+        `;
+        
+        // Célula de variação
+        const variationCell = document.createElement('td');
+        const variationClass = item[variationField] >= 0 ? 'up' : 'down';
+        const variationIcon = item[variationField] >= 0 ? 'up' : 'down';
+        const variationPercent = formatVariation(item[valueField], item[valueField] - item[variationField]);
+        
+        variationCell.innerHTML = `
+          <div class="variation-cell ${variationClass}">
+            <i class="fas fa-arrow-${variationIcon}"></i> ${variationPercent}
+            <div class="delta-value">Δ ${formatMoney(Math.abs(item[variationField]))}</div>
+          </div>
+        `;
+        
+        row.appendChild(clubCell);
+        row.appendChild(valueCell);
+        row.appendChild(variationCell);
+        table.appendChild(row);
+      });
+    }
+    
+    // Função para exportar dados para CSV
+    function exportToCSV() {
+      // Agrupar dados por clube
+      const clubData = {};
+      
+      filteredData.forEach(row => {
+        if (!clubData[row.Clube]) {
+          clubData[row.Clube] = {
+            clube: row.Clube,
+            ftd: 0,
+            depositos: 0,
+            ggr: 0,
+            sportsbook: 0,
+            cassino: 0,
+            bonus: 0
+          };
+        }
+        
+        clubData[row.Clube].ftd += parseFloat(row.FTD) || 0;
+        clubData[row.Clube].depositos += parseFloat(row.Depositos) || 0;
+        clubData[row.Clube].ggr += parseFloat(row.GGR) || 0;
+        clubData[row.Clube].sportsbook += parseFloat(row['Sportsbook GGR']) || 0;
+        clubData[row.Clube].cassino += parseFloat(row['Cassino GGR']) || 0;
+        clubData[row.Clube].bonus += parseFloat(row['Bônus Convertidos']) || 0;
+      });
+      
+      // Converter para array
+      const clubArray = Object.values(clubData);
+      
+      // Criar conteúdo CSV
+      let csvContent = "Clube,FTD,Depósitos,GGR,Sportsbook GGR,Cassino GGR,Bônus Convertidos\n";
+      
+      clubArray.forEach(club => {
+        csvContent += `${club.clube},${club.ftd},${club.depositos},${club.ggr},${club.sportsbook},${club.cassino},${club.bonus}\n`;
+      });
+      
+      // Criar blob e download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `dashboard_clubes_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      showNotification('Dados exportados com sucesso!', 'success');
+    }
+    
+    // Quando o documento estiver carregado
+    document.addEventListener('DOMContentLoaded', function() {
+      // Configurar datas padrão
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      document.getElementById('filtroInicio').value = yesterday.toISOString().split('T')[0];
+      document.getElementById('filtroFim').value = yesterday.toISOString().split('T')[0];
       
       // Configurar eventos
-      document.getElementById('btnAplicar').addEventListener('click', initDashboard);
-      document.getElementById('btnAtualizar').addEventListener('click', initDashboard);
+      document.getElementById('btnAplicar').addEventListener('click', applyFilters);
+      document.getElementById('btnAtualizar').addEventListener('click', loadDataFromSpreadsheet);
+      document.getElementById('btnExportar').addEventListener('click', exportToCSV);
+      
       document.getElementById('btnDarkMode').addEventListener('click', function() {
         document.body.classList.toggle('dark-mode');
         document.body.classList.toggle('light-mode');
@@ -960,7 +1584,55 @@
         } else {
           this.innerHTML = '<i class="fa-solid fa-moon"></i> Modo Escuro';
         }
+        
+        // Atualizar cores dos gráficos
+        updateCharts();
       });
+      
+      // Botões de período rápido
+      document.getElementById('btnOntem').addEventListener('click', function() {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        document.getElementById('filtroInicio').value = yesterday.toISOString().split('T')[0];
+        document.getElementById('filtroFim').value = yesterday.toISOString().split('T')[0];
+      });
+      
+      document.getElementById('btnUltimos7').addEventListener('click', function() {
+        const today = new Date();
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        document.getElementById('filtroInicio').value = sevenDaysAgo.toISOString().split('T')[0];
+        document.getElementById('filtroFim').value = today.toISOString().split('T')[0];
+      });
+      
+      document.getElementById('btnUltimos30').addEventListener('click', function() {
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        document.getElementById('filtroInicio').value = thirtyDaysAgo.toISOString().split('T')[0];
+        document.getElementById('filtroFim').value = today.toISOString().split('T')[0];
+      });
+      
+      // Filtro de busca de clube
+      document.getElementById('searchClub').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const options = document.querySelectorAll('#filtroClubeA option, #filtroClubeB option');
+        
+        options.forEach(option => {
+          if (option.value.toLowerCase().includes(searchTerm) || option.value === 'Todos' || option.value === 'Nenhum') {
+            option.style.display = '';
+          } else {
+            option.style.display = 'none';
+          }
+        });
+      });
+      
+      // Carregar dados iniciais
+      loadDataFromSpreadsheet();
     });
   </script>
 </body>
