@@ -788,6 +788,31 @@
         maximumFractionDigits: 2
       }).format(value / 100);
     }
+
+    // Função para converter string de moeda para número
+    function parseCurrency(value) {
+      if (typeof value === 'number') {
+        return value; // Se já for um número, retorna diretamente
+      }
+      if (typeof value !== 'string' || value.trim() === '') {
+        return 0; // Se não for uma string ou estiver vazia, retorna 0
+      }
+      
+      // 1. Remove "R$" e espaços em branco
+      // 2. Remove os pontos de milhar
+      // 3. Substitui a vírgula decimal por um ponto
+      // 4. Converte a string limpa para um número de ponto flutuante (float)
+      const cleanedValue = value
+        .replace('R$', '')
+        .trim()
+        .replace(/\./g, '') 
+        .replace(',', '.');
+        
+      const number = parseFloat(cleanedValue);
+      
+      // Retorna o número ou 0 se a conversão falhar (resultar em NaN - Not a Number)
+      return isNaN(number) ? 0 : number;
+    }
     
     // Função para gerar avatar com base na primeira letra
     function getAvatarLetter(clube) {
@@ -863,10 +888,10 @@
       });
     }
     
-    // Função para transformar dados brutos em formato do dashboard
+    // Função para transformar dados brutos em formato do dashboard (VERSÃO CORRIGIDA)
     function transformData(rawData) {
       if (!rawData || rawData.length === 0) return null;
-      
+
       // Mapeamento de colunas (ajuste conforme necessário)
       const columns = {
         date: 'Data',
@@ -878,21 +903,15 @@
         cassino: 'Cassino',
         bonus: 'Bônus'
       };
-      
+
       // Extrair todas as datas únicas e ordenar
       const dates = [...new Set(rawData.map(row => row[columns.date]))].sort();
-      
+
       // Inicializar objetos para agregação
       const totals = {
-        ftd: 0,
-        depositos: 0,
-        ggr: 0,
-        sportsbook: 0,
-        cassino: 0,
-        bonus: 0
+        ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0
       };
-      
-      // Para gráficos de linha: para cada métrica, um array com o total por data
+
       const chartsData = {
         ggr: Array(dates.length).fill(0),
         depositos: Array(dates.length).fill(0),
@@ -901,39 +920,42 @@
         cassino: Array(dates.length).fill(0)
       };
       
-      // Para tabelas: para cada métrica, um objeto que mapeia clube -> total
       const tablesData = {
-        depositos: {},
-        ftd: {},
-        ggr: {},
-        sportsbook: {},
-        cassino: {},
-        bonus: {}
+        depositos: {}, ftd: {}, ggr: {}, sportsbook: {}, cassino: {}, bonus: {}
       };
-      
+
       // Processar cada linha
       rawData.forEach(row => {
         const date = row[columns.date];
         const club = row[columns.club];
         const dateIndex = dates.indexOf(date);
-        
+
+        // --- AQUI ESTÁ A CORREÇÃO ---
+        // Usamos a função parseCurrency para garantir que os valores são números
+        const ftdValue = parseCurrency(row[columns.ftd]);
+        const depValue = parseCurrency(row[columns.depositos]);
+        const ggrValue = parseCurrency(row[columns.ggr]);
+        const sbValue = parseCurrency(row[columns.sportsbook]);
+        const csValue = parseCurrency(row[columns.cassino]);
+        const bnValue = parseCurrency(row[columns.bonus]);
+
         // Atualizar totais
-        totals.ftd += row[columns.ftd] || 0;
-        totals.depositos += row[columns.depositos] || 0;
-        totals.ggr += row[columns.ggr] || 0;
-        totals.sportsbook += row[columns.sportsbook] || 0;
-        totals.cassino += row[columns.cassino] || 0;
-        totals.bonus += row[columns.bonus] || 0;
-        
+        totals.ftd += ftdValue;
+        totals.depositos += depValue;
+        totals.ggr += ggrValue;
+        totals.sportsbook += sbValue;
+        totals.cassino += csValue;
+        totals.bonus += bnValue;
+
         // Atualizar gráficos de linha
         if (dateIndex !== -1) {
-          chartsData.ggr[dateIndex] += row[columns.ggr] || 0;
-          chartsData.depositos[dateIndex] += row[columns.depositos] || 0;
-          chartsData.ftd[dateIndex] += row[columns.ftd] || 0;
-          chartsData.sportsbook[dateIndex] += row[columns.sportsbook] || 0;
-          chartsData.cassino[dateIndex] += row[columns.cassino] || 0;
+          chartsData.ggr[dateIndex] += ggrValue;
+          chartsData.depositos[dateIndex] += depValue;
+          chartsData.ftd[dateIndex] += ftdValue;
+          chartsData.sportsbook[dateIndex] += sbValue;
+          chartsData.cassino[dateIndex] += csValue;
         }
-        
+
         // Atualizar tabelas (agregar por clube)
         if (!tablesData.depositos[club]) {
           tablesData.depositos[club] = 0;
@@ -944,27 +966,24 @@
           tablesData.bonus[club] = 0;
         }
         
-        tablesData.depositos[club] += row[columns.depositos] || 0;
-        tablesData.ftd[club] += row[columns.ftd] || 0;
-        tablesData.ggr[club] += row[columns.ggr] || 0;
-        tablesData.sportsbook[club] += row[columns.sportsbook] || 0;
-        tablesData.cassino[club] += row[columns.cassino] || 0;
-        tablesData.bonus[club] += row[columns.bonus] || 0;
+        tablesData.depositos[club] += depValue;
+        tablesData.ftd[club] += ftdValue;
+        tablesData.ggr[club] += ggrValue;
+        tablesData.sportsbook[club] += sbValue;
+        tablesData.cassino[club] += csValue;
+        tablesData.bonus[club] += bnValue;
       });
-      
+
       // Preparar os dados das tabelas (top 10)
       const top10 = (data) => {
         return Object.entries(data)
-          .map(([clube, valor]) => ({ 
-            clube, 
-            valor, 
-            variacao: valor, 
-            delta: `+${valor.toLocaleString('pt-BR')}` 
+          .map(([clube, valor]) => ({
+            clube, valor, variacao: valor, delta: `+${valor.toLocaleString('pt-BR')}`
           }))
           .sort((a, b) => b.valor - a.valor)
           .slice(0, 10);
       };
-      
+
       // Montar o objeto dashboardData
       return {
         kpis: {
@@ -981,26 +1000,11 @@
             dataA: [totals.ftd, totals.depositos, totals.ggr, totals.sportsbook, totals.cassino, totals.bonus],
             dataB: [0, 0, 0, 0, 0, 0]
           },
-          ggr: {
-            labels: dates,
-            data: chartsData.ggr
-          },
-          depositos: {
-            labels: dates,
-            data: chartsData.depositos
-          },
-          ftd: {
-            labels: dates,
-            data: chartsData.ftd
-          },
-          sportsbook: {
-            labels: dates,
-            data: chartsData.sportsbook
-          },
-          cassino: {
-            labels: dates,
-            data: chartsData.cassino
-          }
+          ggr: { labels: dates, data: chartsData.ggr },
+          depositos: { labels: dates, data: chartsData.depositos },
+          ftd: { labels: dates, data: chartsData.ftd },
+          sportsbook: { labels: dates, data: chartsData.sportsbook },
+          cassino: { labels: dates, data: chartsData.cassino }
         },
         tables: {
           depositos: top10(tablesData.depositos),
@@ -1398,7 +1402,7 @@
           
           // Célula do valor com barra
           const valueCell = document.createElement('td');
-          const percentage = (item.valor / maxVal) * 100;
+          const percentage = maxVal > 0 ? (item.valor / maxVal) * 100 : 0;
           valueCell.innerHTML = `
             <div class="value-bar">
               <div class="bar" style="width: ${percentage}%"></div>
