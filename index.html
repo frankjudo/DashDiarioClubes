@@ -12,7 +12,7 @@
       --bg:#0e1621; --bg2:#0b1926;
       --card:#101f2d; --card2:#0f2130;
       --txt:#e9f3ff; --muted:#98a9b7; --accent:#49b6ff;
-      --good:#28d07f; --bad:#ff5c5c;
+      --good:#28d07f; --bad:#ff5c5c; --amber:#ffb86b;
       --border:rgba(255,255,255,.07); --shadow:0 10px 30px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
@@ -25,33 +25,34 @@
 
     .panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);
       border-radius:16px; box-shadow:var(--shadow)}
-    .controls{padding:16px 16px 10px; margin-bottom:16px}
+    .controls{padding:16px 16px 10px; margin-bottom:12px}
     .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
     label{font-weight:800;font-size:14px}
     input,select{background:#0b2435;color:var(--txt);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
     input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(73,182,255,.18)}
-
     .btn{padding:10px 14px;border:none;border-radius:12px;font-weight:900;letter-spacing:.2px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:all .15s}
-    .btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
-    .btn:active{transform:translateY(0)}
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.1)} .btn:active{transform:translateY(0)}
     .btn-ghost{background:#0e2c43;border:1px solid rgba(73,182,255,.35);color:var(--accent)}
     .btn-apply{background:#133822;border:1px solid rgba(40,208,127,.35);color:#bfffe1}
 
-    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px}
-    .kpi{padding:14px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));position:relative;overflow:hidden}
+    .insights{padding:10px 14px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start}
+    .chip{background:#0b2435;border:1px solid var(--border);padding:8px 10px;border-radius:12px;color:var(--muted);font-weight:700}
+
+    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px}
+    .kpi{padding:12px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));position:relative;overflow:hidden}
     .kpi:before{content:'';position:absolute;left:0;top:0;height:100%;width:4px;background:var(--accent)}
     .kpi .title{color:var(--muted);font-weight:800;font-size:13px;display:flex;gap:8px;align-items:center}
-    .kpi .value{font-size:24px;font-weight:900;margin:8px 0 2px}
-    .kpi .var{font-weight:900;font-size:13px}
+    .kpi .value{font-size:22px;font-weight:900;margin:8px 0 2px}
+    .kpi .var{font-weight:900;font-size:12px}
     .up{color:var(--good)} .down{color:var(--bad)} .muted{color:var(--muted)}
 
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:12px;grid-auto-rows:380px;margin-bottom:16px}
-    .card{padding:14px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
-    .card h3{margin:0 0 10px;color:var(--accent);display:flex;gap:8px;align-items:center}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:10px;grid-auto-rows:380px;margin-bottom:12px}
+    .card{padding:12px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
+    .card h3{margin:0 0 8px;color:var(--accent);display:flex;gap:8px;align-items:center}
     .chart-container{flex:1;min-height:0}
     .loader{position:absolute;inset:0;border-radius:16px;background:rgba(11,25,38,.65);display:none;justify-content:center;align-items:center}
     .loader.show{display:flex}
-    .spinner{width:38px;height:38px;border:4px solid rgba(255,255,255,.12);border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+    .spinner{width:36px;height:36px;border:4px solid rgba(255,255,255,.12);border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
     /* Ranking */
@@ -59,14 +60,14 @@
     .ranking-head .left{display:flex;gap:12px;align-items:center}
     table{width:100%;border-collapse:separate;border-spacing:0 8px}
     thead th{color:var(--muted);font-size:.85rem;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;text-align:left}
-    tbody tr{background:rgba(255,255,255,.03);border:1px solid var(--border)}
+    tbody tr{background:rgba(255,255,255,.03);border:1px solid var(--border);cursor:pointer}
     tbody td{padding:10px 10px}
+    tbody tr:hover{background:rgba(73,182,255,.08)}
     .delta.up{color:var(--good)} .delta.down{color:var(--bad)} .delta.flat{color:var(--muted)}
 
-    .notification{position:fixed;right:20px;bottom:20px;background:linear-gradient(180deg,var(--card),var(--card2));
-      border:1px solid var(--border);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);
-      display:flex;gap:8px;align-items:center;opacity:0;transform:translateY(16px);transition:all .2s}
-    .notification.show{opacity:1;transform:translateY(0)}
+    .legend-chip{display:inline-flex;gap:6px;align-items:center;font-weight:800;color:var(--muted);font-size:12px}
+    .dotA{width:10px;height:10px;border-radius:50%;background:#49b6ff;display:inline-block}
+    .dotB{width:10px;height:10px;border-radius:50%;background:#ffb86b;display:inline-block}
   </style>
 </head>
 <body>
@@ -111,6 +112,12 @@
       </div>
     </div>
 
+    <!-- insights -->
+    <div class="panel insights" id="insights">
+      <div class="chip" id="chipResumo">Gerando insights…</div>
+    </div>
+
+    <!-- KPIs -->
     <div class="kpis">
       <div class="kpi" id="kpi-ftd"><div class="title"><i class="fa-solid fa-user-plus"></i> FTD</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-dep"><div class="title"><i class="fa-solid fa-coins"></i> Depósitos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
@@ -118,15 +125,18 @@
       <div class="kpi" id="kpi-sb"><div class="title"><i class="fa-solid fa-futbol"></i> Sportsbook GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-cs"><div class="title"><i class="fa-solid fa-dice"></i> Cassino GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-bn"><div class="title"><i class="fa-solid fa-gift"></i> Bônus Convertidos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
+      <div class="kpi" id="kpi-margem"><div class="title"><i class="fa-solid fa-percentage"></i> Margem</div><div class="value">0%</div><div class="var muted">—</div></div>
+      <div class="kpi" id="kpi-ticket"><div class="title"><i class="fa-solid fa-ticket"></i> Ticket Médio de Depósito</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
     </div>
 
     <div class="grid">
-      <div class="card"><h3><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartComparativo"></canvas></div></div>
-      <div class="card"><h3><i class="fa-solid fa-chart-line"></i> Evolução do GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartGGR"></canvas></div></div>
-      <div class="card"><h3><i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
-      <div class="card"><h3><i class="fa-solid fa-user-plus"></i> Evolução do FTD</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartFTD"></canvas></div></div>
-      <div class="card"><h3><i class="fa-solid fa-futbol"></i> Evolução do Sportsbook</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartSportsbook"></canvas></div></div>
-      <div class="card"><h3><i class="fa-solid fa-dice"></i> Evolução do Cassino</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartCassino"></canvas></div></div>
+      <div class="card"><h3 id="tComp"><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartComparativo"></canvas></div></div>
+      <div class="card"><h3 id="tGgr"><i class="fa-solid fa-chart-line"></i> Evolução do GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartGGR"></canvas></div></div>
+      <div class="card"><h3 id="tDep"><i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
+      <div class="card"><h3 id="tFtd"><i class="fa-solid fa-user-plus"></i> Evolução do FTD</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartFTD"></canvas></div></div>
+      <div class="card"><h3 id="tSb"><i class="fa-solid fa-futbol"></i> Evolução do Sportsbook</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartSportsbook"></canvas></div></div>
+      <div class="card"><h3 id="tCs"><i class="fa-solid fa-dice"></i> Evolução do Cassino</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartCassino"></canvas></div></div>
+      <div class="card"><h3><i class="fa-solid fa-braille"></i> Correlação Depósitos × GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartScatter"></canvas></div></div>
     </div>
 
     <!-- Ranking único -->
@@ -168,11 +178,8 @@
     /* ============= STATE ============= */
     let charts = {};
     let allRows = [];
-    // bases (apenas filtros por data + exclusões, sem Clube A/B)
     let baseAtual = [], baseAnterior = [];
-    // união (para KPIs e ranking quando A/B selecionados)
     let rowsAtual = [], rowsAnterior = [];
-    // por clube (para gráficos comparativos A x B)
     let rowsA = [], rowsB = [], rowsA_prev = [], rowsB_prev = [];
     let aggAtual = null, aggAnterior = null;
 
@@ -181,6 +188,7 @@
 
     /* ============= UTILS ============= */
     function formatMoney(n){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0); }
+    function formatPct(n){ return new Intl.NumberFormat('pt-BR',{style:'percent',minimumFractionDigits:2,maximumFractionDigits:2}).format((n||0)/100); }
     function note(msg,type='info'){ const n=$('notification'),t=$('notificationText'),i=n.querySelector('i'); n.className='notification'; n.classList.add('show',type); i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':'fas fa-info-circle'; t.textContent=msg; setTimeout(()=>n.classList.remove('show'),2200); }
     function parseCurrency(v){ if(typeof v==='number') return v; if(v==null) return 0; let s=String(v).trim(); if(!s) return 0; s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-'); const par=/^\(.*\)$/.test(s); if(par) s=s.replace(/[()]/g,''); s=s.replace(/[^0-9,.\-]/g,''); const c=s.includes(','),d=s.includes('.'); if(c&&d){const lc=s.lastIndexOf(','),ld=s.lastIndexOf('.'); const dec=lc>ld?',':'.',th=dec===','?'.':','; s=s.split(th).join(''); if(dec===',') s=s.replace(',','.');} else if(c){ s=s.split('.').join(''); s=s.replace(',', '.'); } else { s=s.replace(/,/g,''); } let n=parseFloat(s); if(isNaN(n)) n=0; if(par) n=-Math.abs(n); return n; }
 
@@ -239,15 +247,13 @@
       return map;
     }
 
-    // Séries por data para um clube
     function seriesPorClube(rows, metric){
       const c={date:'DATA', club:'Usuário - Nome de usuário', ftd:'Usuário - FTD-Montante', dep:'Usuário - Depósitos',
                ggrCalc:'Cálculo - GGR', sb:'Sportsbook - GGR', cs:'Cassino - GGR', hab:'Jogos de habilidade - W/L'};
       const dates=[...new Set(rows.map(r=>r[c.date]))].sort();
       const serie=Array(dates.length).fill(0);
       rows.forEach(r=>{
-        const di=dates.indexOf(r[c.date]);
-        if(di<0) return;
+        const di=dates.indexOf(r[c.date]); if(di<0) return;
         let v=0;
         if(metric==='depositos') v=parseCurrency(r[c.dep]);
         else if(metric==='ftd') v=parseCurrency(r[c.ftd]);
@@ -263,27 +269,76 @@
       return {labels:dates, data:serie};
     }
 
+    /* ============= INSIGHTS ============= */
+    function gerarInsights(){
+      const pos = (delta) => delta>=0? '↑':'↓';
+      const mk = (v)=> formatMoney(v);
+      if(!aggAtual){ $('chipResumo').textContent='Sem dados no período.'; return; }
+      // variações globais
+      const compOn = $('chkComparar').checked && aggAnterior;
+      const d = (now, prev) => !compOn ? null : now - prev;
+      const depDelta = d(aggAtual.kpis.depositos, aggAnterior?.kpis.depositos);
+      const ggrDelta = d(aggAtual.kpis.ggr, aggAnterior?.kpis.ggr);
+      const ftdDelta = d(aggAtual.kpis.ftd, aggAnterior?.kpis.ftd);
+
+      // melhores/piores no ranking da métrica atual
+      const metric = $('selRanking').value;
+      const curMap = sumByClub(rowsAtual, metric);
+      const prevMap = $('chkComparar').checked ? sumByClub(rowsAnterior, metric) : {};
+      const linhas = Object.entries(curMap).map(([clube,valor])=>{
+        const prev = prevMap[clube]??0; return {clube, delta: valor-prev};
+      }).sort((a,b)=>b.delta-a.delta);
+      const top = linhas[0]; const worst = linhas[linhas.length-1];
+
+      let txt = `Depósitos ${!compOn?'—':`${pos(depDelta)} ${mk(Math.abs(depDelta))}`} | GGR ${!compOn?'—':`${pos(ggrDelta)} ${mk(Math.abs(ggrDelta))}`} | FTD ${!compOn?'—':`${pos(ftdDelta)} ${mk(Math.abs(ftdDelta))}`}.`;
+      if(top && worst){
+        txt += ` Destaques: ↑ ${top.clube} (maior crescimento em ${metric}); ↓ ${worst.clube} (maior queda).`;
+      }
+      $('chipResumo').textContent = txt;
+    }
+
     /* ============= RENDER ============= */
     function setKPI(id, val, prev, metricKey){
       const el=$(id);
-      el.querySelector('.value').textContent = formatMoney(val);
+      el.querySelector('.value').textContent = metricKey==='margem' ? (isFinite(val)? `${val.toFixed(2)}%` : '—') : formatMoney(val);
       const varEl = el.querySelector('.var');
+      if(metricKey==='margem' || metricKey==='ticket'){
+        // só mostra var percentual para margem / var absoluta para ticket
+        if(prev==null || !$('chkComparar').checked){ varEl.textContent='—'; varEl.className='var muted'; return; }
+        const delta = val - prev;
+        const good = (metricKey==='margem') ? (delta>=0) : (delta>=0); // ticket: maior pode ser bom/ruim — deixo neutro (verde se sobe)
+        varEl.textContent = `${delta>=0?'+':''}${metricKey==='margem' ? delta.toFixed(2)+'pp' : formatMoney(delta)}`;
+        varEl.className = `var ${good?'up':'down'}`;
+        return;
+      }
       if(!$('chkComparar').checked || prev==null){ varEl.textContent='—'; varEl.className='var muted'; return; }
       const delta = val - prev;
       const pct = (prev===0) ? (val===0?0:100) : (delta/Math.abs(prev))*100;
-      const positiveIsGood = metricKey !== 'bonus'; // bonus invertido
+      const positiveIsGood = metricKey !== 'bonus';
       const good = (delta>=0 && positiveIsGood) || (delta<0 && !positiveIsGood);
       varEl.textContent = `${delta>=0?'+':''}${formatMoney(delta)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`;
       varEl.className = `var ${good?'up':'down'}`;
     }
+
     function renderKPIs(){
+      // KPIs principais
       setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd, 'ftd');
       setKPI('kpi-dep', aggAtual.kpis.depositos, aggAnterior?.kpis.depositos, 'depositos');
       setKPI('kpi-ggr', aggAtual.kpis.ggr, aggAnterior?.kpis.ggr, 'ggr');
       setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook, 'sportsbook');
       setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino, 'cassino');
       setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus, 'bonus');
+
+      // KPIs derivados
+      const margemAtual = aggAtual.kpis.ggr ? ((aggAtual.kpis.ggr - aggAtual.kpis.bonus)/aggAtual.kpis.ggr)*100 : 0;
+      const margemAnterior = aggAnterior?.kpis?.ggr ? ((aggAnterior.kpis.ggr - aggAnterior.kpis.bonus)/aggAnterior.kpis.ggr)*100 : null;
+      setKPI('kpi-margem', margemAtual, margemAnterior, 'margem');
+
+      const ticketAtual = aggAtual.kpis.ftd ? (aggAtual.kpis.depositos/aggAtual.kpis.ftd) : 0;
+      const ticketAnterior = (aggAnterior && aggAnterior.kpis.ftd) ? (aggAnterior.kpis.depositos/aggAnterior.kpis.ftd) : null;
+      setKPI('kpi-ticket', ticketAtual, ticketAnterior, 'ticket');
     }
+
     function destroyCharts(){ Object.values(charts).forEach(c=>{try{c.destroy()}catch{}}); charts={}; }
 
     function renderCharts(){
@@ -296,37 +351,38 @@
       const ctxFTD=$('chartFTD').getContext('2d');
       const ctxSB=$('chartSportsbook').getContext('2d');
       const ctxCS=$('chartCassino').getContext('2d');
+      const ctxSc=$('chartScatter').getContext('2d');
 
       const clubA=$('filtroClubeA').value, clubB=$('filtroClubeB').value;
       const compararClubes = !!(clubA || clubB);
+      // títulos
+      $('tComp').innerHTML = `<i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa${compararClubes?' — A vs B':''}`;
+      $('tGgr').innerHTML = `<i class="fa-solid fa-chart-line"></i> Evolução do GGR${compararClubes?' — A vs B':''}`;
+      $('tDep').innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos${compararClubes?' — A vs B':''}`;
+      $('tFtd').innerHTML = `<i class="fa-solid fa-user-plus"></i> Evolução do FTD${compararClubes?' — A vs B':''}`;
+      $('tSb').innerHTML = `<i class="fa-solid fa-futbol"></i> Evolução do Sportsbook${compararClubes?' — A vs B':''}`;
+      $('tCs').innerHTML = `<i class="fa-solid fa-dice"></i> Evolução do Cassino${compararClubes?' — A vs B':''}`;
 
       // ====== Comparativo ======
       if(charts.comp) charts.comp.destroy();
       if(compararClubes){
-        // barras por métrica para A e B no período atual
         const metrics=['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'];
-        const totalClub = (rows) => {
-          const a=transform(rows); return a ? a.kpis : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
-        };
+        const totalClub = (rows) => { const a=transform(rows); return a ? a.kpis : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0}; };
         const kpiA = clubA ? totalClub(rowsA) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
         const kpiB = clubB ? totalClub(rowsB) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
-
         charts.comp = new Chart(ctxComp,{
           type:'bar',
           data:{
             labels:metrics,
             datasets:[
-              {label: clubA||'—', data:[kpiA.ftd,kpiA.depositos,kpiA.ggr,kpiA.sportsbook,kpiA.cassino,kpiA.bonus], backgroundColor:'rgba(73,182,255,.72)', borderColor:'rgba(73,182,255,1)', borderWidth:1},
-              {label: clubB||'—', data:[kpiB.ftd,kpiB.depositos,kpiB.ggr,kpiB.sportsbook,kpiB.cassino,kpiB.bonus], backgroundColor:'rgba(215,178,255,.72)', borderColor:'rgba(215,178,255,1)', borderWidth:1}
+              {label: clubA||'—', data:[kpiA.ftd,kpiA.depositos,kpiA.ggr,kpiA.sportsbook,kpiA.cassino,kpiA.bonus], backgroundColor:'rgba(73,182,255,.7)', borderColor:'rgba(73,182,255,1)', borderWidth:1},
+              {label: clubB||'—', data:[kpiB.ftd,kpiB.depositos,kpiB.ggr,kpiB.sportsbook,kpiB.cassino,kpiB.bonus], backgroundColor:'rgba(255,184,107,.7)', borderColor:'rgba(255,184,107,1)', borderWidth:1}
             ]
           },
           options: common
         });
       }else{
-        // período atual vs anterior
-        const ds=[
-          {label:'Período Atual', data:aggAtual.charts.comparativo.dataA, backgroundColor:'rgba(73,182,255,.72)', borderColor:'rgba(73,182,255,1)', borderWidth:1}
-        ];
+        const ds=[{label:'Período Atual', data:aggAtual.charts.comparativo.dataA, backgroundColor:'rgba(73,182,255,.72)', borderColor:'rgba(73,182,255,1)', borderWidth:1}];
         if($('chkComparar').checked && aggAnterior){
           ds.push({label:'Período Anterior', data:aggAnterior.charts.comparativo.dataA, backgroundColor:'rgba(159,179,194,.72)', borderColor:'rgba(159,179,194,1)', borderWidth:1});
         }
@@ -334,44 +390,54 @@
       }
 
       // ====== Linhas ======
-      const makeLine=(ctx,label,serieAtual,serieAnterior,serieA,serieB)=>{
-        if(charts[label]) charts[label].destroy();
+      const makeLine=(ctx,key,serieAtual,serieAnterior,serieA,serieB)=>{
+        if(charts[key]) charts[key].destroy();
         if(compararClubes){
           const ds=[];
           if(clubA){ ds.push({label:`${clubA}`, data:serieA.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}); }
-          if(clubB){ ds.push({label:`${clubB}`, data:serieB.data, borderColor:'#d7b2ff', backgroundColor:'rgba(215,178,255,.16)', tension:.35, fill:true}); }
-          charts[label]=new Chart(ctx,{type:'line', data:{labels:serieA.labels.length?serieA.labels:serieB.labels, datasets:ds}, options:common});
+          if(clubB){ ds.push({label:`${clubB}`, data:serieB.data, borderColor:'#ffb86b', backgroundColor:'rgba(255,184,107,.15)', tension:.35, fill:true}); }
+          charts[key]=new Chart(ctx,{type:'line', data:{labels:serieA.labels.length?serieA.labels:serieB.labels, datasets:ds}, options:common});
         }else{
-          const ds=[{label:`${label} (Atual)`, data:serieAtual.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}];
-          if($('chkComparar').checked && serieAnterior){ ds.push({label:`${label} (Anterior)`, data:serieAnterior.data, borderColor:'#9fb3c2', backgroundColor:'rgba(159,179,194,.15)', tension:.35, fill:true}); }
-          charts[label]=new Chart(ctx,{type:'line', data:{labels:serieAtual.labels, datasets:ds}, options:common});
+          const ds=[{label:`${key} (Atual)`, data:serieAtual.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}];
+          if($('chkComparar').checked && serieAnterior){ ds.push({label:`${key} (Anterior)`, data:serieAnterior.data, borderColor:'#9fb3c2', backgroundColor:'rgba(159,179,194,.15)', tension:.35, fill:true}); }
+          charts[key]=new Chart(ctx,{type:'line', data:{labels:serieAtual.labels, datasets:ds}, options:common});
         }
       };
-
-      // construir séries
       if(compararClubes){
-        // por clube (A e B)
-        makeLine(ctxGGR,'GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr,
-          seriesPorClube(rowsA,'ggr'), seriesPorClube(rowsB,'ggr'));
-        makeLine(ctxDep,'Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos,
-          seriesPorClube(rowsA,'depositos'), seriesPorClube(rowsB,'depositos'));
-        makeLine(ctxFTD,'FTD',aggAtual.charts.ftd,aggAnterior?.charts.ftd,
-          seriesPorClube(rowsA,'ftd'), seriesPorClube(rowsB,'ftd'));
-        makeLine(ctxSB,'Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook,
-          seriesPorClube(rowsA,'sportsbook'), seriesPorClube(rowsB,'sportsbook'));
-        makeLine(ctxCS,'Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino,
-          seriesPorClube(rowsA,'cassino'), seriesPorClube(rowsB,'cassino'));
+        makeLine(ctxGGR,'GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr, seriesPorClube(rowsA,'ggr'), seriesPorClube(rowsB,'ggr'));
+        makeLine(ctxDep,'Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos, seriesPorClube(rowsA,'depositos'), seriesPorClube(rowsB,'depositos'));
+        makeLine(ctxFTD,'FTD',aggAtual.charts.ftd,aggAnterior?.charts.ftd, seriesPorClube(rowsA,'ftd'), seriesPorClube(rowsB,'ftd'));
+        makeLine(ctxSB,'Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook, seriesPorClube(rowsA,'sportsbook'), seriesPorClube(rowsB,'sportsbook'));
+        makeLine(ctxCS,'Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino, seriesPorClube(rowsA,'cassino'), seriesPorClube(rowsB,'cassino'));
       }else{
-        // totals (Atual vs Anterior)
         makeLine(ctxGGR,'GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr,{labels:aggAtual.charts.ggr.labels,data:aggAtual.charts.ggr.data},{labels:[],data:[]});
         makeLine(ctxDep,'Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos,{labels:aggAtual.charts.depositos.labels,data:aggAtual.charts.depositos.data},{labels:[],data:[]});
         makeLine(ctxFTD,'FTD',aggAtual.charts.ftd,aggAnterior?.charts.ftd,{labels:aggAtual.charts.ftd.labels,data:aggAtual.charts.ftd.data},{labels:[],data:[]});
         makeLine(ctxSB,'Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook,{labels:aggAtual.charts.sportsbook.labels,data:aggAtual.charts.sportsbook.data},{labels:[],data:[]});
         makeLine(ctxCS,'Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino,{labels:aggAtual.charts.cassino.labels,data:aggAtual.charts.cassino.data},{labels:[],data:[]});
       }
+
+      // ====== Scatter Correlação (Depósitos x GGR) – Top 50 por GGR ======
+      if(charts.scatter) charts.scatter.destroy();
+      const curMapG = sumByClub(baseAtual,'ggr');
+      const curMapD = sumByClub(baseAtual,'depositos');
+      const points = Object.keys(curMapG)
+        .map(clube=>({clube, x:curMapD[clube]||0, y:curMapG[clube]||0}))
+        .sort((a,b)=>b.y-a.y).slice(0,50);
+      charts.scatter = new Chart(ctxSc,{
+        type:'scatter',
+        data:{ datasets:[{label:'Clubes (Top 50 por GGR)', data:points, parsing:false, pointRadius:4, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.4)'}] },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:textColor}}, tooltip:{callbacks:{label:(ctx)=>`${ctx.raw.clube}: Dep ${formatMoney(ctx.raw.x)} | GGR ${formatMoney(ctx.raw.y)}`}}},
+          scales:{
+            x:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')}, title:{display:true,text:'Depósitos',color:textColor,font:{weight:800}}},
+            y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')}, title:{display:true,text:'GGR',color:textColor,font:{weight:800}}}
+          }
+        }
+      });
     }
 
-    // RENDER RANKING (com variação mesmo se clube não existia antes)
     function renderRanking(){
       const metric = $('selRanking').value;
       localStorage.setItem('dash_ranking_metric', metric);
@@ -402,14 +468,24 @@
         let cls='flat', deltaText='—';
         if (r.delta !== null) {
           const isBonus = metric==='bonus';
-          const good = (r.delta>=0 && !isBonus) || (r.delta<0 && isBonus); // bônus invertido
+          const good = (r.delta>=0 && !isBonus) || (r.delta<0 && isBonus);
           cls = good ? 'up' : 'down';
           const pctText = (r.pct==null) ? '—' : `${r.pct>=0?'+':''}${r.pct.toFixed(2)}%`;
           deltaText = `${r.delta>=0?'+':''}${formatMoney(r.delta)} (${pctText})${r.badge||''}`;
         }
         const tr=document.createElement('tr');
+        tr.dataset.clube = r.clube;
         tr.innerHTML = `<td>${idx+1}</td><td>${r.clube}</td><td>${formatMoney(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
         tb.appendChild(tr);
+      });
+
+      // clique no ranking -> define Clube A e atualiza
+      [...tb.querySelectorAll('tr')].forEach(tr=>{
+        tr.addEventListener('click', ()=>{
+          $('filtroClubeA').value = tr.dataset.clube;
+          updateAll();
+          note(`Clube A definido: ${tr.dataset.clube}`, 'success');
+        });
       });
     }
 
@@ -461,16 +537,13 @@
       const cur=allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), ini, fim));
       const prv=allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), prevStart, prevEnd));
 
-      // aplica exclusões (Suprema/Toni) — base sem A/B
       baseAtual = applyNameFilters(cur);
       baseAnterior = applyNameFilters(prv);
 
       const a=$('filtroClubeA').value, b=$('filtroClubeB').value;
-      // união para KPIs/ranking
       rowsAtual = (!a && !b) ? baseAtual : baseAtual.filter(r=> (a && r['Usuário - Nome de usuário']===a) || (b && r['Usuário - Nome de usuário']===b));
       rowsAnterior = (!a && !b) ? baseAnterior : baseAnterior.filter(r=> (a && r['Usuário - Nome de usuário']===a) || (b && r['Usuário - Nome de usuário']===b));
 
-      // conjuntos separados para gráficos comparativos A x B
       rowsA = a ? baseAtual.filter(r=> r['Usuário - Nome de usuário']===a) : [];
       rowsB = b ? baseAtual.filter(r=> r['Usuário - Nome de usuário']===b) : [];
       rowsA_prev = a ? baseAnterior.filter(r=> r['Usuário - Nome de usuário']===a) : [];
@@ -484,7 +557,10 @@
       aggAtual = transform(rowsAtual) || {kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0},charts:{comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[0,0,0,0,0,0]},ggr:{labels:[],data:[]},depositos:{labels:[],data:[]},ftd:{labels:[],data:[]},sportsbook:{labels:[],data:[]},cassino:{labels:[],data:[]}}};
       aggAnterior = rowsAnterior.length ? transform(rowsAnterior) : null;
 
-      renderKPIs(); destroyCharts(); renderCharts(); renderRanking();
+      renderKPIs();
+      destroyCharts(); renderCharts();
+      renderRanking();
+      gerarInsights();
 
       showLoaders(false); savePrefs();
       $('ultimaAtualizacao').textContent='Atualizado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
