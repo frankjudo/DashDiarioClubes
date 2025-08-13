@@ -792,25 +792,17 @@
     // Função para converter string de moeda para número
     function parseCurrency(value) {
       if (typeof value === 'number') {
-        return value; // Se já for um número, retorna diretamente
+        return value;
       }
       if (typeof value !== 'string' || value.trim() === '') {
-        return 0; // Se não for uma string ou estiver vazia, retorna 0
+        return 0;
       }
-      
-      // 1. Remove "R$" e espaços em branco
-      // 2. Remove os pontos de milhar
-      // 3. Substitui a vírgula decimal por um ponto
-      // 4. Converte a string limpa para um número de ponto flutuante (float)
       const cleanedValue = value
         .replace('R$', '')
         .trim()
         .replace(/\./g, '') 
         .replace(',', '.');
-        
       const number = parseFloat(cleanedValue);
-      
-      // Retorna o número ou 0 se a conversão falhar (resultar em NaN - Not a Number)
       return isNaN(number) ? 0 : number;
     }
     
@@ -825,14 +817,8 @@
       const notification = document.getElementById('notification');
       const notificationText = document.getElementById('notificationText');
       const icon = notification.querySelector('i');
-      
-      // Limpa classes anteriores
       notification.className = 'notification';
-      
-      // Define o tipo de notificação
       notification.classList.add(type);
-      
-      // Define o ícone
       if (type === 'success') {
         icon.className = 'fas fa-check-circle';
       } else if (type === 'error') {
@@ -840,14 +826,8 @@
       } else {
         icon.className = 'fas fa-info-circle';
       }
-      
-      // Define a mensagem
       notificationText.textContent = message;
-      
-      // Mostra a notificação
       notification.classList.add('show');
-      
-      // Esconde após 3 segundos
       setTimeout(() => {
         notification.classList.remove('show');
       }, 3000);
@@ -888,66 +868,39 @@
       });
     }
     
-    // Função para transformar dados brutos em formato do dashboard (VERSÃO CORRIGIDA)
+    // Função para transformar dados brutos em formato do dashboard
     function transformData(rawData) {
       if (!rawData || rawData.length === 0) return null;
-
-      // Mapeamento de colunas (ajuste conforme necessário)
       const columns = {
-        date: 'Data',
-        club: 'Clube',
-        ftd: 'FTD',
-        depositos: 'Depósitos',
-        ggr: 'GGR',
-        sportsbook: 'Sportsbook',
-        cassino: 'Cassino',
-        bonus: 'Bônus'
+        date: 'Data', club: 'Clube', ftd: 'FTD', depositos: 'Depósitos',
+        ggr: 'GGR', sportsbook: 'Sportsbook', cassino: 'Cassino', bonus: 'Bônus'
       };
-
-      // Extrair todas as datas únicas e ordenar
       const dates = [...new Set(rawData.map(row => row[columns.date]))].sort();
-
-      // Inicializar objetos para agregação
-      const totals = {
-        ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0
-      };
-
+      const totals = { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
       const chartsData = {
-        ggr: Array(dates.length).fill(0),
-        depositos: Array(dates.length).fill(0),
-        ftd: Array(dates.length).fill(0),
-        sportsbook: Array(dates.length).fill(0),
+        ggr: Array(dates.length).fill(0), depositos: Array(dates.length).fill(0),
+        ftd: Array(dates.length).fill(0), sportsbook: Array(dates.length).fill(0),
         cassino: Array(dates.length).fill(0)
       };
-      
       const tablesData = {
         depositos: {}, ftd: {}, ggr: {}, sportsbook: {}, cassino: {}, bonus: {}
       };
-
-      // Processar cada linha
       rawData.forEach(row => {
         const date = row[columns.date];
         const club = row[columns.club];
         const dateIndex = dates.indexOf(date);
-
-        // --- AQUI ESTÁ A CORREÇÃO ---
-        // Usamos a função parseCurrency para garantir que os valores são números
         const ftdValue = parseCurrency(row[columns.ftd]);
         const depValue = parseCurrency(row[columns.depositos]);
         const ggrValue = parseCurrency(row[columns.ggr]);
         const sbValue = parseCurrency(row[columns.sportsbook]);
         const csValue = parseCurrency(row[columns.cassino]);
         const bnValue = parseCurrency(row[columns.bonus]);
-
-        // Atualizar totais
         totals.ftd += ftdValue;
         totals.depositos += depValue;
         totals.ggr += ggrValue;
         totals.sportsbook += sbValue;
         totals.cassino += csValue;
         totals.bonus += bnValue;
-
-        // Atualizar gráficos de linha
         if (dateIndex !== -1) {
           chartsData.ggr[dateIndex] += ggrValue;
           chartsData.depositos[dateIndex] += depValue;
@@ -955,17 +908,11 @@
           chartsData.sportsbook[dateIndex] += sbValue;
           chartsData.cassino[dateIndex] += csValue;
         }
-
-        // Atualizar tabelas (agregar por clube)
         if (!tablesData.depositos[club]) {
-          tablesData.depositos[club] = 0;
-          tablesData.ftd[club] = 0;
-          tablesData.ggr[club] = 0;
-          tablesData.sportsbook[club] = 0;
-          tablesData.cassino[club] = 0;
-          tablesData.bonus[club] = 0;
+          tablesData.depositos[club] = 0; tablesData.ftd[club] = 0;
+          tablesData.ggr[club] = 0; tablesData.sportsbook[club] = 0;
+          tablesData.cassino[club] = 0; tablesData.bonus[club] = 0;
         }
-        
         tablesData.depositos[club] += depValue;
         tablesData.ftd[club] += ftdValue;
         tablesData.ggr[club] += ggrValue;
@@ -973,8 +920,6 @@
         tablesData.cassino[club] += csValue;
         tablesData.bonus[club] += bnValue;
       });
-
-      // Preparar os dados das tabelas (top 10)
       const top10 = (data) => {
         return Object.entries(data)
           .map(([clube, valor]) => ({
@@ -983,8 +928,6 @@
           .sort((a, b) => b.valor - a.valor)
           .slice(0, 10);
       };
-
-      // Montar o objeto dashboardData
       return {
         kpis: {
           ftd: { value: totals.ftd, variation: 0, previous: 0 },
@@ -1017,45 +960,55 @@
       };
     }
     
-    // Função para buscar e processar dados
+    // Função para buscar e processar dados (COM DEPURAÇÃO)
     async function fetchData() {
       try {
         showNotification('Carregando dados...', 'info');
         
-        // Mostrar indicadores de carregamento
         document.querySelectorAll('.card, .table').forEach(el => {
-          el.style.position = 'relative';
-          el.innerHTML += '<div class="loading"><div class="spinner"></div></div>';
+          if (!el.querySelector('.loading')) {
+            el.style.position = 'relative';
+            el.innerHTML += '<div class="loading"><div class="spinner"></div></div>';
+          }
         });
         
-        // Buscar dados da planilha
+        // --- PONTO DE VERIFICAÇÃO 1: O que a URL está a devolver? ---
         const csvData = await fetchSpreadsheetData();
+        console.log('--- DEBUG 1: DADOS BRUTOS RECEBIDOS (CSV) ---');
+        console.log(csvData);
+
+        // --- PONTO DE VERIFICAÇÃO 2: Como o PapaParse processou os dados? ---
         const rawData = await processCSVData(csvData);
-        dashboardData = transformData(rawData);
+        console.log('--- DEBUG 2: DADOS PARSEADOS PELA BIBLIOTECA ---');
+        console.log(rawData);
         
-        // Aplica filtros
+        // --- PONTO DE VERIFICAÇÃO 3: Como os dados ficaram após a nossa transformação? ---
+        dashboardData = transformData(rawData);
+        console.log('--- DEBUG 3: DADOS FINAIS PARA O DASHBOARD ---');
+        console.log(dashboardData);
+
+        if (!dashboardData) {
+            throw new Error("A transformação dos dados falhou. Verifique os logs de DEBUG.");
+        }
+
         applyFilters();
         
-        // Remove indicadores de carregamento
         document.querySelectorAll('.loading').forEach(el => el.remove());
         
-        // Atualiza a interface
         updateKPIs();
         updateCharts();
         updateTables();
         
-        // Atualiza data de atualização
         const now = new Date();
         document.getElementById('ultimaAtualizacao').textContent = 
           `Atualizado em ${now.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
         
-        showNotification('Dados atualizados com sucesso!', 'success');
+        showNotification('Processamento concluído!', 'success');
         
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
-        showNotification('Erro ao carregar dados. Tente novamente.', 'error');
+        console.error('ERRO CRÍTICO NO FETCH:', error);
+        showNotification('Erro ao carregar dados. Verifique o console (F12).', 'error');
         
-        // Remove indicadores de carregamento
         document.querySelectorAll('.loading').forEach(el => el.remove());
       }
     }
@@ -1063,13 +1016,9 @@
     // Função para aplicar filtros
     function applyFilters() {
       if (!dashboardData) return;
-      
-      // Filtra clubes se necessário
       filteredData = JSON.parse(JSON.stringify(dashboardData));
-      
       const excludeSuprema = document.getElementById('eliminarSuprema').checked;
       const excludeToni = document.getElementById('eliminarToni').checked;
-      
       if (excludeSuprema || excludeToni) {
         Object.keys(filteredData.tables).forEach(tableKey => {
           filteredData.tables[tableKey] = filteredData.tables[tableKey].filter(item => {
@@ -1084,350 +1033,143 @@
     // Função para atualizar KPIs
     function updateKPIs() {
       if (!filteredData) return;
-      
       const kpis = filteredData.kpis;
-      
-      // Atualiza FTD
       const kpiFtd = document.getElementById('kpi-ftd');
       kpiFtd.querySelector('.vl').textContent = formatMoney(kpis.ftd.value);
-      kpiFtd.querySelector('.var').innerHTML = `
-        <i class="fas fa-arrow-${kpis.ftd.variation >= 0 ? 'up' : 'down'}"></i> 
-        ${formatPercent(kpis.ftd.variation)} vs período anterior
-      `;
+      kpiFtd.querySelector('.var').innerHTML = `<i class="fas fa-arrow-${kpis.ftd.variation >= 0 ? 'up' : 'down'}"></i> ${formatPercent(kpis.ftd.variation)} vs período anterior`;
       kpiFtd.querySelector('.var').className = `var ${kpis.ftd.variation >= 0 ? 'up' : 'down'}`;
-      
-      // Atualiza Depósitos
       const kpiDep = document.getElementById('kpi-dep');
       kpiDep.querySelector('.vl').textContent = formatMoney(kpis.depositos.value);
-      kpiDep.querySelector('.var').innerHTML = `
-        <i class="fas fa-arrow-${kpis.depositos.variation >= 0 ? 'up' : 'down'}"></i> 
-        ${formatPercent(kpis.depositos.variation)} vs período anterior
-      `;
+      kpiDep.querySelector('.var').innerHTML = `<i class="fas fa-arrow-${kpis.depositos.variation >= 0 ? 'up' : 'down'}"></i> ${formatPercent(kpis.depositos.variation)} vs período anterior`;
       kpiDep.querySelector('.var').className = `var ${kpis.depositos.variation >= 0 ? 'up' : 'down'}`;
-      
-      // Atualiza GGR
       const kpiGgr = document.getElementById('kpi-ggr');
       kpiGgr.querySelector('.vl').textContent = formatMoney(kpis.ggr.value);
-      kpiGgr.querySelector('.var').innerHTML = `
-        <i class="fas fa-arrow-${kpis.ggr.variation >= 0 ? 'up' : 'down'}"></i> 
-        ${formatPercent(kpis.ggr.variation)} vs período anterior
-      `;
+      kpiGgr.querySelector('.var').innerHTML = `<i class="fas fa-arrow-${kpis.ggr.variation >= 0 ? 'up' : 'down'}"></i> ${formatPercent(kpis.ggr.variation)} vs período anterior`;
       kpiGgr.querySelector('.var').className = `var ${kpis.ggr.variation >= 0 ? 'up' : 'down'}`;
-      
-      // Atualiza Sportsbook
       const kpiSb = document.getElementById('kpi-sb');
       kpiSb.querySelector('.vl').textContent = formatMoney(kpis.sportsbook.value);
-      kpiSb.querySelector('.var').innerHTML = `
-        <i class="fas fa-arrow-${kpis.sportsbook.variation >= 0 ? 'up' : 'down'}"></i> 
-        ${formatPercent(kpis.sportsbook.variation)} vs período anterior
-      `;
+      kpiSb.querySelector('.var').innerHTML = `<i class="fas fa-arrow-${kpis.sportsbook.variation >= 0 ? 'up' : 'down'}"></i> ${formatPercent(kpis.sportsbook.variation)} vs período anterior`;
       kpiSb.querySelector('.var').className = `var ${kpis.sportsbook.variation >= 0 ? 'up' : 'down'}`;
-      
-      // Atualiza Cassino
       const kpiCs = document.getElementById('kpi-cs');
       kpiCs.querySelector('.vl').textContent = formatMoney(kpis.cassino.value);
-      kpiCs.querySelector('.var').innerHTML = `
-        <i class="fas fa-arrow-${kpis.cassino.variation >= 0 ? 'up' : 'down'}"></i> 
-        ${formatPercent(kpis.cassino.variation)} vs período anterior
-      `;
+      kpiCs.querySelector('.var').innerHTML = `<i class="fas fa-arrow-${kpis.cassino.variation >= 0 ? 'up' : 'down'}"></i> ${formatPercent(kpis.cassino.variation)} vs período anterior`;
       kpiCs.querySelector('.var').className = `var ${kpis.cassino.variation >= 0 ? 'up' : 'down'}`;
-      
-      // Atualiza Bônus
       const kpiBn = document.getElementById('kpi-bn');
       kpiBn.querySelector('.vl').textContent = formatMoney(kpis.bonus.value);
-      kpiBn.querySelector('.var').innerHTML = `
-        <i class="fas fa-arrow-${kpis.bonus.variation >= 0 ? 'up' : 'down'}"></i> 
-        ${formatPercent(kpis.bonus.variation)} vs período anterior
-      `;
+      kpiBn.querySelector('.var').innerHTML = `<i class="fas fa-arrow-${kpis.bonus.variation >= 0 ? 'up' : 'down'}"></i> ${formatPercent(kpis.bonus.variation)} vs período anterior`;
       kpiBn.querySelector('.var').className = `var ${kpis.bonus.variation >= 0 ? 'up' : 'down'}`;
     }
     
     // Função para atualizar gráficos
     function updateCharts() {
       if (!filteredData) return;
-      
       const escalaMode = document.getElementById('escalaMode').value;
       const isDarkMode = document.body.classList.contains('dark-mode');
-      
-      // Cores baseadas no modo
       const textColor = isDarkMode ? '#e9f3ff' : '#0f1b25';
       const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-      
-      // Configuração comum para gráficos
       const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            labels: {
-              color: textColor
-            }
-          }
-        },
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: textColor } } },
         scales: {
           y: {
-            beginAtZero: true,
-            grid: {
-              color: gridColor
-            },
-            ticks: {
-              color: textColor,
-              callback: function(value) {
-                return 'R$ ' + value.toLocaleString('pt-BR');
-              }
-            }
+            beginAtZero: true, grid: { color: gridColor },
+            ticks: { color: textColor, callback: function(value) { return 'R$ ' + value.toLocaleString('pt-BR'); } }
           },
-          x: {
-            grid: {
-              display: false
-            },
-            ticks: {
-              color: textColor
-            }
-          }
+          x: { grid: { display: false }, ticks: { color: textColor } }
         }
       };
-      
-      // Gráfico Comparativo
       const ctxComp = document.getElementById('chartComparativo').getContext('2d');
       if (charts.comp) charts.comp.destroy();
-      
       charts.comp = new Chart(ctxComp, {
         type: 'bar',
         data: {
           labels: filteredData.charts.comparativo.labels,
           datasets: [
-            {
-              label: 'Período Atual',
-              data: filteredData.charts.comparativo.dataA,
-              backgroundColor: 'rgba(71, 179, 255, 0.7)',
-              borderColor: 'rgba(71, 179, 255, 1)',
-              borderWidth: 1
-            },
-            {
-              label: 'Período Anterior',
-              data: filteredData.charts.comparativo.dataB,
-              backgroundColor: 'rgba(159, 179, 194, 0.7)',
-              borderColor: 'rgba(159, 179, 194, 1)',
-              borderWidth: 1
-            }
+            { label: 'Período Atual', data: filteredData.charts.comparativo.dataA, backgroundColor: 'rgba(71, 179, 255, 0.7)', borderColor: 'rgba(71, 179, 255, 1)', borderWidth: 1 },
+            { label: 'Período Anterior', data: filteredData.charts.comparativo.dataB, backgroundColor: 'rgba(159, 179, 194, 0.7)', borderColor: 'rgba(159, 179, 194, 1)', borderWidth: 1 }
           ]
         },
-        options: {
-          ...commonOptions,
-          scales: {
-            ...commonOptions.scales,
-            y: {
-              ...commonOptions.scales.y,
-              beginAtZero: escalaMode === 'tipo'
-            }
-          }
-        }
+        options: { ...commonOptions, scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, beginAtZero: escalaMode === 'tipo' } } }
       });
-      
-      // Gráfico GGR
       const ctxGgr = document.getElementById('chartGGR').getContext('2d');
       if (charts.ggr) charts.ggr.destroy();
-      
       charts.ggr = new Chart(ctxGgr, {
         type: 'line',
         data: {
           labels: filteredData.charts.ggr.labels,
-          datasets: [{
-            label: 'GGR',
-            data: filteredData.charts.ggr.data,
-            borderColor: '#47b3ff',
-            backgroundColor: 'rgba(71, 179, 255, 0.1)',
-            tension: 0.4,
-            fill: true
-          }]
+          datasets: [{ label: 'GGR', data: filteredData.charts.ggr.data, borderColor: '#47b3ff', backgroundColor: 'rgba(71, 179, 255, 0.1)', tension: 0.4, fill: true }]
         },
-        options: {
-          ...commonOptions,
-          scales: {
-            ...commonOptions.scales,
-            y: {
-              ...commonOptions.scales.y,
-              beginAtZero: escalaMode === 'tipo'
-            }
-          }
-        }
+        options: { ...commonOptions, scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, beginAtZero: escalaMode === 'tipo' } } }
       });
-      
-      // Gráfico Depósitos
       const ctxDep = document.getElementById('chartDepositos').getContext('2d');
       if (charts.dep) charts.dep.destroy();
-      
       charts.dep = new Chart(ctxDep, {
         type: 'line',
         data: {
           labels: filteredData.charts.depositos.labels,
-          datasets: [{
-            label: 'Depósitos',
-            data: filteredData.charts.depositos.data,
-            borderColor: '#ffd389',
-            backgroundColor: 'rgba(255, 211, 137, 0.1)',
-            tension: 0.4,
-            fill: true
-          }]
+          datasets: [{ label: 'Depósitos', data: filteredData.charts.depositos.data, borderColor: '#ffd389', backgroundColor: 'rgba(255, 211, 137, 0.1)', tension: 0.4, fill: true }]
         },
-        options: {
-          ...commonOptions,
-          scales: {
-            ...commonOptions.scales,
-            y: {
-              ...commonOptions.scales.y,
-              beginAtZero: escalaMode === 'tipo'
-            }
-          }
-        }
+        options: { ...commonOptions, scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, beginAtZero: escalaMode === 'tipo' } } }
       });
-      
-      // Gráfico FTD
       const ctxFtd = document.getElementById('chartFTD').getContext('2d');
       if (charts.ftd) charts.ftd.destroy();
-      
       charts.ftd = new Chart(ctxFtd, {
         type: 'line',
         data: {
           labels: filteredData.charts.ftd.labels,
-          datasets: [{
-            label: 'FTD',
-            data: filteredData.charts.ftd.data,
-            borderColor: '#2ecc71',
-            backgroundColor: 'rgba(46, 204, 113, 0.1)',
-            tension: 0.4,
-            fill: true
-          }]
+          datasets: [{ label: 'FTD', data: filteredData.charts.ftd.data, borderColor: '#2ecc71', backgroundColor: 'rgba(46, 204, 113, 0.1)', tension: 0.4, fill: true }]
         },
-        options: {
-          ...commonOptions,
-          scales: {
-            ...commonOptions.scales,
-            y: {
-              ...commonOptions.scales.y,
-              beginAtZero: escalaMode === 'tipo'
-            }
-          }
-        }
+        options: { ...commonOptions, scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, beginAtZero: escalaMode === 'tipo' } } }
       });
-      
-      // Gráfico Sportsbook
       const ctxSb = document.getElementById('chartSportsbook').getContext('2d');
       if (charts.sb) charts.sb.destroy();
-      
       charts.sb = new Chart(ctxSb, {
         type: 'line',
         data: {
           labels: filteredData.charts.sportsbook.labels,
-          datasets: [{
-            label: 'Sportsbook',
-            data: filteredData.charts.sportsbook.data,
-            borderColor: '#d7b2ff',
-            backgroundColor: 'rgba(215, 178, 255, 0.1)',
-            tension: 0.4,
-            fill: true
-          }]
+          datasets: [{ label: 'Sportsbook', data: filteredData.charts.sportsbook.data, borderColor: '#d7b2ff', backgroundColor: 'rgba(215, 178, 255, 0.1)', tension: 0.4, fill: true }]
         },
-        options: {
-          ...commonOptions,
-          scales: {
-            ...commonOptions.scales,
-            y: {
-              ...commonOptions.scales.y,
-              beginAtZero: escalaMode === 'tipo'
-            }
-          }
-        }
+        options: { ...commonOptions, scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, beginAtZero: escalaMode === 'tipo' } } }
       });
-      
-      // Gráfico Cassino
       const ctxCs = document.getElementById('chartCassino').getContext('2d');
       if (charts.cs) charts.cs.destroy();
-      
       charts.cs = new Chart(ctxCs, {
         type: 'line',
         data: {
           labels: filteredData.charts.cassino.labels,
-          datasets: [{
-            label: 'Cassino',
-            data: filteredData.charts.cassino.data,
-            borderColor: '#ff9e9e',
-            backgroundColor: 'rgba(255, 158, 158, 0.1)',
-            tension: 0.4,
-            fill: true
-          }]
+          datasets: [{ label: 'Cassino', data: filteredData.charts.cassino.data, borderColor: '#ff9e9e', backgroundColor: 'rgba(255, 158, 158, 0.1)', tension: 0.4, fill: true }]
         },
-        options: {
-          ...commonOptions,
-          scales: {
-            ...commonOptions.scales,
-            y: {
-              ...commonOptions.scales.y,
-              beginAtZero: escalaMode === 'tipo'
-            }
-          }
-        }
+        options: { ...commonOptions, scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, beginAtZero: escalaMode === 'tipo' } } }
       });
     }
     
     // Função para atualizar tabelas
     function updateTables() {
       if (!filteredData) return;
-      
-      // Função para popular uma tabela específica
       function populateTable(tableId, data) {
         const table = document.querySelector(`#${tableId} tbody`);
         table.innerHTML = '';
-        
         if (data.length === 0) {
           table.innerHTML = '<tr><td colspan="3" class="muted">Nenhum dado encontrado</td></tr>';
           return;
         }
-        
-        // Encontrar o valor máximo para normalizar as barras
         const maxVal = Math.max(...data.map(item => item.valor));
-        
         data.forEach(item => {
           const row = document.createElement('tr');
-          
-          // Célula do clube
           const clubCell = document.createElement('td');
-          clubCell.innerHTML = `
-            <div class="club-cell">
-              <div class="club-avatar">${getAvatarLetter(item.clube)}</div>
-              <div class="club-name" title="${item.clube}">${item.clube}</div>
-            </div>
-          `;
-          
-          // Célula do valor com barra
+          clubCell.innerHTML = `<div class="club-cell"><div class="club-avatar">${getAvatarLetter(item.clube)}</div><div class="club-name" title="${item.clube}">${item.clube}</div></div>`;
           const valueCell = document.createElement('td');
           const percentage = maxVal > 0 ? (item.valor / maxVal) * 100 : 0;
-          valueCell.innerHTML = `
-            <div class="value-bar">
-              <div class="bar" style="width: ${percentage}%"></div>
-              <div class="value-text">${formatMoney(item.valor)}</div>
-            </div>
-          `;
-          
-          // Célula de variação
+          valueCell.innerHTML = `<div class="value-bar"><div class="bar" style="width: ${percentage}%"></div><div class="value-text">${formatMoney(item.valor)}</div></div>`;
           const variationCell = document.createElement('td');
           const isPositive = item.variacao >= 0;
-          variationCell.innerHTML = `
-            <div class="variation-cell ${isPositive ? 'up' : 'down'}">
-              <i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i> ${item.delta}
-              <div class="delta-value">Δ ${formatMoney(item.variacao)}</div>
-            </div>
-          `;
-          
+          variationCell.innerHTML = `<div class="variation-cell ${isPositive ? 'up' : 'down'}"><i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i> ${item.delta}<div class="delta-value">Δ ${formatMoney(item.variacao)}</div></div>`;
           row.appendChild(clubCell);
           row.appendChild(valueCell);
           row.appendChild(variationCell);
           table.appendChild(row);
         });
       }
-      
-      // Popular cada tabela com seus respectivos dados
       populateTable('topDepositos', filteredData.tables.depositos);
       populateTable('topFTD', filteredData.tables.ftd);
       populateTable('topGGR', filteredData.tables.ggr);
@@ -1442,31 +1184,21 @@
         showNotification('Nenhum dado para exportar', 'error');
         return;
       }
-      
       let csvContent = "data:text/csv;charset=utf-8,";
-      
-      // Adiciona cabeçalho
       csvContent += "Métrica,Clube,Valor,Variação,Delta\n";
-      
-      // Adiciona dados de cada tabela
       Object.keys(filteredData.tables).forEach(metric => {
         const metricName = metric.charAt(0).toUpperCase() + metric.slice(1);
         filteredData.tables[metric].forEach(item => {
           csvContent += `${metricName},"${item.clube}",${item.valor},${item.variacao},"${item.delta}"\n`;
         });
       });
-      
-      // Cria o link para download
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
       link.setAttribute("download", `dashboard_clubes_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
-      
-      // Clica no link para iniciar o download
       link.click();
       document.body.removeChild(link);
-      
       showNotification('Dados exportados com sucesso!', 'success');
     }
     
@@ -1476,7 +1208,6 @@
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-      
       document.getElementById('filtroInicio').value = yesterday.toISOString().split('T')[0];
       document.getElementById('filtroFim').value = yesterday.toISOString().split('T')[0];
       
@@ -1489,32 +1220,24 @@
       document.getElementById('btnOntem').addEventListener('click', function() {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        
         document.getElementById('filtroInicio').value = yesterday.toISOString().split('T')[0];
         document.getElementById('filtroFim').value = yesterday.toISOString().split('T')[0];
-        
         fetchData();
       });
-      
       document.getElementById('btnUltimos7').addEventListener('click', function() {
         const today = new Date();
         const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
         document.getElementById('filtroInicio').value = sevenDaysAgo.toISOString().split('T')[0];
         document.getElementById('filtroFim').value = today.toISOString().split('T')[0];
-        
         fetchData();
       });
-      
       document.getElementById('btnUltimos30').addEventListener('click', function() {
         const today = new Date();
         const thirtyDaysAgo = new Date(today);
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
         document.getElementById('filtroInicio').value = thirtyDaysAgo.toISOString().split('T')[0];
         document.getElementById('filtroFim').value = today.toISOString().split('T')[0];
-        
         fetchData();
       });
       
@@ -1522,15 +1245,11 @@
       document.getElementById('btnDarkMode').addEventListener('click', function() {
         document.body.classList.toggle('dark-mode');
         document.body.classList.toggle('light-mode');
-        
-        const icon = this.querySelector('i');
         if (document.body.classList.contains('dark-mode')) {
           this.innerHTML = '<i class="fa-solid fa-sun"></i> Modo Claro';
         } else {
           this.innerHTML = '<i class="fa-solid fa-moon"></i> Modo Escuro';
         }
-        
-        // Atualiza gráficos com novas cores
         if (filteredData) {
           updateCharts();
         }
@@ -1546,11 +1265,8 @@
       // Evento de busca de clube
       document.getElementById('searchClub').addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
-        
-        // Filtra opções dos selects
         const optionsA = document.querySelectorAll('#filtroClubeA option');
         const optionsB = document.querySelectorAll('#filtroClubeB option');
-        
         [...optionsA, ...optionsB].forEach(option => {
           if (option.value.toLowerCase().includes(searchTerm) || 
               option.textContent.toLowerCase().includes(searchTerm)) {
