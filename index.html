@@ -3,68 +3,84 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Comparativo de Clubes — Ranking Dinâmico</title>
+  <title>Relatório dos clubes</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     :root{
-      --dark-bg:#0f1b25;--dark-card:#142635;--dark-card2:#112331;--dark-txt:#e9f3ff;--dark-muted:#9fb3c2;--dark-accent:#47b3ff;
-      --light-bg:#f5f9ff;--light-card:#fff;--light-card2:#f0f6ff;--light-txt:#0f1b25;--light-muted:#6c7a8a;--light-accent:#0077cc;
+      --bg:#0e1621; --bg2:#0b1926;
+      --card:#101f2d; --card2:#0f2130;
+      --txt:#e9f3ff; --muted:#98a9b7; --accent:#49b6ff;
+      --good:#28d07f; --bad:#ff5c5c;
+      --border:rgba(255,255,255,.07); --shadow:0 10px 30px rgba(0,0,0,.35);
+      --chip:#163148;
     }
-    .dark-mode{--bg:var(--dark-bg);--card:var(--dark-card);--card2:var(--dark-card2);--txt:var(--dark-txt);--muted:var(--dark-muted);--accent:var(--dark-accent);--border:rgba(255,255,255,.06);--shadow:rgba(0,0,0,.3)}
-    .light-mode{--bg:var(--light-bg);--card:var(--light-card);--card2:var(--light-card2);--txt:var(--light-txt);--muted:var(--light-muted);--accent:var(--light-accent);--border:rgba(0,0,0,.08);--shadow:rgba(0,0,0,.06)}
-    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;padding:0;transition:background-color .2s,color .2s}
-    body{background:linear-gradient(180deg,var(--bg),var(--card2));color:var(--txt);padding:20px;min-height:100vh}
-    .container{max-width:1700px;margin:0 auto}
-    header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:16px}
-    h1{font-size:26px;font-weight:800;display:flex;gap:10px;align-items:center}
-    .sub{color:var(--muted)}
-    .controls,.card,.table{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:14px;box-shadow:0 4px 12px var(--shadow)}
-    .controls{padding:14px;margin-bottom:14px}
+    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--txt)}
+    .container{max-width:1700px;margin:0 auto;padding:22px}
+    header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
+    header h1{margin:0;font-size:28px;font-weight:900;letter-spacing:.2px;display:flex;gap:10px;align-items:center}
+    header .sub{color:var(--muted);font-weight:600}
+
+    .panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);
+      border-radius:16px; box-shadow:var(--shadow)}
+    .controls{padding:16px 16px 10px; margin-bottom:16px}
     .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
-    label{font-weight:700}
-    input,select{background:var(--card2);color:var(--txt);border:1px solid var(--border);border-radius:8px;padding:9px 10px}
-    .btn{padding:9px 12px;border:none;border-radius:10px;font-weight:800;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
-    .btn-ghost{background:rgba(15,40,59,.35);color:var(--accent);border:1px solid rgba(71,179,255,.35)}
-    .btn-apply{background:rgba(15,43,30,.35);color:#8cffc6;border:1px solid rgba(46,204,113,.35)}
-    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:14px}
-    .kpi{padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--card),var(--card2));position:relative}
-    .kpi .vl{font-size:22px;font-weight:900;margin:6px 0}
-    .kpi .var{font-size:13px;font-weight:800}
-    .up{color:#2ecc71}.down{color:#e74c3c}.muted{color:var(--muted)}
-    .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:12px;margin-bottom:14px;grid-auto-rows:380px}
-    .card{padding:12px;display:flex;flex-direction:column;position:relative}
-    .card h3{margin-bottom:8px;color:var(--accent)}
+    label{font-weight:800;font-size:14px}
+    input,select{background:#0b2435;color:var(--txt);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+    input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(73,182,255,.18)}
+
+    .btn{padding:10px 14px;border:none;border-radius:12px;font-weight:900;letter-spacing:.2px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:all .15s}
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+    .btn:active{transform:translateY(0)}
+    .btn-ghost{background:#0e2c43;border:1px solid rgba(73,182,255,.35);color:var(--accent)}
+    .btn-apply{background:#133822;border:1px solid rgba(40,208,127,.35);color:#bfffe1}
+
+    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px}
+    .kpi{padding:14px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));position:relative;overflow:hidden}
+    .kpi:before{content:'';position:absolute;left:0;top:0;height:100%;width:4px;background:var(--accent)}
+    .kpi .title{color:var(--muted);font-weight:800;font-size:13px;display:flex;gap:8px;align-items:center}
+    .kpi .value{font-size:24px;font-weight:900;margin:8px 0 2px}
+    .kpi .var{font-weight:900;font-size:13px}
+    .up{color:var(--good)} .down{color:var(--bad)} .muted{color:var(--muted)}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:12px;grid-auto-rows:380px;margin-bottom:16px}
+    .card{padding:14px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
+    .card h3{margin:0 0 10px;color:var(--accent);display:flex;gap:8px;align-items:center}
     .chart-container{flex:1;min-height:0}
-    .loader{position:absolute;inset:0;background:rgba(15,27,37,.75);display:none;justify-content:center;align-items:center;border-radius:14px;z-index:2}
+    .loader{position:absolute;inset:0;border-radius:16px;background:rgba(11,25,38,.65);display:none;justify-content:center;align-items:center}
     .loader.show{display:flex}
-    .spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.12);border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+    .spinner{width:38px;height:38px;border:4px solid rgba(255,255,255,.12);border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .notification{position:fixed;right:20px;bottom:20px;background:var(--card);border:1px solid var(--border);padding:12px 14px;border-radius:12px;box-shadow:0 4px 12px var(--shadow);opacity:0;transform:translateY(16px);transition:all .25s;display:flex;gap:8px;align-items:center}
-    .notification.show{opacity:1;transform:translateY(0)}
+
     /* Ranking */
-    .ranking-card{margin-top:12px}
-    .ranking-head{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .ranking-head .left{display:flex;gap:10px;align-items:center}
+    .ranking-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .ranking-head .left{display:flex;gap:12px;align-items:center}
     table{width:100%;border-collapse:separate;border-spacing:0 8px}
-    thead th{color:var(--muted);font-size:.85rem;border-bottom:1px solid var(--border);padding-bottom:6px;text-align:left}
-    tbody tr{background:rgba(255,255,255,.02);border:1px solid var(--border)}
-    tbody td{padding:10px 8px}
-    .delta.up{color:#2ecc71}.delta.down{color:#e74c3c}.delta.flat{color:var(--muted)}
+    thead th{color:var(--muted);font-size:.85rem;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;text-align:left}
+    tbody tr{background:rgba(255,255,255,.03);border:1px solid var(--border)}
+    tbody td{padding:10px 10px}
+    .delta.up{color:var(--good)} .delta.down{color:var(--bad)} .delta.flat{color:var(--muted)}
+
+    .notification{position:fixed;right:20px;bottom:20px;background:linear-gradient(180deg,var(--card),var(--card2));
+      border:1px solid var(--border);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);
+      display:flex;gap:8px;align-items:center;opacity:0;transform:translateY(16px);transition:all .2s}
+    .notification.show{opacity:1;transform:translateY(0)}
   </style>
 </head>
-<body class="dark-mode">
+<body>
   <div class="container">
     <header>
       <div>
-        <h1><i class="fas fa-chart-line"></i> Dashboard Comparativo de Clubes</h1>
+        <h1><i class="fa-solid fa-chart-line"></i> Relatório dos clubes</h1>
         <div class="sub">Visão executiva com comparação automática e ranking dinâmico</div>
       </div>
       <div class="sub" id="ultimaAtualizacao">—</div>
     </header>
 
-    <div class="controls" id="controls">
+    <div class="panel controls" id="controls">
       <div class="row">
         <label for="filtroInicio">De</label><input type="date" id="filtroInicio">
         <label for="filtroFim">até</label><input type="date" id="filtroFim">
@@ -74,13 +90,11 @@
         <label style="display:flex;gap:6px;align-items:center;margin-left:10px"><input type="checkbox" id="chkComparar"> Comparar c/ período anterior</label>
         <button class="btn btn-apply" id="btnAplicar"><i class="fa-solid fa-filter"></i> Aplicar</button>
       </div>
-
       <div class="row">
         <label style="flex:1">Pesquisar clube
           <input type="text" id="searchClub" placeholder="Digite para filtrar opções..." style="width:100%;margin-top:6px">
         </label>
       </div>
-
       <div class="row" style="gap:16px">
         <label style="flex:1">Clube A
           <select id="filtroClubeA" style="width:100%;margin-top:6px"></select>
@@ -89,36 +103,35 @@
           <select id="filtroClubeB" style="width:100%;margin-top:6px"></select>
         </label>
       </div>
-
       <div class="row" style="gap:16px">
         <label><input type="checkbox" id="eliminarSuprema"> Eliminar Clubes Suprema</label>
         <label><input type="checkbox" id="eliminarToni"> Eliminar TONI</label>
-        <button class="btn btn-ghost" id="btnDarkMode"><i class="fa-solid fa-moon"></i> Modo Claro</button>
+        <button class="btn btn-ghost" id="btnDarkMode"><i class="fa-solid fa-moon"></i> Modo Claro/Escuro</button>
         <button class="btn btn-ghost" id="btnAtualizar"><i class="fa-solid fa-sync"></i> Atualizar</button>
         <button class="btn btn-ghost" id="btnExportar"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
       </div>
     </div>
 
     <div class="kpis">
-      <div class="kpi" id="kpi-ftd"><div class="hd">FTD</div><div class="vl">R$ 0</div><div class="var muted">—</div></div>
-      <div class="kpi" id="kpi-dep"><div class="hd">Depósitos</div><div class="vl">R$ 0</div><div class="var muted">—</div></div>
-      <div class="kpi" id="kpi-ggr"><div class="hd">GGR</div><div class="vl">R$ 0</div><div class="var muted">—</div></div>
-      <div class="kpi" id="kpi-sb"><div class="hd">Sportsbook GGR</div><div class="vl">R$ 0</div><div class="var muted">—</div></div>
-      <div class="kpi" id="kpi-cs"><div class="hd">Cassino GGR</div><div class="vl">R$ 0</div><div class="var muted">—</div></div>
-      <div class="kpi" id="kpi-bn"><div class="hd">Bônus Convertidos</div><div class="vl">R$ 0</div><div class="var muted">—</div></div>
+      <div class="kpi" id="kpi-ftd"><div class="title"><i class="fa-solid fa-user-plus"></i> FTD</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
+      <div class="kpi" id="kpi-dep"><div class="title"><i class="fa-solid fa-coins"></i> Depósitos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
+      <div class="kpi" id="kpi-ggr"><div class="title"><i class="fa-solid fa-chart-line"></i> GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
+      <div class="kpi" id="kpi-sb"><div class="title"><i class="fa-solid fa-futbol"></i> Sportsbook GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
+      <div class="kpi" id="kpi-cs"><div class="title"><i class="fa-solid fa-dice"></i> Cassino GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
+      <div class="kpi" id="kpi-bn"><div class="title"><i class="fa-solid fa-gift"></i> Bônus Convertidos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
     </div>
 
-    <div class="charts">
-      <div class="card"><h3>Visão Geral Comparativa</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartComparativo"></canvas></div></div>
-      <div class="card"><h3>Evolução do GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartGGR"></canvas></div></div>
-      <div class="card"><h3>Evolução de Depósitos</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
-      <div class="card"><h3>Evolução do FTD</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartFTD"></canvas></div></div>
-      <div class="card"><h3>Evolução do Sportsbook</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartSportsbook"></canvas></div></div>
-      <div class="card"><h3>Evolução do Cassino</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartCassino"></canvas></div></div>
+    <div class="grid">
+      <div class="card"><h3><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartComparativo"></canvas></div></div>
+      <div class="card"><h3><i class="fa-solid fa-chart-line"></i> Evolução do GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartGGR"></canvas></div></div>
+      <div class="card"><h3><i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
+      <div class="card"><h3><i class="fa-solid fa-user-plus"></i> Evolução do FTD</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartFTD"></canvas></div></div>
+      <div class="card"><h3><i class="fa-solid fa-futbol"></i> Evolução do Sportsbook</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartSportsbook"></canvas></div></div>
+      <div class="card"><h3><i class="fa-solid fa-dice"></i> Evolução do Cassino</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartCassino"></canvas></div></div>
     </div>
 
-    <!-- Ranking Único Dinâmico -->
-    <div class="card ranking-card">
+    <!-- Ranking único -->
+    <div class="card">
       <div class="ranking-head">
         <div class="left">
           <h3><i class="fa-solid fa-trophy"></i> Ranking de Clubes</h3>
@@ -134,7 +147,7 @@
             </select>
           </label>
         </div>
-        <div class="sub" id="rankingInfo">Top 15</div>
+        <div class="sub" id="rankingInfo">Top 15 — GGR</div>
       </div>
       <div class="loader"><div class="spinner"></div></div>
       <table id="rankingTable">
@@ -147,28 +160,26 @@
   <div class="notification" id="notification"><i class="fas fa-info-circle"></i><span id="notificationText"></span></div>
 
   <script>
-    /* ================= CONFIG ================= */
+    /* ============= CONFIG ============= */
     const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
     const CLUBES_SUPREMA = ['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
     const CLUBE_TONI = 'crisslots123@gmail.com';
     const TOP_N = 15;
 
-    /* ================= STATE ================= */
+    /* ============= STATE ============= */
     let charts = {};
-    let allRows = [];      // cache do CSV inteiro
-    let rowsAtual = [];    // janela atual (com filtros)
-    let rowsAnterior = []; // janela anterior (com filtros)
+    let allRows = [];
+    let rowsAtual = [], rowsAnterior = [];
     let aggAtual = null, aggAnterior = null;
-
     const $ = id => document.getElementById(id);
+    const showLoaders = (on=true) => document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',on));
 
-    /* ================= UTILS ================= */
+    /* ============= UTILS ============= */
     function formatMoney(n){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0); }
     function note(msg,type='info'){ const n=$('notification'),t=$('notificationText'),i=n.querySelector('i'); n.className='notification'; n.classList.add('show',type); i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':'fas fa-info-circle'; t.textContent=msg; setTimeout(()=>n.classList.remove('show'),2200); }
     function parseCurrency(v){ if(typeof v==='number') return v; if(v==null) return 0; let s=String(v).trim(); if(!s) return 0; s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-'); const par=/^\(.*\)$/.test(s); if(par) s=s.replace(/[()]/g,''); s=s.replace(/[^0-9,.\-]/g,''); const c=s.includes(','),d=s.includes('.'); if(c&&d){const lc=s.lastIndexOf(','),ld=s.lastIndexOf('.'); const dec=lc>ld?',':'.',th=dec===','?'.':','; s=s.split(th).join(''); if(dec===',') s=s.replace(',','.');} else if(c){ s=s.split('.').join(''); s=s.replace(',', '.'); } else { s=s.replace(/,/g,''); } let n=parseFloat(s); if(isNaN(n)) n=0; if(par) n=-Math.abs(n); return n; }
-    const showLoaders = (on=true) => document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',on));
 
-    /* ========== TRANSFORM ========= */
+    /* ============= TRANSFORM ============= */
     function transform(rows){
       if(!rows.length) return null;
       const c={date:'DATA', club:'Usuário - Nome de usuário', ftd:'Usuário - FTD-Montante', dep:'Usuário - Depósitos',
@@ -202,12 +213,11 @@
       };
     }
 
-    // Agrega por clube para ranking
     function sumByClub(rows, metric){
       const c={club:'Usuário - Nome de usuário', ftd:'Usuário - FTD-Montante', depositos:'Usuário - Depósitos', ggrCalc:'Cálculo - GGR', sb:'Sportsbook - GGR', cs:'Cassino - GGR', hab:'Jogos de habilidade - W/L', bonus:'Cálculo - bônus convertidos'};
-      const map={}; // clube -> valor
+      const map={};
       rows.forEach(r=>{
-        const club = r[c.club] || '(Clube não informado)';
+        const club=r[c.club]||'(Clube não informado)';
         let v=0;
         if(metric==='depositos') v=parseCurrency(r[c.depositos]);
         else if(metric==='ftd') v=parseCurrency(r[c.ftd]);
@@ -217,192 +227,155 @@
         else if(metric==='ggr'){
           const vCalc=parseCurrency(r[c.ggrCalc]);
           const vSum=parseCurrency(r[c.sb])+parseCurrency(r[c.cs])+parseCurrency(r[c.hab]);
-          v = (Number.isFinite(vCalc) && vCalc!==0) ? vCalc : vSum;
+          v=(Number.isFinite(vCalc) && vCalc!==0) ? vCalc : vSum;
         }
         map[club]=(map[club]||0)+v;
       });
       return map;
     }
 
-    /* ========== RENDER ========= */
-    function setKPI(id, val, prev){
-      const el=$(id); el.querySelector('.vl').textContent = formatMoney(val);
+    /* ============= RENDER ============= */
+    function setKPI(id, val, prev, metricKey){
+      const el=$(id);
+      el.querySelector('.value').textContent = formatMoney(val);
       const varEl = el.querySelector('.var');
       if(!$('chkComparar').checked || prev==null){ varEl.textContent='—'; varEl.className='var muted'; return; }
       const delta = val - prev;
       const pct = (prev===0) ? (val===0?0:100) : (delta/Math.abs(prev))*100;
+
+      // regra: em "bonus", aumento = pior (vermelho)
+      const positiveIsGood = metricKey !== 'bonus';
+      const isUpGood = (delta>=0 && positiveIsGood) || (delta<0 && !positiveIsGood);
       varEl.textContent = `${delta>=0?'+':''}${formatMoney(delta)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`;
-      varEl.className = `var ${delta>=0?'up':'down'}`;
+      varEl.className = `var ${isUpGood?'up':'down'}`;
     }
     function renderKPIs(){
-      setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd);
-      setKPI('kpi-dep', aggAtual.kpis.depositos, aggAnterior?.kpis.depositos);
-      setKPI('kpi-ggr', aggAtual.kpis.ggr, aggAnterior?.kpis.ggr);
-      setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook);
-      setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino);
-      setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus);
+      setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd, 'ftd');
+      setKPI('kpi-dep', aggAtual.kpis.depositos, aggAnterior?.kpis.depositos, 'depositos');
+      setKPI('kpi-ggr', aggAtual.kpis.ggr, aggAnterior?.kpis.ggr, 'ggr');
+      setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook, 'sportsbook');
+      setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino, 'cassino');
+      setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus, 'bonus'); // <- inversão aplicada
     }
     function destroyCharts(){ Object.values(charts).forEach(c=>{try{c.destroy()}catch{}}); charts={}; }
     function renderCharts(){
-      const isDark=document.body.classList.contains('dark-mode');
-      const textColor=isDark?'#e9f3ff':'#0f1b25';
-      const gridColor=isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)';
+      const textColor='#e9f3ff', gridColor='rgba(255,255,255,.1)';
       const common={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor}}},scales:{y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$ '+v.toLocaleString('pt-BR')}},x:{grid:{display:false},ticks:{color:textColor}}}};
-      const comp=$('chartComparativo').getContext('2d');
-      const ds=[{label:'Período Atual', data: aggAtual.charts.comparativo.dataA, backgroundColor:'rgba(71,179,255,.7)', borderColor:'rgba(71,179,255,1)', borderWidth:1}];
-      if($('chkComparar').checked && aggAnterior){ ds.push({label:'Período Anterior', data: aggAnterior.charts.comparativo.dataA, backgroundColor:'rgba(159,179,194,.7)', borderColor:'rgba(159,179,194,1)', borderWidth:1}); }
-      charts.comp=new Chart(comp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
-
-      function line(id,label,cur,prev,border,bg){
-        const ctx=$(id).getContext('2d'); const d=[{label:label+' (Atual)',data:cur.data,borderColor:border,backgroundColor:bg,tension:.35,fill:true}];
-        if($('chkComparar').checked && prev){ d.push({label:label+' (Anterior)',data:prev.data,borderColor:'#9fb3c2',backgroundColor:'rgba(159,179,194,.15)',tension:.35,fill:true}); }
-        charts[id]=new Chart(ctx,{type:'line',data:{labels:cur.labels,datasets:d},options:common});
-      }
-      line('chartGGR','GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr,'#47b3ff','rgba(71,179,255,.1)');
-      line('chartDepositos','Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos,'#ffd389','rgba(255,211,137,.15)');
-      line('chartFTD','FTD',aggAtual.charts.ftd,aggAnterior?.charts.ftd,'#2ecc71','rgba(46,204,113,.15)');
-      line('chartSportsbook','Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook,'#d7b2ff','rgba(215,178,255,.15)');
-      line('chartCassino','Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino,'#ff9e9e','rgba(255,158,158,.15)');
+      const cmp=$('chartComparativo').getContext('2d');
+      const ds=[{label:'Período Atual', data:aggAtual.charts.comparativo.dataA, backgroundColor:'rgba(73,182,255,.72)', borderColor:'rgba(73,182,255,1)', borderWidth:1}];
+      if($('chkComparar').checked && aggAnterior){ ds.push({label:'Período Anterior', data:aggAnterior.charts.comparativo.dataA, backgroundColor:'rgba(159,179,194,.72)', borderColor:'rgba(159,179,194,1)', borderWidth:1}); }
+      charts.comp=new Chart(cmp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
+      const line=(id,label,cur,prev,col,bg)=>{ const ctx=$(id).getContext('2d'); const d=[{label:label+' (Atual)',data:cur.data,borderColor:col,backgroundColor:bg,tension:.35,fill:true}]; if($('chkComparar').checked && prev){ d.push({label:label+' (Anterior)',data:prev.data,borderColor:'#9fb3c2',backgroundColor:'rgba(159,179,194,.15)',tension:.35,fill:true}); } charts[id]=new Chart(ctx,{type:'line',data:{labels:cur.labels,datasets:d},options:common}); };
+      line('chartGGR','GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr,'#49b6ff','rgba(73,182,255,.12)');
+      line('chartDepositos','Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos,'#ffd389','rgba(255,211,137,.16)');
+      line('chartFTD','FTD',aggAtual.charts.ftd,aggAnterior?.charts.ftd,'#28d07f','rgba(40,208,127,.14)');
+      line('chartSportsbook','Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook,'#d7b2ff','rgba(215,178,255,.16)');
+      line('chartCassino','Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino,'#ff9e9e','rgba(255,158,158,.16)');
     }
 
-    // RENDER RANKING ÚNICO
     function renderRanking(){
-      const metric = $('selRanking').value; // depositos, ftd, ggr, sportsbook, cassino, bonus
+      const metric=$('selRanking').value;
       localStorage.setItem('dash_ranking_metric', metric);
-      const curMap = sumByClub(rowsAtual, metric);
-      const prevMap = $('chkComparar').checked ? sumByClub(rowsAnterior, metric) : {};
-
-      // array [{clube, valor, prev, delta, pct}]
-      const rows = Object.entries(curMap).map(([clube,valor])=>{
+      const curMap=sumByClub(rowsAtual, metric);
+      const prevMap=$('chkComparar').checked ? sumByClub(rowsAnterior, metric) : {};
+      const rows=Object.entries(curMap).map(([clube,valor])=>{
         const prev = prevMap[clube] ?? null;
-        const delta = (prev==null) ? null : (valor - prev);
-        const pct = (prev==null || prev===0) ? null : ((valor - prev)/Math.abs(prev))*100;
-        return {clube, valor, prev, delta, pct};
-      }).sort((a,b)=>b.valor - a.valor).slice(0, TOP_N);
+        const delta = prev==null ? null : (valor - prev);
+        const pct = (prev==null || prev===0) ? null : ((valor-prev)/Math.abs(prev))*100;
+        return {clube,valor,delta,pct};
+      }).sort((a,b)=>b.valor-a.valor).slice(0,TOP_N);
 
-      $('rankingInfo').textContent = `Top ${TOP_N} — ${metric.charAt(0).toUpperCase()+metric.slice(1)}`;
+      $('rankingInfo').textContent=`Top ${TOP_N} — ${metric.charAt(0).toUpperCase()+metric.slice(1)}`;
 
-      const tb = $('rankingTable').querySelector('tbody');
-      tb.innerHTML = '';
-      if(rows.length===0){ tb.innerHTML = '<tr><td colspan="4">Sem dados</td></tr>'; return; }
-      rows.forEach((r,idx)=>{
-        const cls = (r.delta==null) ? 'flat' : (r.delta>=0?'up':'down');
-        const deltaText = (r.delta==null) ? '—' : `${r.delta>=0?'+':''}${formatMoney(r.delta)} ${r.pct==null?'':'('+(r.pct>=0?'+':'')+r.pct.toFixed(2)+'%)'}`;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${idx+1}</td><td>${r.clube}</td><td>${formatMoney(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
+      const tb=$('rankingTable').querySelector('tbody'); tb.innerHTML='';
+      if(!rows.length){ tb.innerHTML='<tr><td colspan="4">Sem dados</td></tr>'; return; }
+      rows.forEach((r,i)=>{
+        // Regra de cor: inverte para bônus (mais é pior)
+        let cls='flat';
+        if(r.delta!=null){
+          if(metric==='bonus'){ cls = r.delta>=0 ? 'down' : 'up'; }
+          else { cls = r.delta>=0 ? 'up' : 'down'; }
+        }
+        const deltaText = (r.delta==null) ? '—' : `${r.delta>=0?'+':''}${formatMoney(r.delta)} ${r.pct==null?'':`(${r.pct>=0?'+':''}${r.pct.toFixed(2)}%)`}`;
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td><td>${r.clube}</td><td>${formatMoney(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
         tb.appendChild(tr);
       });
     }
 
-    /* ========= FILTERS & PREFS ========= */
+    /* ============= FILTROS & PREFS ============= */
     function getDateRange(){
       let ini=new Date($('filtroInicio').value+'T00:00:00');
       let fim=new Date($('filtroFim').value+'T23:59:59');
-      if(ini>fim){ const t=ini; ini=fim; fim=t; $('filtroInicio').value=ini.toISOString().split('T')[0]; $('filtroFim').value=fim.toISOString().split('T')[0]; note('Datas invertidas — corrigi pra você','info');}
+      if(ini>fim){ const t=ini; ini=fim; fim=t; $('filtroInicio').value=ini.toISOString().split('T')[0]; $('filtroFim').value=fim.toISOString().split('T')[0]; note('Datas invertidas — corrigi pra você');}
       return {ini,fim};
     }
     function applyNameFilters(rows){
       const sup=$('eliminarSuprema').checked, toni=$('eliminarToni').checked;
-      const supList = CLUBES_SUPREMA.map(s=>s.toLowerCase());
-      const toniName = CLUBE_TONI.toLowerCase();
-      return rows.filter(r=>{
-        const name=(r['Usuário - Nome de usuário']||'').toString().trim().toLowerCase();
-        if (sup && supList.includes(name)) return false;
-        if (toni && name === toniName) return false;
-        return true;
-      });
+      const supList=CLUBES_SUPREMA.map(s=>s.toLowerCase()); const toniName=CLUBE_TONI.toLowerCase();
+      return rows.filter(r=>{ const name=(r['Usuário - Nome de usuário']||'').toString().trim().toLowerCase(); if(sup && supList.includes(name)) return false; if(toni && name===toniName) return false; return true; });
     }
     function applyClubFilters(rows){
       const a=$('filtroClubeA').value, b=$('filtroClubeB').value;
       if(!a && !b) return rows;
-      return rows.filter(r=>{
-        const club=(r['Usuário - Nome de usuário']||'').toString();
-        return (a && club===a) || (b && club===b);
-      });
+      return rows.filter(r=>{ const club=(r['Usuário - Nome de usuário']||'').toString(); return (a&&club===a)||(b&&club===b); });
     }
     function savePrefs(){
-      const prefs={ ini:$('filtroInicio').value, fim:$('filtroFim').value, a:$('filtroClubeA').value, b:$('filtroClubeB').value,
-        sup:$('eliminarSuprema').checked, toni:$('eliminarToni').checked, comp:$('chkComparar').checked,
-        theme:document.body.classList.contains('dark-mode')?'dark':'light' };
-      localStorage.setItem('dash_clubes_prefs', JSON.stringify(prefs));
+      const prefs={ini:$('filtroInicio').value,fim:$('filtroFim').value,a:$('filtroClubeA').value,b:$('filtroClubeB').value,sup:$('eliminarSuprema').checked,toni:$('eliminarToni').checked,comp:$('chkComparar').checked,metric:$('selRanking').value};
+      localStorage.setItem('rel_clubes_prefs', JSON.stringify(prefs));
     }
     function loadPrefs(){
-      try{
-        const p=JSON.parse(localStorage.getItem('dash_clubes_prefs')||'{}');
+      try{ const p=JSON.parse(localStorage.getItem('rel_clubes_prefs')||'{}');
         if(p.ini) $('filtroInicio').value=p.ini; if(p.fim) $('filtroFim').value=p.fim;
         if(p.sup!=null) $('eliminarSuprema').checked=p.sup; if(p.toni!=null) $('eliminarToni').checked=p.toni;
-        if(p.comp!=null) $('chkComparar').checked=p.comp;
-        if(p.theme==='light'){ document.body.classList.remove('dark-mode'); document.body.classList.add('light-mode'); $('btnDarkMode').innerHTML='<i class="fa-solid fa-moon"></i> Modo Escuro'; }
-        const savedMetric = localStorage.getItem('dash_ranking_metric'); if(savedMetric) $('selRanking').value=savedMetric;
-        return p;
+        if(p.comp!=null) $('chkComparar').checked=p.comp; if(p.metric) $('selRanking').value=p.metric; return p;
       }catch{ return {}; }
     }
 
-    /* ============ FETCH & INIT ============ */
+    /* ============= FETCH & INIT ============= */
     async function fetchAll(){
-      const res = await fetch(SPREADSHEET_URL);
-      if(!res.ok) throw new Error('Falha ao acessar planilha');
-      const text = await res.text();
+      const res=await fetch(SPREADSHEET_URL); if(!res.ok) throw new Error('Falha ao acessar planilha');
+      const text=await res.text();
       return new Promise((resolve,reject)=>Papa.parse(text,{header:true,skipEmptyLines:true,dynamicTyping:false,complete:r=>r.errors.length?reject(r.errors):resolve(r.data),error:reject}));
     }
-
-    function populateClubSelects(all,prefs){
+    function populateClubSelects(all,p){
       const clubs=[...new Set(all.map(r=>(r['Usuário - Nome de usuário']||'(Clube não informado)')))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
       const sA=$('filtroClubeA'), sB=$('filtroClubeB');
       [sA,sB].forEach(sel=>{ sel.innerHTML='<option value="">(Todos)</option>'; clubs.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);}); });
-      if(prefs?.a && [...sA.options].some(o=>o.value===prefs.a)) sA.value=prefs.a;
-      if(prefs?.b && [...sB.options].some(o=>o.value===prefs.b)) sB.value=prefs.b;
+      if(p?.a && [...sA.options].some(o=>o.value===p.a)) sA.value=p.a;
+      if(p?.b && [...sB.options].some(o=>o.value===p.b)) sB.value=p.b;
     }
-
     function filterWindows(){
       const {ini,fim}=getDateRange();
-      const days = Math.ceil((fim-ini)/(1000*60*60*24))+1;
-      const prevEnd = new Date(ini); prevEnd.setDate(ini.getDate()-1);
-      const prevStart = new Date(prevEnd); prevStart.setDate(prevEnd.getDate()-(days-1));
-
+      const days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
+      const prevEnd=new Date(ini); prevEnd.setDate(ini.getDate()-1);
+      const prevStart=new Date(prevEnd); prevStart.setDate(prevEnd.getDate()-(days-1));
       const inRange=(d,a,b)=>d && !isNaN(d) && d>=a && d<=b;
-
-      const cur = allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), ini, fim));
-      const prv = allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), prevStart, prevEnd));
-
+      const cur=allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), ini, fim));
+      const prv=allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), prevStart, prevEnd));
       rowsAtual = applyClubFilters(applyNameFilters(cur));
       rowsAnterior = $('chkComparar').checked ? applyClubFilters(applyNameFilters(prv)) : [];
     }
 
     function updateAll(){
       showLoaders(true);
-      // recalcula janelas e agregados
       filterWindows();
       aggAtual = transform(rowsAtual) || {kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0},charts:{comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[0,0,0,0,0,0]},ggr:{labels:[],data:[]},depositos:{labels:[],data:[]},ftd:{labels:[],data:[]},sportsbook:{labels:[],data:[]},cassino:{labels:[],data:[]}}};
       aggAnterior = rowsAnterior.length ? transform(rowsAnterior) : null;
-
-      // KPIs / Charts / Ranking
-      renderKPIs();
-      destroyCharts();
-      renderCharts();
-      renderRanking();
-
-      // fim
-      showLoaders(false);
-      savePrefs();
-      $('ultimaAtualizacao').textContent = 'Atualizado em ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      renderKPIs(); destroyCharts(); renderCharts(); renderRanking();
+      showLoaders(false); savePrefs();
+      $('ultimaAtualizacao').textContent='Atualizado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     }
 
     async function init(){
-      // datas padrão = ontem
       const today=new Date(); const y=new Date(today); y.setDate(today.getDate()-1);
       $('filtroInicio').value=y.toISOString().split('T')[0]; $('filtroFim').value=y.toISOString().split('T')[0];
       const prefs=loadPrefs();
-      try{
-        note('Carregando dados...');
-        allRows = await fetchAll();
-        populateClubSelects(allRows, prefs);
-        updateAll();
-        note('Dados carregados','success');
-      }catch(e){ console.error(e); note('Erro ao carregar dados','error'); }
+      try{ note('Carregando dados...'); allRows=await fetchAll(); populateClubSelects(allRows,prefs); updateAll(); note('Dados carregados','success'); }
+      catch(e){ console.error(e); note('Erro ao carregar dados','error'); }
     }
 
-    /* ============ EVENTS ============ */
+    /* ============= EVENTS ============= */
     document.addEventListener('DOMContentLoaded', ()=>{
       const on=(id,ev,fn)=>{ const el=$(id); if(el) el.addEventListener(ev,fn); };
       on('btnAplicar','click', updateAll);
@@ -413,35 +386,17 @@
       on('eliminarToni','change', updateAll);
       on('chkComparar','change', ()=>{ updateAll(); renderRanking(); });
       on('selRanking','change', renderRanking);
-
       on('btnOntem','click', ()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=d.toISOString().split('T')[0]; $('filtroInicio').value=s; $('filtroFim').value=s; updateAll(); });
       on('btnUltimos7','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); $('filtroInicio').value=s.toISOString().split('T')[0]; $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
       on('btnUltimos30','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-30); $('filtroInicio').value=s.toISOString().split('T')[0]; $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
-
-      on('btnDarkMode','click', function(){
-        document.body.classList.toggle('dark-mode'); document.body.classList.toggle('light-mode');
-        this.innerHTML = document.body.classList.contains('dark-mode') ? '<i class="fa-solid fa-sun"></i> Modo Claro' : '<i class="fa-solid fa-moon"></i> Modo Escuro';
-        if (aggAtual) { destroyCharts(); renderCharts(); }
-        savePrefs();
-      });
-
-      on('searchClub','input', function(){
-        const term=this.value.toLowerCase();
-        ['filtroClubeA','filtroClubeB'].forEach(id=>{
-          const sel=$(id); if(!sel) return;
-          [...sel.options].forEach(o=>{ if(o.value===''){o.style.display='';return;} o.style.display=(o.value.toLowerCase().includes(term)||o.textContent.toLowerCase().includes(term))?'':'none'; });
-        });
-      });
-
+      on('btnDarkMode','click', ()=>{ document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode'); destroyCharts(); renderCharts(); });
+      on('searchClub','input', function(){ const term=this.value.toLowerCase(); ['filtroClubeA','filtroClubeB'].forEach(id=>{ const sel=$(id); if(!sel) return; [...sel.options].forEach(o=>{ if(o.value===''){o.style.display='';return;} o.style.display=(o.value.toLowerCase().includes(term)||o.textContent.toLowerCase().includes(term))?'':'none'; }); }); });
       on('btnExportar','click', ()=>{
-        const metric = $('selRanking').value;
-        const curMap = sumByClub(rowsAtual, metric);
-        const rows = Object.entries(curMap).map(([clube,valor])=>({clube,valor})).sort((a,b)=>b.valor-a.valor);
-        let csv="data:text/csv;charset=utf-8,Clube,Valor\n";
-        rows.forEach(r=>csv+=`"${r.clube}",${r.valor}\n`);
+        const metric=$('selRanking').value; const curMap=sumByClub(rowsAtual, metric);
+        const rows=Object.entries(curMap).map(([clube,valor])=>({clube,valor})).sort((a,b)=>b.valor-a.valor);
+        let csv="data:text/csv;charset=utf-8,Clube,Valor\n"; rows.forEach(r=>csv+=`"${r.clube}",${r.valor}\n`);
         const a=document.createElement('a'); a.href=encodeURI(csv); a.download=`ranking_${metric}_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); a.remove();
       });
-
       init();
     });
   </script>
