@@ -625,6 +625,7 @@
     /* ========= EVENTS ========= */
     document.addEventListener('DOMContentLoaded', ()=>{
       const on=(id,ev,fn)=>{ const el=$(id); if(el) el.addEventListener(ev,fn); };
+
       on('btnAplicar','click', updateAll);
       on('btnAtualizar','click', updateAll);
       on('filtroClubeA','change', updateAll);
@@ -633,17 +634,68 @@
       on('eliminarToni','change', updateAll);
       on('chkComparar','change', ()=>{ updateAll(); renderRanking(); });
       on('selRanking','change', renderRanking);
-      on('btnOntem','click', ()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=d.toISOString().split('T')[0]; $('filtroInicio').value=s; $('filtroFim').value=s; updateAll(); });
-      on('btnUltimos7','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); $('filtroInicio').value=s.toISOString().split(0,10); $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
-      on('btnUltimos30','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-30); $('filtroInicio').value=s.toISOString().split('T')[0]; $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
-      on('btnDarkMode','click', ()=>{ document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode'); destroyCharts(); renderCharts(); });
-      on('searchClub','input', function(){ const term=this.value.toLowerCase(); ['filtroClubeA','filtroClubeB'].forEach(id=>{ const sel=$(id); if(!sel) return; [...sel.options].forEach(o=>{ if(o.value===''){o.style.display='';return;} o.style.display=(o.value.toLowerCase().includes(term)||o.textContent.toLowerCase().includes(term))?'':'none'; }); }); });
-      on('btnExportar','click', ()=>{
-        const metric=$('selRanking').value; const curMap=sumByClub(rowsAtual, metric);
-        const rows=Object.entries(curMap).map(([clube,valor])=>({clube,valor:num(valor)})).sort((a,b)=>b.valor-a.valor);
-        let csv="data:text/csv;charset=utf-8,Clube,Valor\n"; rows.forEach(r=>csv+=`"${r.clube}",${r.valor}\n`);
-        const a=document.createElement('a'); a.href=encodeURI(csv); a.download=`ranking_${metric}_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); a.remove();
+
+      on('btnOntem','click', ()=>{
+        const d=new Date();
+        d.setDate(d.getDate()-1);
+        const s=d.toISOString().split('T')[0];
+        $('filtroInicio').value=s;
+        $('filtroFim').value=s;
+        updateAll();
       });
+
+      /* >>> CORRIGIDO AQUI */
+      on('btnUltimos7','click', ()=>{
+        const t=new Date();
+        const s=new Date();
+        s.setDate(t.getDate()-7);
+        $('filtroInicio').value = s.toISOString().split('T')[0];
+        $('filtroFim').value    = t.toISOString().split('T')[0];
+        updateAll();
+      });
+
+      on('btnUltimos30','click', ()=>{
+        const t=new Date();
+        const s=new Date();
+        s.setDate(t.getDate()-30);
+        $('filtroInicio').value = s.toISOString().split('T')[0];
+        $('filtroFim').value    = t.toISOString().split('T')[0];
+        updateAll();
+      });
+
+      on('btnDarkMode','click', ()=>{
+        document.body.classList.toggle('light-mode');
+        document.body.classList.toggle('dark-mode');
+        destroyCharts();
+        renderCharts();
+      });
+
+      on('searchClub','input', function(){
+        const term=this.value.toLowerCase();
+        ['filtroClubeA','filtroClubeB'].forEach(id=>{
+          const sel=$(id); if(!sel) return;
+          [...sel.options].forEach(o=>{
+            if(o.value===''){o.style.display='';return;}
+            o.style.display=(o.value.toLowerCase().includes(term)||o.textContent.toLowerCase().includes(term))?'':'none';
+          });
+        });
+      });
+
+      on('btnExportar','click', ()=>{
+        const metric=$('selRanking').value;
+        const curMap=sumByClub(rowsAtual, metric);
+        const rows=Object.entries(curMap).map(([clube,valor])=>({clube,valor:Number.isFinite(valor)?valor:0}))
+          .sort((a,b)=>b.valor-a.valor);
+        let csv="data:text/csv;charset=utf-8,Clube,Valor\n";
+        rows.forEach(r=>csv+=`"${r.clube}",${r.valor}\n`);
+        const a=document.createElement('a');
+        a.href=encodeURI(csv);
+        a.download=`ranking_${metric}_${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+
       init();
     });
   </script>
