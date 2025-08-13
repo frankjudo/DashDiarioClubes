@@ -167,13 +167,13 @@
   <div class="notification" id="notification"><i class="fas fa-info-circle"></i><span id="notificationText"></span></div>
 
   <script>
-    /* ====== CONFIG ====== */
+    /* ========= CONFIG ========= */
     const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
     const CLUBES_SUPREMA = ['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
     const CLUBE_TONI = 'crisslots123@gmail.com';
     const TOP_N = 15;
 
-    /* ====== STATE ====== */
+    /* ========= STATE ========= */
     let charts = {};
     let allRows = [];
     let baseAtual = [], baseAnterior = [];
@@ -184,9 +184,10 @@
     const $ = id => document.getElementById(id);
     const showLoaders = (on=true)=>document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',on));
     function note(msg,type='info'){ const n=$('notification'),t=$('notificationText'),i=n.querySelector('i'); n.className='notification'; n.classList.add('show',type); i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':'fas fa-info-circle'; t.textContent=msg; setTimeout(()=>n.classList.remove('show'),3000); }
-    function formatMoney(n){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0); }
+    const money = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0);
+    const num = v => (Number.isFinite(v)? v : 0);
 
-    /* ====== PARSERS ====== */
+    /* ========= PARSERS ========= */
     function parseCurrency(v){
       if(typeof v==='number') return v;
       if(v==null) return 0;
@@ -212,7 +213,7 @@
       const d=new Date(str); return isNaN(d)? null:d;
     }
 
-    /* ====== DETECÇÃO DE COLUNAS (precisa) ====== */
+    /* ========= DETECÇÃO DE COLUNAS ========= */
     function detectColumns(headers){
       const norm = s => (s||'').toString().trim().toLowerCase();
       const find = (fn)=> headers.find(h=>fn(norm(h))) || null;
@@ -239,7 +240,7 @@
       return m;
     }
 
-    /* ====== FETCH + FALLBACK ====== */
+    /* ========= FETCH ========= */
     async function fetchAll(){
       try{
         const res = await fetch(SPREADSHEET_URL,{cache:'no-store'});
@@ -287,12 +288,12 @@
       });
     });
 
-    /* ====== CÁLCULO DE GGR ROBUSTO ====== */
+    /* ========= CÁLCULO GGR ========= */
     function computeGGR(row, c){
       const sb  = parseCurrency(row[c.sb]);
       const cs  = parseCurrency(row[c.cs]);
       const hab = parseCurrency(row[c.hab]);
-      const sum = (sb||0) + (cs||0) + (hab||0);
+      const sum = num(sb)+num(cs)+num(hab);
 
       if (c.ggrCalc){
         const raw = parseCurrency(row[c.ggrCalc]);
@@ -302,7 +303,7 @@
       return sum;
     }
 
-    /* ====== TRANSFORM / SERIES ====== */
+    /* ========= TRANSFORM / SERIES ========= */
     function transform(rows){
       if(!rows.length) return null;
       const c={ date:COLS.date, club:COLS.club, ftd:COLS.ftd, dep:COLS.dep, ggrCalc:COLS.ggrCalc, sb:COLS.sb, cs:COLS.cs, hab:COLS.hab, bonus:COLS.bonus };
@@ -320,8 +321,8 @@
         const vGGR=computeGGR(r,c);
         const vBN =parseCurrency(r[c.bonus]);
 
-        totals.ftd+=vFTD; totals.dep+=vDep; totals.sb+=vSB; totals.cs+=vCS; totals.ggr+=vGGR; totals.bonus+=vBN;
-        if(di>-1){ series.ggr[di]+=vGGR; series.dep[di]+=vDep; series.ftd[di]+=vFTD; series.sb[di]+=vSB; series.cs[di]+=vCS; }
+        totals.ftd+=num(vFTD); totals.dep+=num(vDep); totals.sb+=num(vSB); totals.cs+=num(vCS); totals.ggr+=num(vGGR); totals.bonus+=num(vBN);
+        if(di>-1){ series.ggr[di]+=num(vGGR); series.dep[di]+=num(vDep); series.ftd[di]+=num(vFTD); series.sb[di]+=num(vSB); series.cs[di]+=num(vCS); }
       });
 
       return {
@@ -349,7 +350,7 @@
         else if(metric==='cassino') v=parseCurrency(r[c.cs]);
         else if(metric==='bonus') v=parseCurrency(r[c.bonus]);
         else if(metric==='ggr') v=computeGGR(r,c);
-        map[club]=(map[club]||0)+v;
+        map[club]=(map[club]||0)+num(v);
       });
       return map;
     }
@@ -366,12 +367,12 @@
         else if(metric==='sportsbook') v=parseCurrency(r[c.sb]);
         else if(metric==='cassino') v=parseCurrency(r[c.cs]);
         else if(metric==='ggr') v=computeGGR(r,c);
-        serie[di]+=v;
+        serie[di]+=num(v);
       });
       return {labels:dates, data:serie};
     }
 
-    /* ====== INSIGHTS / KPIs / CHARTS / RANKING ====== */
+    /* ========= INSIGHTS / KPIs ========= */
     function gerarInsights(){
       if(!aggAtual){ $('chipResumo').textContent='Sem dados no período.'; return; }
       const compOn = $('chkComparar').checked && aggAnterior;
@@ -388,7 +389,7 @@
       }).sort((a,b)=>b.delta-a.delta);
       const top=linhas[0], worst=linhas[linhas.length-1];
 
-      const mk=v=>formatMoney(Math.abs(v||0)), dir=v=>v>=0?'↑':'↓';
+      const mk=v=>money(Math.abs(v||0)), dir=v=>v>=0?'↑':'↓';
       let txt=`Depósitos ${!compOn?'—':`${dir(dDep)} ${mk(dDep)}`} | GGR ${!compOn?'—':`${dir(dGgr)} ${mk(dGgr)}`} | FTD ${!compOn?'—':`${dir(dFtd)} ${mk(dFtd)}`}.`;
       if(top && worst){ txt+=` Destaques: ↑ ${top.clube} (maior crescimento em ${metric}); ↓ ${worst.clube} (maior queda).`; }
       $('chipResumo').textContent=txt;
@@ -396,17 +397,17 @@
 
     function setKPI(id, val, prev, metricKey){
       const el=$(id);
-      el.querySelector('.value').textContent = metricKey==='margem' ? (isFinite(val)? `${val.toFixed(2)}%` : '—') : formatMoney(val);
+      el.querySelector('.value').textContent = metricKey==='margem' ? (isFinite(val)? `${val.toFixed(2)}%` : '—') : money(val);
       const varEl=el.querySelector('.var');
       if(metricKey==='margem' || metricKey==='ticket'){
         if(prev==null || !$('chkComparar').checked){ varEl.textContent='—'; varEl.className='var muted'; return; }
-        const delta=val-prev; varEl.textContent=`${delta>=0?'+':''}${metricKey==='margem' ? delta.toFixed(2)+'pp' : formatMoney(delta)}`; varEl.className=`var ${delta>=0?'up':'down'}`; return;
+        const delta=val-prev; varEl.textContent=`${delta>=0?'+':''}${metricKey==='margem' ? delta.toFixed(2)+'pp' : money(delta)}`; varEl.className=`var ${delta>=0?'up':'down'}`; return;
       }
       if(!$('chkComparar').checked || prev==null){ varEl.textContent='—'; varEl.className='var muted'; return; }
       const delta=val-prev; const pct=(prev===0)?(val===0?0:100):(delta/Math.abs(prev))*100;
       const positiveIsGood = metricKey!=='bonus';
       const good = (delta>=0 && positiveIsGood) || (delta<0 && !positiveIsGood);
-      varEl.textContent=`${delta>=0?'+':''}${formatMoney(delta)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`; varEl.className=`var ${good?'up':'down'}`;
+      varEl.textContent=`${delta>=0?'+':''}${money(delta)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`; varEl.className=`var ${good?'up':'down'}`;
     }
 
     function renderKPIs(){
@@ -426,11 +427,14 @@
       setKPI('kpi-ticket', ticketAtual, ticketAnterior, 'ticket');
     }
 
+    /* ========= CHARTS ========= */
     function destroyCharts(){ Object.values(charts).forEach(c=>{try{c.destroy()}catch{}}); charts={}; }
+    const sanitizeSeries = arr => (arr||[]).map(v=> num(v));
+    const sanitizeLabels = arr => (arr||[]).map(v=> String(v||'').trim());
 
     function renderCharts(){
       const textColor='#e9f3ff', gridColor='rgba(255,255,255,.1)';
-      const common={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor}}},scales:{y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$ '+v.toLocaleString('pt-BR')}},x:{grid:{display:false},ticks:{color:textColor}}}};
+      const common={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor}}},scales:{y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')}},x:{grid:{display:false},ticks:{color:textColor}}}};
 
       const ctxComp=$('chartComparativo').getContext('2d');
       const ctxGGR=$('chartGGR').getContext('2d');
@@ -456,20 +460,20 @@
         const kpiA = clubA ? totalClub(baseAtual.filter(r=>r[COLS.club]===clubA)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
         const kpiB = clubB ? totalClub(baseAtual.filter(r=>r[COLS.club]===clubB)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
         charts.comp=new Chart(ctxComp,{type:'bar',data:{labels:metrics,datasets:[
-          {label:clubA||'—',data:[kpiA.ftd,kpiA.depositos,kpiA.ggr,kpiA.sportsbook,kpiA.cassino,kpiA.bonus],backgroundColor:'rgba(73,182,255,.7)',borderColor:'rgba(73,182,255,1)',borderWidth:1},
-          {label:clubB||'—',data:[kpiB.ftd,kpiB.depositos,kpiB.ggr,kpiB.sportsbook,kpiB.cassino,kpiB.bonus],backgroundColor:'rgba(255,184,107,.7)',borderColor:'rgba(255,184,107,1)',borderWidth:1}
+          {label:clubA||'—',data:sanitizeSeries([kpiA.ftd,kpiA.depositos,kpiA.ggr,kpiA.sportsbook,kpiA.cassino,kpiA.bonus]),backgroundColor:'rgba(73,182,255,.7)',borderColor:'rgba(73,182,255,1)',borderWidth:1},
+          {label:clubB||'—',data:sanitizeSeries([kpiB.ftd,kpiB.depositos,kpiB.ggr,kpiB.sportsbook,kpiB.cassino,kpiB.bonus]),backgroundColor:'rgba(255,184,107,.7)',borderColor:'rgba(255,184,107,1)',borderWidth:1}
         ]},options:common});
       }else{
-        const ds=[{label:'Período Atual',data:aggAtual.charts.comparativo.dataA,backgroundColor:'rgba(73,182,255,.72)',borderColor:'rgba(73,182,255,1)',borderWidth:1}];
+        const ds=[{label:'Período Atual',data:sanitizeSeries(aggAtual.charts.comparativo.dataA),backgroundColor:'rgba(73,182,255,.72)',borderColor:'rgba(73,182,255,1)',borderWidth:1}];
         if($('chkComparar').checked && aggAnterior){
-          ds.push({label:'Período Anterior',data:aggAnterior.charts.comparativo.dataA,backgroundColor:'rgba(159,179,194,.72)',borderColor:'rgba(159,179,194,1)',borderWidth:1});
+          ds.push({label:'Período Anterior',data:sanitizeSeries(aggAnterior.charts.comparativo.dataA),backgroundColor:'rgba(159,179,194,.72)',borderColor:'rgba(159,179,194,1)',borderWidth:1});
         }
-        charts.comp=new Chart(ctxComp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
+        charts.comp=new Chart(ctxComp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels, datasets:ds},options:common});
       }
 
       const mkSerie=(metric)=>({
-        atual:aggAtual.charts[metric],
-        anterior:aggAnterior?.charts[metric],
+        atual:{labels:sanitizeLabels(aggAtual.charts[metric].labels), data:sanitizeSeries(aggAtual.charts[metric].data)},
+        anterior: aggAnterior?.charts?.[metric] ? {labels:sanitizeLabels(aggAnterior.charts[metric].labels), data:sanitizeSeries(aggAnterior.charts[metric].data)} : null,
         A:seriesPorClube(baseAtual.filter(r=>r[COLS.club]===$('filtroClubeA').value), metric==='depositos'?'depositos':metric),
         B:seriesPorClube(baseAtual.filter(r=>r[COLS.club]===$('filtroClubeB').value), metric==='depositos'?'depositos':metric)
       });
@@ -478,13 +482,14 @@
         if(charts[key]) charts[key].destroy();
         if(compararClubes){
           const ds=[];
-          if($('filtroClubeA').value) ds.push({label:$('filtroClubeA').value,data:serie.A.data,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true});
-          if($('filtroClubeB').value) ds.push({label:$('filtroClubeB').value,data:serie.B.data,borderColor:'#ffb86b',backgroundColor:'rgba(255,184,107,.15)',tension:.35,fill:true});
-          charts[key]=new Chart(ctx,{type:'line',data:{labels:serie.A.labels.length?serie.A.labels:serie.B.labels,datasets:ds},options:common});
+          if($('filtroClubeA').value) ds.push({label:$('filtroClubeA').value,data:sanitizeSeries(serie.A.data),borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true});
+          if($('filtroClubeB').value) ds.push({label:$('filtroClubeB').value,data:sanitizeSeries(serie.B.data),borderColor:'#ffb86b',backgroundColor:'rgba(255,184,107,.15)',tension:.35,fill:true});
+          const labels = serie.A.labels.length?serie.A.labels:serie.B.labels;
+          charts[key]=new Chart(ctx,{type:'line',data:{labels:sanitizeLabels(labels),datasets:ds},options:common});
         }else{
-          const ds=[{label:`${key} (Atual)`,data:serie.atual.data,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true}];
-          if($('chkComparar').checked && serie.anterior) ds.push({label:`${key} (Anterior)`,data:serie.anterior.data,borderColor:'#9fb3c2',backgroundColor:'rgba(159,179,194,.15)',tension:.35,fill:true});
-          charts[key]=new Chart(ctx,{type:'line',data:{labels:serie.atual.labels,datasets:ds},options:common});
+          const ds=[{label:`${key} (Atual)`,data:sanitizeSeries(serie.atual.data),borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true}];
+          if($('chkComparar').checked && serie.anterior){ ds.push({label:`${key} (Anterior)`,data:sanitizeSeries(serie.anterior.data),borderColor:'#9fb3c2',backgroundColor:'rgba(159,179,194,.15)',tension:.35,fill:true}); }
+          charts[key]=new Chart(ctx,{type:'line',data:{labels:sanitizeLabels(serie.atual.labels),datasets:ds},options:common});
         }
       };
 
@@ -497,13 +502,14 @@
       if(charts.scatter) charts.scatter.destroy();
       const curMapG=sumByClub(baseAtual,'ggr');
       const curMapD=sumByClub(baseAtual,'depositos');
-      const points=Object.keys(curMapG).map(clube=>({clube,x:curMapD[clube]||0,y:curMapG[clube]||0})).sort((a,b)=>b.y-a.y).slice(0,50);
+      const points=Object.keys(curMapG).map(clube=>({clube,x:num(curMapD[clube]||0),y:num(curMapG[clube]||0)})).sort((a,b)=>b.y-a.y).slice(0,50);
       charts.scatter=new Chart(ctxSc,{type:'scatter',data:{datasets:[{label:'Clubes (Top 50 por GGR)',data:points,parsing:false,pointRadius:4,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.4)'}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#e9f3ff'}},tooltip:{callbacks:{label:(c)=>`${c.raw.clube}: Dep ${formatMoney(c.raw.x)} | GGR ${formatMoney(c.raw.y)}`}}},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#e9f3ff'}},tooltip:{callbacks:{label:(c)=>`${c.raw.clube}: Dep ${money(c.raw.x)} | GGR ${money(c.raw.y)}`}}},
           scales:{x:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')},title:{display:true,text:'Depósitos',color:'#e9f3ff',font:{weight:800}}},
                   y:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')},title:{display:true,text:'GGR',color:'#e9f3ff',font:{weight:800)}}}});
     }
 
+    /* ========= RANKING ========= */
     function renderRanking(){
       const metric=$('selRanking').value;
       localStorage.setItem('dash_ranking_metric', metric);
@@ -513,7 +519,7 @@
       const rows=Object.entries(curMap).map(([clube,valor])=>{
         const prev=compareOn?(prevMap[clube]??0):null;
         let delta=null,pct=null,badge=''; if(compareOn){ delta=valor-prev; pct=(prev>0)?((valor-prev)/Math.abs(prev))*100:null; if(prev===0) badge=' (novo)'; }
-        return {clube,valor,delta,pct,badge};
+        return {clube,valor: num(valor),delta: delta==null?null:num(delta),pct, badge};
       }).sort((a,b)=>b.valor-a.valor).slice(0,TOP_N);
 
       $('rankingInfo').textContent=`Top ${TOP_N} — ${metric.charAt(0).toUpperCase()+metric.slice(1)}`;
@@ -525,17 +531,17 @@
           const good=(r.delta>=0 && !isBonus)||(r.delta<0 && isBonus);
           cls=good?'up':'down';
           const pctText=(r.pct==null)?'—':`${r.pct>=0?'+':''}${r.pct.toFixed(2)}%`;
-          deltaText=`${r.delta>=0?'+':''}${formatMoney(r.delta)} (${pctText})${r.badge||''}`;
+          deltaText=`${r.delta>=0?'+':''}${money(r.delta)} (${pctText})${r.badge||''}`;
         }
         const tr=document.createElement('tr');
         tr.dataset.clube=r.clube;
-        tr.innerHTML=`<td>${i+1}</td><td>${r.clube}</td><td>${formatMoney(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
+        tr.innerHTML=`<td>${i+1}</td><td>${r.clube}</td><td>${money(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
         tr.addEventListener('click',()=>{ $('filtroClubeA').value=r.clube; updateAll(); note(`Clube A definido: ${r.clube}`,'success');});
         tb.appendChild(tr);
       });
     }
 
-    /* ====== FILTROS / PREFS ====== */
+    /* ========= FILTROS / PREFS ========= */
     function getDateRange(){
       let ini=new Date($('filtroInicio').value+'T00:00:00');
       let fim=new Date($('filtroFim').value+'T23:59:59');
@@ -566,7 +572,7 @@
       }catch{ return {}; }
     }
 
-    /* ====== PIPELINE ====== */
+    /* ========= PIPELINE ========= */
     function filterWindows(){
       const {ini,fim}=getDateRange();
       const days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
@@ -616,7 +622,7 @@
       }
     }
 
-    /* ====== EVENTS ====== */
+    /* ========= EVENTS ========= */
     document.addEventListener('DOMContentLoaded', ()=>{
       const on=(id,ev,fn)=>{ const el=$(id); if(el) el.addEventListener(ev,fn); };
       on('btnAplicar','click', updateAll);
@@ -628,13 +634,13 @@
       on('chkComparar','change', ()=>{ updateAll(); renderRanking(); });
       on('selRanking','change', renderRanking);
       on('btnOntem','click', ()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=d.toISOString().split('T')[0]; $('filtroInicio').value=s; $('filtroFim').value=s; updateAll(); });
-      on('btnUltimos7','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); $('filtroInicio').value=s.toISOString().split('T')[0]; $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
+      on('btnUltimos7','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); $('filtroInicio').value=s.toISOString().split(0,10); $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
       on('btnUltimos30','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-30); $('filtroInicio').value=s.toISOString().split('T')[0]; $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
       on('btnDarkMode','click', ()=>{ document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode'); destroyCharts(); renderCharts(); });
       on('searchClub','input', function(){ const term=this.value.toLowerCase(); ['filtroClubeA','filtroClubeB'].forEach(id=>{ const sel=$(id); if(!sel) return; [...sel.options].forEach(o=>{ if(o.value===''){o.style.display='';return;} o.style.display=(o.value.toLowerCase().includes(term)||o.textContent.toLowerCase().includes(term))?'':'none'; }); }); });
       on('btnExportar','click', ()=>{
         const metric=$('selRanking').value; const curMap=sumByClub(rowsAtual, metric);
-        const rows=Object.entries(curMap).map(([clube,valor])=>({clube,valor})).sort((a,b)=>b.valor-a.valor);
+        const rows=Object.entries(curMap).map(([clube,valor])=>({clube,valor:num(valor)})).sort((a,b)=>b.valor-a.valor);
         let csv="data:text/csv;charset=utf-8,Clube,Valor\n"; rows.forEach(r=>csv+=`"${r.clube}",${r.valor}\n`);
         const a=document.createElement('a'); a.href=encodeURI(csv); a.download=`ranking_${metric}_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); a.remove();
       });
