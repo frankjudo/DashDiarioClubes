@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Comparativo de Clubes — Turbo</title>
+  <title>Dashboard Comparativo de Clubes — Ranking Dinâmico</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -37,26 +37,29 @@
     .card{padding:12px;display:flex;flex-direction:column;position:relative}
     .card h3{margin-bottom:8px;color:var(--accent)}
     .chart-container{flex:1;min-height:0}
-    .tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:12px}
-    .table{padding:12px;position:relative}
-    table{width:100%;border-collapse:separate;border-spacing:0 8px}
-    thead th{color:var(--muted);font-size:.85rem;border-bottom:1px solid var(--border);padding-bottom:6px;text-align:left}
-    tbody tr{background:rgba(255,255,255,.02);border:1px solid var(--border)}
-    tbody td{padding:10px 8px}
     .loader{position:absolute;inset:0;background:rgba(15,27,37,.75);display:none;justify-content:center;align-items:center;border-radius:14px;z-index:2}
     .loader.show{display:flex}
     .spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.12);border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     .notification{position:fixed;right:20px;bottom:20px;background:var(--card);border:1px solid var(--border);padding:12px 14px;border-radius:12px;box-shadow:0 4px 12px var(--shadow);opacity:0;transform:translateY(16px);transition:all .25s;display:flex;gap:8px;align-items:center}
     .notification.show{opacity:1;transform:translateY(0)}
+    /* Ranking */
+    .ranking-card{margin-top:12px}
+    .ranking-head{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .ranking-head .left{display:flex;gap:10px;align-items:center}
+    table{width:100%;border-collapse:separate;border-spacing:0 8px}
+    thead th{color:var(--muted);font-size:.85rem;border-bottom:1px solid var(--border);padding-bottom:6px;text-align:left}
+    tbody tr{background:rgba(255,255,255,.02);border:1px solid var(--border)}
+    tbody td{padding:10px 8px}
+    .delta.up{color:#2ecc71}.delta.down{color:#e74c3c}.delta.flat{color:var(--muted)}
   </style>
 </head>
 <body class="dark-mode">
   <div class="container">
     <header>
       <div>
-        <h1><i class="fas fa-bolt"></i> Dashboard Comparativo de Clubes — Turbo</h1>
-        <div class="sub">Visão executiva com comparação automática e preferências salvas</div>
+        <h1><i class="fas fa-chart-line"></i> Dashboard Comparativo de Clubes</h1>
+        <div class="sub">Visão executiva com comparação automática e ranking dinâmico</div>
       </div>
       <div class="sub" id="ultimaAtualizacao">—</div>
     </header>
@@ -114,19 +117,30 @@
       <div class="card"><h3>Evolução do Cassino</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartCassino"></canvas></div></div>
     </div>
 
-    <div class="tables">
-      <div class="table"><h3>Top 10 Depósitos</h3><div class="loader"><div class="spinner"></div></div>
-        <table id="topDepositos"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody><tr><td colspan="2">Carregando…</td></tr></tbody></table></div>
-      <div class="table"><h3>Top 10 FTD</h3><div class="loader"><div class="spinner"></div></div>
-        <table id="topFTD"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody><tr><td colspan="2">Carregando…</td></tr></tbody></table></div>
-      <div class="table"><h3>Top 10 GGR</h3><div class="loader"><div class="spinner"></div></div>
-        <table id="topGGR"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody><tr><td colspan="2">Carregando…</td></tr></tbody></table></div>
-      <div class="table"><h3>Top 10 Sportsbook</h3><div class="loader"><div class="spinner"></div></div>
-        <table id="topSportsbook"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody><tr><td colspan="2">Carregando…</td></tr></tbody></table></div>
-      <div class="table"><h3>Top 10 Cassino</h3><div class="loader"><div class="spinner"></div></div>
-        <table id="topCassino"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody><tr><td colspan="2">Carregando…</td></tr></tbody></table></div>
-      <div class="table"><h3>Top 10 Bônus</h3><div class="loader"><div class="spinner"></div></div>
-        <table id="topBonus"><thead><tr><th>Clube</th><th>Valor</th></tr></thead><tbody><tr><td colspan="2">Carregando…</td></tr></tbody></table></div>
+    <!-- Ranking Único Dinâmico -->
+    <div class="card ranking-card">
+      <div class="ranking-head">
+        <div class="left">
+          <h3><i class="fa-solid fa-trophy"></i> Ranking de Clubes</h3>
+          <label style="display:flex;gap:6px;align-items:center">
+            Métrica
+            <select id="selRanking" style="margin-left:6px">
+              <option value="depositos">Depósitos</option>
+              <option value="ftd">FTD</option>
+              <option value="ggr" selected>GGR</option>
+              <option value="sportsbook">Sportsbook</option>
+              <option value="cassino">Cassino</option>
+              <option value="bonus">Bônus</option>
+            </select>
+          </label>
+        </div>
+        <div class="sub" id="rankingInfo">Top 15</div>
+      </div>
+      <div class="loader"><div class="spinner"></div></div>
+      <table id="rankingTable">
+        <thead><tr><th>#</th><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead>
+        <tbody><tr><td colspan="4">Carregando…</td></tr></tbody>
+      </table>
     </div>
   </div>
 
@@ -135,44 +149,26 @@
   <script>
     /* ================= CONFIG ================= */
     const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
-
-    const CLUBES_SUPREMA = [
-      'romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'
-    ];
+    const CLUBES_SUPREMA = ['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
     const CLUBE_TONI = 'crisslots123@gmail.com';
+    const TOP_N = 15;
 
     /* ================= STATE ================= */
     let charts = {};
-    let allRows = [];      // CSV inteiro (cache)
-    let rowsAtual = [];    // janela atual
-    let rowsAnterior = []; // janela anterior
-    let aggAtual = null;   // agregado atual
-    let aggAnterior = null;// agregado período anterior
+    let allRows = [];      // cache do CSV inteiro
+    let rowsAtual = [];    // janela atual (com filtros)
+    let rowsAnterior = []; // janela anterior (com filtros)
+    let aggAtual = null, aggAnterior = null;
+
     const $ = id => document.getElementById(id);
 
     /* ================= UTILS ================= */
     function formatMoney(n){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0); }
-    function formatPercent(p){ const v = isFinite(p)? p : 0; return new Intl.NumberFormat('pt-BR',{style:'percent',minimumFractionDigits:2,maximumFractionDigits:2}).format(v/100); }
-    function note(msg,type='info'){
-      const n=$('notification'),t=$('notificationText'),i=n.querySelector('i');
-      n.className='notification'; n.classList.add('show'); n.classList.add(type);
-      i.className = type==='error'?'fas fa-exclamation-circle' : type==='success'?'fas fa-check-circle' : 'fas fa-info-circle';
-      t.textContent=msg; setTimeout(()=>n.classList.remove('show'),2200);
-    }
-    function parseCurrency(v){
-      if(typeof v==='number') return v; if(v==null) return 0;
-      let s=String(v).trim(); if(!s) return 0;
-      s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-');
-      const paren=/^\(.*\)$/.test(s); if(paren) s=s.replace(/[()]/g,'');
-      s=s.replace(/[^0-9,.\-]/g,'');
-      const hasC=s.includes(','),hasD=s.includes('.');
-      if(hasC&&hasD){const lc=s.lastIndexOf(','),ld=s.lastIndexOf('.');const dec=lc>ld?',':'.';const th=dec===','?'.':',';s=s.split(th).join('');if(dec===',')s=s.replace(',','.')}
-      else if(hasC){s=s.split('.').join('');s=s.replace(',', '.')} else {s=s.replace(/,/g,'')}
-      let n=parseFloat(s); if(isNaN(n)) n=0; if(paren) n=-Math.abs(n); return n;
-    }
-    const showLoaders = (on=true) => document.querySelectorAll('.card .loader, .table .loader').forEach(el=>el.classList.toggle('show',on));
+    function note(msg,type='info'){ const n=$('notification'),t=$('notificationText'),i=n.querySelector('i'); n.className='notification'; n.classList.add('show',type); i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':'fas fa-info-circle'; t.textContent=msg; setTimeout(()=>n.classList.remove('show'),2200); }
+    function parseCurrency(v){ if(typeof v==='number') return v; if(v==null) return 0; let s=String(v).trim(); if(!s) return 0; s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-'); const par=/^\(.*\)$/.test(s); if(par) s=s.replace(/[()]/g,''); s=s.replace(/[^0-9,.\-]/g,''); const c=s.includes(','),d=s.includes('.'); if(c&&d){const lc=s.lastIndexOf(','),ld=s.lastIndexOf('.'); const dec=lc>ld?',':'.',th=dec===','?'.':','; s=s.split(th).join(''); if(dec===',') s=s.replace(',','.');} else if(c){ s=s.split('.').join(''); s=s.replace(',', '.'); } else { s=s.replace(/,/g,''); } let n=parseFloat(s); if(isNaN(n)) n=0; if(par) n=-Math.abs(n); return n; }
+    const showLoaders = (on=true) => document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',on));
 
-    /* ========= TRANSFORM (agregado) ========= */
+    /* ========== TRANSFORM ========= */
     function transform(rows){
       if(!rows.length) return null;
       const c={date:'DATA', club:'Usuário - Nome de usuário', ftd:'Usuário - FTD-Montante', dep:'Usuário - Depósitos',
@@ -180,10 +176,8 @@
       const dates=[...new Set(rows.map(r=>r[c.date]))].sort();
       const totals={ftd:0,dep:0,ggr:0,sb:0,cs:0,bonus:0};
       const series={ggr:Array(dates.length).fill(0),dep:Array(dates.length).fill(0),ftd:Array(dates.length).fill(0),sb:Array(dates.length).fill(0),cs:Array(dates.length).fill(0)};
-      const byClub={dep:{},ftd:{},ggr:{},sb:{},cs:{},bonus:{}};
 
       rows.forEach(r=>{
-        const club=r[c.club]||'(Clube não informado)';
         const di=dates.indexOf(r[c.date]);
         const vFTD=parseCurrency(r[c.ftd]), vDep=parseCurrency(r[c.dep]);
         const vSB=parseCurrency(r[c.sb]), vCS=parseCurrency(r[c.cs]);
@@ -193,36 +187,48 @@
 
         totals.ftd+=vFTD; totals.dep+=vDep; totals.sb+=vSB; totals.cs+=vCS; totals.ggr+=vGGR; totals.bonus+=vBN;
         if(di>-1){ series.ggr[di]+=vGGR; series.dep[di]+=vDep; series.ftd[di]+=vFTD; series.sb[di]+=vSB; series.cs[di]+=vCS; }
-
-        if(!byClub.dep[club]){ byClub.dep[club]=0;byClub.ftd[club]=0;byClub.ggr[club]=0;byClub.sb[club]=0;byClub.cs[club]=0;byClub.bonus[club]=0; }
-        byClub.dep[club]+=vDep; byClub.ftd[club]+=vFTD; byClub.ggr[club]+=vGGR; byClub.sb[club]+=vSB; byClub.cs[club]+=vCS; byClub.bonus[club]+=vBN;
       });
-
-      const topN = o => Object.entries(o).map(([clube,valor])=>({clube,valor})).sort((a,b)=>b.valor-a.valor).slice(0,10);
 
       return {
         kpis:{ ftd:totals.ftd, depositos:totals.dep, ggr:totals.ggr, sportsbook:totals.sb, cassino:totals.cs, bonus:totals.bonus },
         charts:{
-          ggr:{labels:dates, data:series.ggr},
-          depositos:{labels:dates, data:series.dep},
-          ftd:{labels:dates, data:series.ftd},
-          sportsbook:{labels:dates, data:series.sb},
-          cassino:{labels:dates, data:series.cs},
-          comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'], dataA:[totals.ftd, totals.dep, totals.ggr, totals.sb, totals.cs, totals.bonus]}
-        },
-        tables:{
-          depositos:topN(byClub.dep), ftd:topN(byClub.ftd), ggr:topN(byClub.ggr),
-          sportsbook:topN(byClub.sb), cassino:topN(byClub.cs), bonus:topN(byClub.bonus)
+          comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'], dataA:[totals.ftd, totals.dep, totals.ggr, totals.sb, totals.cs, totals.bonus]},
+          ggr:{labels:dates,data:series.ggr},
+          depositos:{labels:dates,data:series.dep},
+          ftd:{labels:dates,data:series.ftd},
+          sportsbook:{labels:dates,data:series.sb},
+          cassino:{labels:dates,data:series.cs}
         }
       };
     }
 
-    /* =========== RENDER =========== */
+    // Agrega por clube para ranking
+    function sumByClub(rows, metric){
+      const c={club:'Usuário - Nome de usuário', ftd:'Usuário - FTD-Montante', depositos:'Usuário - Depósitos', ggrCalc:'Cálculo - GGR', sb:'Sportsbook - GGR', cs:'Cassino - GGR', hab:'Jogos de habilidade - W/L', bonus:'Cálculo - bônus convertidos'};
+      const map={}; // clube -> valor
+      rows.forEach(r=>{
+        const club = r[c.club] || '(Clube não informado)';
+        let v=0;
+        if(metric==='depositos') v=parseCurrency(r[c.depositos]);
+        else if(metric==='ftd') v=parseCurrency(r[c.ftd]);
+        else if(metric==='sportsbook') v=parseCurrency(r[c.sb]);
+        else if(metric==='cassino') v=parseCurrency(r[c.cs]);
+        else if(metric==='bonus') v=parseCurrency(r[c.bonus]);
+        else if(metric==='ggr'){
+          const vCalc=parseCurrency(r[c.ggrCalc]);
+          const vSum=parseCurrency(r[c.sb])+parseCurrency(r[c.cs])+parseCurrency(r[c.hab]);
+          v = (Number.isFinite(vCalc) && vCalc!==0) ? vCalc : vSum;
+        }
+        map[club]=(map[club]||0)+v;
+      });
+      return map;
+    }
+
+    /* ========== RENDER ========= */
     function setKPI(id, val, prev){
-      const el=$(id); if(!el) return;
-      el.querySelector('.vl').textContent = formatMoney(val);
+      const el=$(id); el.querySelector('.vl').textContent = formatMoney(val);
       const varEl = el.querySelector('.var');
-      if(prev==null || !$('chkComparar').checked){ varEl.textContent='—'; varEl.className='var muted'; return; }
+      if(!$('chkComparar').checked || prev==null){ varEl.textContent='—'; varEl.className='var muted'; return; }
       const delta = val - prev;
       const pct = (prev===0) ? (val===0?0:100) : (delta/Math.abs(prev))*100;
       varEl.textContent = `${delta>=0?'+':''}${formatMoney(delta)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`;
@@ -242,19 +248,15 @@
       const textColor=isDark?'#e9f3ff':'#0f1b25';
       const gridColor=isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)';
       const common={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor}}},scales:{y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$ '+v.toLocaleString('pt-BR')}},x:{grid:{display:false},ticks:{color:textColor}}}};
-      const cmpCtx=$('chartComparativo').getContext('2d');
-      const compDatasets=[
-        { label:'Período Atual', data:aggAtual.charts.comparativo.dataA, backgroundColor:'rgba(71,179,255,.7)', borderColor:'rgba(71,179,255,1)', borderWidth:1 }
-      ];
-      if($('chkComparar').checked && aggAnterior){
-        compDatasets.push({ label:'Período Anterior', data:aggAnterior.charts.comparativo.dataA, backgroundColor:'rgba(159,179,194,.7)', borderColor:'rgba(159,179,194,1)', borderWidth:1 });
-      }
-      charts.comp=new Chart(cmpCtx,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:compDatasets},options:common});
+      const comp=$('chartComparativo').getContext('2d');
+      const ds=[{label:'Período Atual', data: aggAtual.charts.comparativo.dataA, backgroundColor:'rgba(71,179,255,.7)', borderColor:'rgba(71,179,255,1)', borderWidth:1}];
+      if($('chkComparar').checked && aggAnterior){ ds.push({label:'Período Anterior', data: aggAnterior.charts.comparativo.dataA, backgroundColor:'rgba(159,179,194,.7)', borderColor:'rgba(159,179,194,1)', borderWidth:1}); }
+      charts.comp=new Chart(comp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
 
       function line(id,label,cur,prev,border,bg){
-        const ctx=$(id).getContext('2d'); const ds=[{label:label+' (Atual)', data:cur.data, borderColor:border, backgroundColor:bg, tension:.35, fill:true}];
-        if($('chkComparar').checked && prev){ ds.push({label:label+' (Anterior)', data:prev.data, borderColor:'#9fb3c2', backgroundColor:'rgba(159,179,194,.15)', tension:.35, fill:true}); }
-        charts[id]=new Chart(ctx,{type:'line', data:{labels:cur.labels, datasets:ds}, options:common});
+        const ctx=$(id).getContext('2d'); const d=[{label:label+' (Atual)',data:cur.data,borderColor:border,backgroundColor:bg,tension:.35,fill:true}];
+        if($('chkComparar').checked && prev){ d.push({label:label+' (Anterior)',data:prev.data,borderColor:'#9fb3c2',backgroundColor:'rgba(159,179,194,.15)',tension:.35,fill:true}); }
+        charts[id]=new Chart(ctx,{type:'line',data:{labels:cur.labels,datasets:d},options:common});
       }
       line('chartGGR','GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr,'#47b3ff','rgba(71,179,255,.1)');
       line('chartDepositos','Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos,'#ffd389','rgba(255,211,137,.15)');
@@ -262,17 +264,37 @@
       line('chartSportsbook','Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook,'#d7b2ff','rgba(215,178,255,.15)');
       line('chartCassino','Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino,'#ff9e9e','rgba(255,158,158,.15)');
     }
-    function renderTables(){
-      const put=(id,rows)=>{const tb=document.querySelector(`#${id} tbody`); tb.innerHTML=''; if(!rows.length){tb.innerHTML='<tr><td colspan="2">Sem dados</td></tr>'; return;} rows.forEach(r=>{const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.clube}</td><td>${formatMoney(r.valor)}</td>`; tb.appendChild(tr);});}
-      put('topDepositos',aggAtual.tables.depositos);
-      put('topFTD',aggAtual.tables.ftd);
-      put('topGGR',aggAtual.tables.ggr);
-      put('topSportsbook',aggAtual.tables.sportsbook);
-      put('topCassino',aggAtual.tables.cassino);
-      put('topBonus',aggAtual.tables.bonus);
+
+    // RENDER RANKING ÚNICO
+    function renderRanking(){
+      const metric = $('selRanking').value; // depositos, ftd, ggr, sportsbook, cassino, bonus
+      localStorage.setItem('dash_ranking_metric', metric);
+      const curMap = sumByClub(rowsAtual, metric);
+      const prevMap = $('chkComparar').checked ? sumByClub(rowsAnterior, metric) : {};
+
+      // array [{clube, valor, prev, delta, pct}]
+      const rows = Object.entries(curMap).map(([clube,valor])=>{
+        const prev = prevMap[clube] ?? null;
+        const delta = (prev==null) ? null : (valor - prev);
+        const pct = (prev==null || prev===0) ? null : ((valor - prev)/Math.abs(prev))*100;
+        return {clube, valor, prev, delta, pct};
+      }).sort((a,b)=>b.valor - a.valor).slice(0, TOP_N);
+
+      $('rankingInfo').textContent = `Top ${TOP_N} — ${metric.charAt(0).toUpperCase()+metric.slice(1)}`;
+
+      const tb = $('rankingTable').querySelector('tbody');
+      tb.innerHTML = '';
+      if(rows.length===0){ tb.innerHTML = '<tr><td colspan="4">Sem dados</td></tr>'; return; }
+      rows.forEach((r,idx)=>{
+        const cls = (r.delta==null) ? 'flat' : (r.delta>=0?'up':'down');
+        const deltaText = (r.delta==null) ? '—' : `${r.delta>=0?'+':''}${formatMoney(r.delta)} ${r.pct==null?'':'('+(r.pct>=0?'+':'')+r.pct.toFixed(2)+'%)'}`;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${idx+1}</td><td>${r.clube}</td><td>${formatMoney(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
+        tb.appendChild(tr);
+      });
     }
 
-    /* ===== FILTROS & PREFERÊNCIAS ===== */
+    /* ========= FILTERS & PREFS ========= */
     function getDateRange(){
       let ini=new Date($('filtroInicio').value+'T00:00:00');
       let fim=new Date($('filtroFim').value+'T23:59:59');
@@ -285,8 +307,8 @@
       const toniName = CLUBE_TONI.toLowerCase();
       return rows.filter(r=>{
         const name=(r['Usuário - Nome de usuário']||'').toString().trim().toLowerCase();
-        if(sup && supList.includes(name)) return false;
-        if(toni && name===toniName) return false;
+        if (sup && supList.includes(name)) return false;
+        if (toni && name === toniName) return false;
         return true;
       });
     }
@@ -299,29 +321,24 @@
       });
     }
     function savePrefs(){
-      const prefs={
-        ini:$('filtroInicio').value, fim:$('filtroFim').value,
-        a:$('filtroClubeA').value, b:$('filtroClubeB').value,
-        sup:$('eliminarSuprema').checked, toni:$('eliminarToni').checked,
-        comp:$('chkComparar').checked, theme:document.body.classList.contains('dark-mode')?'dark':'light'
-      };
+      const prefs={ ini:$('filtroInicio').value, fim:$('filtroFim').value, a:$('filtroClubeA').value, b:$('filtroClubeB').value,
+        sup:$('eliminarSuprema').checked, toni:$('eliminarToni').checked, comp:$('chkComparar').checked,
+        theme:document.body.classList.contains('dark-mode')?'dark':'light' };
       localStorage.setItem('dash_clubes_prefs', JSON.stringify(prefs));
     }
     function loadPrefs(){
       try{
         const p=JSON.parse(localStorage.getItem('dash_clubes_prefs')||'{}');
-        if(p.ini) $('filtroInicio').value=p.ini;
-        if(p.fim) $('filtroFim').value=p.fim;
-        if(p.sup!=null) $('eliminarSuprema').checked=p.sup;
-        if(p.toni!=null) $('eliminarToni').checked=p.toni;
+        if(p.ini) $('filtroInicio').value=p.ini; if(p.fim) $('filtroFim').value=p.fim;
+        if(p.sup!=null) $('eliminarSuprema').checked=p.sup; if(p.toni!=null) $('eliminarToni').checked=p.toni;
         if(p.comp!=null) $('chkComparar').checked=p.comp;
         if(p.theme==='light'){ document.body.classList.remove('dark-mode'); document.body.classList.add('light-mode'); $('btnDarkMode').innerHTML='<i class="fa-solid fa-moon"></i> Modo Escuro'; }
-        // A/B serão aplicados após carregar lista
+        const savedMetric = localStorage.getItem('dash_ranking_metric'); if(savedMetric) $('selRanking').value=savedMetric;
         return p;
       }catch{ return {}; }
     }
 
-    /* ===== CORE FLOW ===== */
+    /* ============ FETCH & INIT ============ */
     async function fetchAll(){
       const res = await fetch(SPREADSHEET_URL);
       if(!res.ok) throw new Error('Falha ao acessar planilha');
@@ -329,8 +346,8 @@
       return new Promise((resolve,reject)=>Papa.parse(text,{header:true,skipEmptyLines:true,dynamicTyping:false,complete:r=>r.errors.length?reject(r.errors):resolve(r.data),error:reject}));
     }
 
-    function populateClubSelects(rows, prefs){
-      const clubs=[...new Set(rows.map(r=>(r['Usuário - Nome de usuário']||'(Clube não informado)')))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    function populateClubSelects(all,prefs){
+      const clubs=[...new Set(all.map(r=>(r['Usuário - Nome de usuário']||'(Clube não informado)')))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
       const sA=$('filtroClubeA'), sB=$('filtroClubeB');
       [sA,sB].forEach(sel=>{ sel.innerHTML='<option value="">(Todos)</option>'; clubs.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);}); });
       if(prefs?.a && [...sA.options].some(o=>o.value===prefs.a)) sA.value=prefs.a;
@@ -338,16 +355,15 @@
     }
 
     function filterWindows(){
-      const {ini,fim} = getDateRange();
-      // Janela anterior: mesmo tamanho, imediatamente anterior
-      const days = Math.ceil((fim - ini) / (1000*60*60*24)) + 1;
+      const {ini,fim}=getDateRange();
+      const days = Math.ceil((fim-ini)/(1000*60*60*24))+1;
       const prevEnd = new Date(ini); prevEnd.setDate(ini.getDate()-1);
-      const prevStart = new Date(prevEnd); prevStart.setDate(prevEnd.getDate() - (days-1));
+      const prevStart = new Date(prevEnd); prevStart.setDate(prevEnd.getDate()-(days-1));
 
-      const inRange = (d, a, b) => (d && !isNaN(d) && d>=a && d<=b);
+      const inRange=(d,a,b)=>d && !isNaN(d) && d>=a && d<=b;
 
-      const cur = allRows.filter(r=>{ const d=new Date((r['DATA']||'')+'T00:00:00'); return inRange(d, ini, fim); });
-      const prv = allRows.filter(r=>{ const d=new Date((r['DATA']||'')+'T00:00:00'); return inRange(d, prevStart, prevEnd); });
+      const cur = allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), ini, fim));
+      const prv = allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), prevStart, prevEnd));
 
       rowsAtual = applyClubFilters(applyNameFilters(cur));
       rowsAnterior = $('chkComparar').checked ? applyClubFilters(applyNameFilters(prv)) : [];
@@ -355,17 +371,19 @@
 
     function updateAll(){
       showLoaders(true);
-      destroyCharts();
-
+      // recalcula janelas e agregados
       filterWindows();
-      aggAtual = transform(rowsAtual) || {kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0},charts:{comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[0,0,0,0,0,0]},ggr:{labels:[],data:[]},depositos:{labels:[],data:[]},ftd:{labels:[],data:[]},sportsbook:{labels:[],data:[]},cassino:{labels:[],data:[]}},tables:{depositos:[],ftd:[],ggr:[],sportsbook:[],cassino:[],bonus:[]}};
+      aggAtual = transform(rowsAtual) || {kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0},charts:{comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[0,0,0,0,0,0]},ggr:{labels:[],data:[]},depositos:{labels:[],data:[]},ftd:{labels:[],data:[]},sportsbook:{labels:[],data:[]},cassino:{labels:[],data:[]}}};
       aggAnterior = rowsAnterior.length ? transform(rowsAnterior) : null;
 
+      // KPIs / Charts / Ranking
       renderKPIs();
+      destroyCharts();
       renderCharts();
-      renderTables();
-      showLoaders(false);
+      renderRanking();
 
+      // fim
+      showLoaders(false);
       savePrefs();
       $('ultimaAtualizacao').textContent = 'Atualizado em ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     }
@@ -373,33 +391,28 @@
     async function init(){
       // datas padrão = ontem
       const today=new Date(); const y=new Date(today); y.setDate(today.getDate()-1);
-      $('filtroInicio').value = y.toISOString().split('T')[0];
-      $('filtroFim').value = y.toISOString().split('T')[0];
-
-      const prefs = loadPrefs();
-
+      $('filtroInicio').value=y.toISOString().split('T')[0]; $('filtroFim').value=y.toISOString().split('T')[0];
+      const prefs=loadPrefs();
       try{
         note('Carregando dados...');
         allRows = await fetchAll();
         populateClubSelects(allRows, prefs);
         updateAll();
         note('Dados carregados','success');
-      }catch(e){
-        console.error(e); note('Erro ao carregar dados','error');
-      }
+      }catch(e){ console.error(e); note('Erro ao carregar dados','error'); }
     }
 
-    /* ===== EVENTS ===== */
+    /* ============ EVENTS ============ */
     document.addEventListener('DOMContentLoaded', ()=>{
-      const on = (id,ev,fn)=>{ const el=$(id); if(el) el.addEventListener(ev,fn); };
-
+      const on=(id,ev,fn)=>{ const el=$(id); if(el) el.addEventListener(ev,fn); };
       on('btnAplicar','click', updateAll);
       on('btnAtualizar','click', updateAll);
       on('filtroClubeA','change', updateAll);
       on('filtroClubeB','change', updateAll);
       on('eliminarSuprema','change', updateAll);
       on('eliminarToni','change', updateAll);
-      on('chkComparar','change', updateAll);
+      on('chkComparar','change', ()=>{ updateAll(); renderRanking(); });
+      on('selRanking','change', renderRanking);
 
       on('btnOntem','click', ()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=d.toISOString().split('T')[0]; $('filtroInicio').value=s; $('filtroFim').value=s; updateAll(); });
       on('btnUltimos7','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); $('filtroInicio').value=s.toISOString().split('T')[0]; $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
@@ -416,25 +429,17 @@
         const term=this.value.toLowerCase();
         ['filtroClubeA','filtroClubeB'].forEach(id=>{
           const sel=$(id); if(!sel) return;
-          [...sel.options].forEach(o=>{
-            if(o.value===''){o.style.display=''; return;}
-            o.style.display = (o.value.toLowerCase().includes(term) || o.textContent.toLowerCase().includes(term)) ? '' : 'none';
-          });
+          [...sel.options].forEach(o=>{ if(o.value===''){o.style.display='';return;} o.style.display=(o.value.toLowerCase().includes(term)||o.textContent.toLowerCase().includes(term))?'':'none'; });
         });
       });
 
       on('btnExportar','click', ()=>{
-        if(!aggAtual){ note('Nada para exportar','error'); return; }
-        let csv="data:text/csv;charset=utf-8,";
-        csv += "Métrica,Clube,Valor\n";
-        const dump=(name,arr)=>arr.forEach(item=>csv+=`${name},"${item.clube}",${item.valor}\n`);
-        dump('Depósitos', aggAtual.tables.depositos);
-        dump('FTD', aggAtual.tables.ftd);
-        dump('GGR', aggAtual.tables.ggr);
-        dump('Sportsbook', aggAtual.tables.sportsbook);
-        dump('Cassino', aggAtual.tables.cassino);
-        dump('Bônus', aggAtual.tables.bonus);
-        const a=document.createElement('a'); a.href=encodeURI(csv); a.download=`dashboard_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); a.remove();
+        const metric = $('selRanking').value;
+        const curMap = sumByClub(rowsAtual, metric);
+        const rows = Object.entries(curMap).map(([clube,valor])=>({clube,valor})).sort((a,b)=>b.valor-a.valor);
+        let csv="data:text/csv;charset=utf-8,Clube,Valor\n";
+        rows.forEach(r=>csv+=`"${r.clube}",${r.valor}\n`);
+        const a=document.createElement('a'); a.href=encodeURI(csv); a.download=`ranking_${metric}_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); a.remove();
       });
 
       init();
