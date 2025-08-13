@@ -14,7 +14,6 @@
       --txt:#e9f3ff; --muted:#98a9b7; --accent:#49b6ff;
       --good:#28d07f; --bad:#ff5c5c;
       --border:rgba(255,255,255,.07); --shadow:0 10px 30px rgba(0,0,0,.35);
-      --chip:#163148;
     }
     *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     html,body{height:100%}
@@ -169,8 +168,14 @@
     /* ============= STATE ============= */
     let charts = {};
     let allRows = [];
+    // bases (apenas filtros por data + exclusões, sem Clube A/B)
+    let baseAtual = [], baseAnterior = [];
+    // união (para KPIs e ranking quando A/B selecionados)
     let rowsAtual = [], rowsAnterior = [];
+    // por clube (para gráficos comparativos A x B)
+    let rowsA = [], rowsB = [], rowsA_prev = [], rowsB_prev = [];
     let aggAtual = null, aggAnterior = null;
+
     const $ = id => document.getElementById(id);
     const showLoaders = (on=true) => document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',on));
 
@@ -234,6 +239,30 @@
       return map;
     }
 
+    // Séries por data para um clube
+    function seriesPorClube(rows, metric){
+      const c={date:'DATA', club:'Usuário - Nome de usuário', ftd:'Usuário - FTD-Montante', dep:'Usuário - Depósitos',
+               ggrCalc:'Cálculo - GGR', sb:'Sportsbook - GGR', cs:'Cassino - GGR', hab:'Jogos de habilidade - W/L'};
+      const dates=[...new Set(rows.map(r=>r[c.date]))].sort();
+      const serie=Array(dates.length).fill(0);
+      rows.forEach(r=>{
+        const di=dates.indexOf(r[c.date]);
+        if(di<0) return;
+        let v=0;
+        if(metric==='depositos') v=parseCurrency(r[c.dep]);
+        else if(metric==='ftd') v=parseCurrency(r[c.ftd]);
+        else if(metric==='sportsbook') v=parseCurrency(r[c.sb]);
+        else if(metric==='cassino') v=parseCurrency(r[c.cs]);
+        else if(metric==='ggr'){
+          const vCalc=parseCurrency(r[c.ggrCalc]);
+          const vSum=parseCurrency(r[c.sb])+parseCurrency(r[c.cs])+parseCurrency(r[c.hab]);
+          v=(Number.isFinite(vCalc) && vCalc!==0) ? vCalc : vSum;
+        }
+        serie[di]+=v;
+      });
+      return {labels:dates, data:serie};
+    }
+
     /* ============= RENDER ============= */
     function setKPI(id, val, prev, metricKey){
       const el=$(id);
@@ -242,12 +271,10 @@
       if(!$('chkComparar').checked || prev==null){ varEl.textContent='—'; varEl.className='var muted'; return; }
       const delta = val - prev;
       const pct = (prev===0) ? (val===0?0:100) : (delta/Math.abs(prev))*100;
-
-      // regra: em "bonus", aumento = pior (vermelho)
-      const positiveIsGood = metricKey !== 'bonus';
-      const isUpGood = (delta>=0 && positiveIsGood) || (delta<0 && !positiveIsGood);
+      const positiveIsGood = metricKey !== 'bonus'; // bonus invertido
+      const good = (delta>=0 && positiveIsGood) || (delta<0 && !positiveIsGood);
       varEl.textContent = `${delta>=0?'+':''}${formatMoney(delta)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`;
-      varEl.className = `var ${isUpGood?'up':'down'}`;
+      varEl.className = `var ${good?'up':'down'}`;
     }
     function renderKPIs(){
       setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd, 'ftd');
@@ -255,50 +282,133 @@
       setKPI('kpi-ggr', aggAtual.kpis.ggr, aggAnterior?.kpis.ggr, 'ggr');
       setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook, 'sportsbook');
       setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino, 'cassino');
-      setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus, 'bonus'); // <- inversão aplicada
+      setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus, 'bonus');
     }
     function destroyCharts(){ Object.values(charts).forEach(c=>{try{c.destroy()}catch{}}); charts={}; }
+
     function renderCharts(){
       const textColor='#e9f3ff', gridColor='rgba(255,255,255,.1)';
       const common={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor}}},scales:{y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$ '+v.toLocaleString('pt-BR')}},x:{grid:{display:false},ticks:{color:textColor}}}};
-      const cmp=$('chartComparativo').getContext('2d');
-      const ds=[{label:'Período Atual', data:aggAtual.charts.comparativo.dataA, backgroundColor:'rgba(73,182,255,.72)', borderColor:'rgba(73,182,255,1)', borderWidth:1}];
-      if($('chkComparar').checked && aggAnterior){ ds.push({label:'Período Anterior', data:aggAnterior.charts.comparativo.dataA, backgroundColor:'rgba(159,179,194,.72)', borderColor:'rgba(159,179,194,1)', borderWidth:1}); }
-      charts.comp=new Chart(cmp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
-      const line=(id,label,cur,prev,col,bg)=>{ const ctx=$(id).getContext('2d'); const d=[{label:label+' (Atual)',data:cur.data,borderColor:col,backgroundColor:bg,tension:.35,fill:true}]; if($('chkComparar').checked && prev){ d.push({label:label+' (Anterior)',data:prev.data,borderColor:'#9fb3c2',backgroundColor:'rgba(159,179,194,.15)',tension:.35,fill:true}); } charts[id]=new Chart(ctx,{type:'line',data:{labels:cur.labels,datasets:d},options:common}); };
-      line('chartGGR','GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr,'#49b6ff','rgba(73,182,255,.12)');
-      line('chartDepositos','Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos,'#ffd389','rgba(255,211,137,.16)');
-      line('chartFTD','FTD',aggAtual.charts.ftd,aggAnterior?.charts.ftd,'#28d07f','rgba(40,208,127,.14)');
-      line('chartSportsbook','Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook,'#d7b2ff','rgba(215,178,255,.16)');
-      line('chartCassino','Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino,'#ff9e9e','rgba(255,158,158,.16)');
+
+      const ctxComp=$('chartComparativo').getContext('2d');
+      const ctxGGR=$('chartGGR').getContext('2d');
+      const ctxDep=$('chartDepositos').getContext('2d');
+      const ctxFTD=$('chartFTD').getContext('2d');
+      const ctxSB=$('chartSportsbook').getContext('2d');
+      const ctxCS=$('chartCassino').getContext('2d');
+
+      const clubA=$('filtroClubeA').value, clubB=$('filtroClubeB').value;
+      const compararClubes = !!(clubA || clubB);
+
+      // ====== Comparativo ======
+      if(charts.comp) charts.comp.destroy();
+      if(compararClubes){
+        // barras por métrica para A e B no período atual
+        const metrics=['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'];
+        const totalClub = (rows) => {
+          const a=transform(rows); return a ? a.kpis : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
+        };
+        const kpiA = clubA ? totalClub(rowsA) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
+        const kpiB = clubB ? totalClub(rowsB) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
+
+        charts.comp = new Chart(ctxComp,{
+          type:'bar',
+          data:{
+            labels:metrics,
+            datasets:[
+              {label: clubA||'—', data:[kpiA.ftd,kpiA.depositos,kpiA.ggr,kpiA.sportsbook,kpiA.cassino,kpiA.bonus], backgroundColor:'rgba(73,182,255,.72)', borderColor:'rgba(73,182,255,1)', borderWidth:1},
+              {label: clubB||'—', data:[kpiB.ftd,kpiB.depositos,kpiB.ggr,kpiB.sportsbook,kpiB.cassino,kpiB.bonus], backgroundColor:'rgba(215,178,255,.72)', borderColor:'rgba(215,178,255,1)', borderWidth:1}
+            ]
+          },
+          options: common
+        });
+      }else{
+        // período atual vs anterior
+        const ds=[
+          {label:'Período Atual', data:aggAtual.charts.comparativo.dataA, backgroundColor:'rgba(73,182,255,.72)', borderColor:'rgba(73,182,255,1)', borderWidth:1}
+        ];
+        if($('chkComparar').checked && aggAnterior){
+          ds.push({label:'Período Anterior', data:aggAnterior.charts.comparativo.dataA, backgroundColor:'rgba(159,179,194,.72)', borderColor:'rgba(159,179,194,1)', borderWidth:1});
+        }
+        charts.comp = new Chart(ctxComp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
+      }
+
+      // ====== Linhas ======
+      const makeLine=(ctx,label,serieAtual,serieAnterior,serieA,serieB)=>{
+        if(charts[label]) charts[label].destroy();
+        if(compararClubes){
+          const ds=[];
+          if(clubA){ ds.push({label:`${clubA}`, data:serieA.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}); }
+          if(clubB){ ds.push({label:`${clubB}`, data:serieB.data, borderColor:'#d7b2ff', backgroundColor:'rgba(215,178,255,.16)', tension:.35, fill:true}); }
+          charts[label]=new Chart(ctx,{type:'line', data:{labels:serieA.labels.length?serieA.labels:serieB.labels, datasets:ds}, options:common});
+        }else{
+          const ds=[{label:`${label} (Atual)`, data:serieAtual.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}];
+          if($('chkComparar').checked && serieAnterior){ ds.push({label:`${label} (Anterior)`, data:serieAnterior.data, borderColor:'#9fb3c2', backgroundColor:'rgba(159,179,194,.15)', tension:.35, fill:true}); }
+          charts[label]=new Chart(ctx,{type:'line', data:{labels:serieAtual.labels, datasets:ds}, options:common});
+        }
+      };
+
+      // construir séries
+      if(compararClubes){
+        // por clube (A e B)
+        makeLine(ctxGGR,'GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr,
+          seriesPorClube(rowsA,'ggr'), seriesPorClube(rowsB,'ggr'));
+        makeLine(ctxDep,'Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos,
+          seriesPorClube(rowsA,'depositos'), seriesPorClube(rowsB,'depositos'));
+        makeLine(ctxFTD,'FTD',aggAtual.charts.ftd,aggAnterior?.charts.ftd,
+          seriesPorClube(rowsA,'ftd'), seriesPorClube(rowsB,'ftd'));
+        makeLine(ctxSB,'Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook,
+          seriesPorClube(rowsA,'sportsbook'), seriesPorClube(rowsB,'sportsbook'));
+        makeLine(ctxCS,'Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino,
+          seriesPorClube(rowsA,'cassino'), seriesPorClube(rowsB,'cassino'));
+      }else{
+        // totals (Atual vs Anterior)
+        makeLine(ctxGGR,'GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr,{labels:aggAtual.charts.ggr.labels,data:aggAtual.charts.ggr.data},{labels:[],data:[]});
+        makeLine(ctxDep,'Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos,{labels:aggAtual.charts.depositos.labels,data:aggAtual.charts.depositos.data},{labels:[],data:[]});
+        makeLine(ctxFTD,'FTD',aggAtual.charts.ftd,aggAnterior?.charts.ftd,{labels:aggAtual.charts.ftd.labels,data:aggAtual.charts.ftd.data},{labels:[],data:[]});
+        makeLine(ctxSB,'Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook,{labels:aggAtual.charts.sportsbook.labels,data:aggAtual.charts.sportsbook.data},{labels:[],data:[]});
+        makeLine(ctxCS,'Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino,{labels:aggAtual.charts.cassino.labels,data:aggAtual.charts.cassino.data},{labels:[],data:[]});
+      }
     }
 
+    // RENDER RANKING (com variação mesmo se clube não existia antes)
     function renderRanking(){
-      const metric=$('selRanking').value;
+      const metric = $('selRanking').value;
       localStorage.setItem('dash_ranking_metric', metric);
-      const curMap=sumByClub(rowsAtual, metric);
-      const prevMap=$('chkComparar').checked ? sumByClub(rowsAnterior, metric) : {};
-      const rows=Object.entries(curMap).map(([clube,valor])=>{
-        const prev = prevMap[clube] ?? null;
-        const delta = prev==null ? null : (valor - prev);
-        const pct = (prev==null || prev===0) ? null : ((valor-prev)/Math.abs(prev))*100;
-        return {clube,valor,delta,pct};
-      }).sort((a,b)=>b.valor-a.valor).slice(0,TOP_N);
 
-      $('rankingInfo').textContent=`Top ${TOP_N} — ${metric.charAt(0).toUpperCase()+metric.slice(1)}`;
+      const curMap = sumByClub(rowsAtual, metric);
+      const compareOn = $('chkComparar').checked;
+      const prevMap = compareOn ? sumByClub(rowsAnterior, metric) : {};
 
-      const tb=$('rankingTable').querySelector('tbody'); tb.innerHTML='';
-      if(!rows.length){ tb.innerHTML='<tr><td colspan="4">Sem dados</td></tr>'; return; }
-      rows.forEach((r,i)=>{
-        // Regra de cor: inverte para bônus (mais é pior)
-        let cls='flat';
-        if(r.delta!=null){
-          if(metric==='bonus'){ cls = r.delta>=0 ? 'down' : 'up'; }
-          else { cls = r.delta>=0 ? 'up' : 'down'; }
+      const rows = Object.entries(curMap).map(([clube, valor])=>{
+        const hasPrev = compareOn && Object.prototype.hasOwnProperty.call(prevMap, clube);
+        const prev = compareOn ? (hasPrev ? prevMap[clube] : 0) : null;
+        let delta = null, pct = null, badge = '';
+        if (compareOn) {
+          delta = valor - prev;
+          pct = (prev > 0) ? ((valor - prev) / Math.abs(prev)) * 100 : null;
+          if (!hasPrev) badge = ' (novo)';
         }
-        const deltaText = (r.delta==null) ? '—' : `${r.delta>=0?'+':''}${formatMoney(r.delta)} ${r.pct==null?'':`(${r.pct>=0?'+':''}${r.pct.toFixed(2)}%)`}`;
+        return { clube, valor, prev, delta, pct, badge };
+      }).sort((a,b)=> b.valor - a.valor).slice(0, TOP_N);
+
+      $('rankingInfo').textContent = `Top ${TOP_N} — ${metric.charAt(0).toUpperCase()+metric.slice(1)}`;
+
+      const tb = $('rankingTable').querySelector('tbody');
+      tb.innerHTML = '';
+      if(rows.length===0){ tb.innerHTML='<tr><td colspan="4">Sem dados</td></tr>'; return; }
+
+      rows.forEach((r,idx)=>{
+        let cls='flat', deltaText='—';
+        if (r.delta !== null) {
+          const isBonus = metric==='bonus';
+          const good = (r.delta>=0 && !isBonus) || (r.delta<0 && isBonus); // bônus invertido
+          cls = good ? 'up' : 'down';
+          const pctText = (r.pct==null) ? '—' : `${r.pct>=0?'+':''}${r.pct.toFixed(2)}%`;
+          deltaText = `${r.delta>=0?'+':''}${formatMoney(r.delta)} (${pctText})${r.badge||''}`;
+        }
         const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${i+1}</td><td>${r.clube}</td><td>${formatMoney(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
+        tr.innerHTML = `<td>${idx+1}</td><td>${r.clube}</td><td>${formatMoney(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
         tb.appendChild(tr);
       });
     }
@@ -315,10 +425,12 @@
       const supList=CLUBES_SUPREMA.map(s=>s.toLowerCase()); const toniName=CLUBE_TONI.toLowerCase();
       return rows.filter(r=>{ const name=(r['Usuário - Nome de usuário']||'').toString().trim().toLowerCase(); if(sup && supList.includes(name)) return false; if(toni && name===toniName) return false; return true; });
     }
-    function applyClubFilters(rows){
-      const a=$('filtroClubeA').value, b=$('filtroClubeB').value;
-      if(!a && !b) return rows;
-      return rows.filter(r=>{ const club=(r['Usuário - Nome de usuário']||'').toString(); return (a&&club===a)||(b&&club===b); });
+    function populateClubSelects(all,p){
+      const clubs=[...new Set(all.map(r=>(r['Usuário - Nome de usuário']||'(Clube não informado)')))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+      const sA=$('filtroClubeA'), sB=$('filtroClubeB');
+      [sA,sB].forEach(sel=>{ sel.innerHTML='<option value="">(Todos)</option>'; clubs.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);}); });
+      if(p?.a && [...sA.options].some(o=>o.value===p.a)) sA.value=p.a;
+      if(p?.b && [...sB.options].some(o=>o.value===p.b)) sB.value=p.b;
     }
     function savePrefs(){
       const prefs={ini:$('filtroInicio').value,fim:$('filtroFim').value,a:$('filtroClubeA').value,b:$('filtroClubeB').value,sup:$('eliminarSuprema').checked,toni:$('eliminarToni').checked,comp:$('chkComparar').checked,metric:$('selRanking').value};
@@ -332,37 +444,48 @@
       }catch{ return {}; }
     }
 
-    /* ============= FETCH & INIT ============= */
+    /* ============= FETCH & FLOW ============= */
     async function fetchAll(){
       const res=await fetch(SPREADSHEET_URL); if(!res.ok) throw new Error('Falha ao acessar planilha');
       const text=await res.text();
       return new Promise((resolve,reject)=>Papa.parse(text,{header:true,skipEmptyLines:true,dynamicTyping:false,complete:r=>r.errors.length?reject(r.errors):resolve(r.data),error:reject}));
     }
-    function populateClubSelects(all,p){
-      const clubs=[...new Set(all.map(r=>(r['Usuário - Nome de usuário']||'(Clube não informado)')))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-      const sA=$('filtroClubeA'), sB=$('filtroClubeB');
-      [sA,sB].forEach(sel=>{ sel.innerHTML='<option value="">(Todos)</option>'; clubs.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);}); });
-      if(p?.a && [...sA.options].some(o=>o.value===p.a)) sA.value=p.a;
-      if(p?.b && [...sB.options].some(o=>o.value===p.b)) sB.value=p.b;
-    }
+
     function filterWindows(){
       const {ini,fim}=getDateRange();
       const days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
       const prevEnd=new Date(ini); prevEnd.setDate(ini.getDate()-1);
       const prevStart=new Date(prevEnd); prevStart.setDate(prevEnd.getDate()-(days-1));
       const inRange=(d,a,b)=>d && !isNaN(d) && d>=a && d<=b;
+
       const cur=allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), ini, fim));
       const prv=allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), prevStart, prevEnd));
-      rowsAtual = applyClubFilters(applyNameFilters(cur));
-      rowsAnterior = $('chkComparar').checked ? applyClubFilters(applyNameFilters(prv)) : [];
+
+      // aplica exclusões (Suprema/Toni) — base sem A/B
+      baseAtual = applyNameFilters(cur);
+      baseAnterior = applyNameFilters(prv);
+
+      const a=$('filtroClubeA').value, b=$('filtroClubeB').value;
+      // união para KPIs/ranking
+      rowsAtual = (!a && !b) ? baseAtual : baseAtual.filter(r=> (a && r['Usuário - Nome de usuário']===a) || (b && r['Usuário - Nome de usuário']===b));
+      rowsAnterior = (!a && !b) ? baseAnterior : baseAnterior.filter(r=> (a && r['Usuário - Nome de usuário']===a) || (b && r['Usuário - Nome de usuário']===b));
+
+      // conjuntos separados para gráficos comparativos A x B
+      rowsA = a ? baseAtual.filter(r=> r['Usuário - Nome de usuário']===a) : [];
+      rowsB = b ? baseAtual.filter(r=> r['Usuário - Nome de usuário']===b) : [];
+      rowsA_prev = a ? baseAnterior.filter(r=> r['Usuário - Nome de usuário']===a) : [];
+      rowsB_prev = b ? baseAnterior.filter(r=> r['Usuário - Nome de usuário']===b) : [];
     }
 
     function updateAll(){
       showLoaders(true);
       filterWindows();
+
       aggAtual = transform(rowsAtual) || {kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0},charts:{comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[0,0,0,0,0,0]},ggr:{labels:[],data:[]},depositos:{labels:[],data:[]},ftd:{labels:[],data:[]},sportsbook:{labels:[],data:[]},cassino:{labels:[],data:[]}}};
       aggAnterior = rowsAnterior.length ? transform(rowsAnterior) : null;
+
       renderKPIs(); destroyCharts(); renderCharts(); renderRanking();
+
       showLoaders(false); savePrefs();
       $('ultimaAtualizacao').textContent='Atualizado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     }
