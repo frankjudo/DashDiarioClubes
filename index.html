@@ -16,23 +16,21 @@
       --border:rgba(255,255,255,.07); --shadow:0 10px 30px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    html,body{height:100%}
     body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--txt)}
     .container{max-width:1700px;margin:0 auto;padding:22px}
     header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
-    header h1{margin:0;font-size:28px;font-weight:900;letter-spacing:.2px;display:flex;gap:10px;align-items:center}
+    header h1{margin:0;font-size:28px;font-weight:900;display:flex;gap:10px;align-items:center}
     header .sub{color:var(--muted);font-weight:600}
 
-    .panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);
-      border-radius:16px; box-shadow:var(--shadow)}
-    .controls{padding:16px 16px 10px; margin-bottom:12px}
+    .panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+    .controls{padding:16px 16px 10px;margin-bottom:12px}
     .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
-    .row > .field{display:flex;flex-direction:column;gap:6px}
+    .row>.field{display:flex;flex-direction:column;gap:6px}
     .row .grow{flex:1}
     label{font-weight:800;font-size:14px}
     input,select{background:#0b2435;color:var(--txt);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
     input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(73,182,255,.18)}
-    .btn{padding:10px 14px;border:none;border-radius:12px;font-weight:900;letter-spacing:.2px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:all .15s}
+    .btn{padding:10px 14px;border:none;border-radius:12px;font-weight:900;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:.15s}
     .btn:hover{transform:translateY(-1px);filter:brightness(1.1)} .btn:active{transform:translateY(0)}
     .btn-ghost{background:#0e2c43;border:1px solid rgba(73,182,255,.35);color:var(--accent)}
     .btn-apply{background:#133822;border:1px solid rgba(40,208,127,.35);color:#bfffe1}
@@ -41,7 +39,7 @@
     .chip{background:#0b2435;border:1px solid var(--border);padding:8px 10px;border-radius:12px;color:var(--muted);font-weight:700}
 
     .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px}
-    .kpi{padding:12px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));position:relative;overflow:hidden}
+    .kpi{padding:12px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));position:relative}
     .kpi:before{content:'';position:absolute;left:0;top:0;height:100%;width:4px;background:var(--accent)}
     .kpi .title{color:var(--muted);font-weight:800;font-size:13px;display:flex;gap:8px;align-items:center}
     .kpi .value{font-size:22px;font-weight:900;margin:8px 0 2px}
@@ -84,50 +82,29 @@
 
     <div class="panel controls" id="controls">
       <div class="row" role="group" aria-label="Período">
-        <div class="field">
-          <label for="filtroInicio">De</label>
-          <input type="date" id="filtroInicio" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="filtroFim">até</label>
-          <input type="date" id="filtroFim" autocomplete="off" />
-        </div>
+        <div class="field"><label for="filtroInicio">De</label><input type="date" id="filtroInicio"/></div>
+        <div class="field"><label for="filtroFim">até</label><input type="date" id="filtroFim"/></div>
         <button class="btn btn-ghost" id="btnOntem" type="button"><i class="fa-solid fa-calendar-day"></i> Ontem</button>
         <button class="btn btn-ghost" id="btnUltimos7" type="button"><i class="fa-solid fa-calendar-week"></i> Últimos 7 dias</button>
         <button class="btn btn-ghost" id="btnUltimos30" type="button"><i class="fa-solid fa-calendar-alt"></i> Últimos 30 dias</button>
         <div class="field" style="margin-left:10px">
-          <label for="chkComparar" style="display:flex;align-items:center;gap:6px">
-            <input type="checkbox" id="chkComparar"> Comparar c/ período anterior
-          </label>
+          <label for="chkComparar" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="chkComparar"> Comparar c/ período anterior</label>
         </div>
         <button class="btn btn-apply" id="btnAplicar" type="button"><i class="fa-solid fa-filter"></i> Aplicar</button>
       </div>
 
       <div class="row">
-        <div class="field grow">
-          <label for="searchClub">Pesquisar clube</label>
-          <input type="text" id="searchClub" placeholder="Digite para filtrar opções..." autocomplete="off">
-        </div>
+        <div class="field grow"><label for="searchClub">Pesquisar clube</label><input type="text" id="searchClub" placeholder="Digite para filtrar opções..."></div>
       </div>
 
       <div class="row" style="gap:16px">
-        <div class="field grow">
-          <label for="filtroClubeA">Clube A</label>
-          <select id="filtroClubeA"></select>
-        </div>
-        <div class="field grow">
-          <label for="filtroClubeB">Clube B</label>
-          <select id="filtroClubeB"></select>
-        </div>
+        <div class="field grow"><label for="filtroClubeA">Clube A</label><select id="filtroClubeA"></select></div>
+        <div class="field grow"><label for="filtroClubeB">Clube B</label><select id="filtroClubeB"></select></div>
       </div>
 
       <div class="row" style="gap:16px">
-        <div class="field">
-          <label for="eliminarSuprema" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="eliminarSuprema"> Eliminar Clubes Suprema</label>
-        </div>
-        <div class="field">
-          <label for="eliminarToni" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="eliminarToni"> Eliminar TONI</label>
-        </div>
+        <div class="field"><label for="eliminarSuprema" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="eliminarSuprema"> Eliminar Clubes Suprema</label></div>
+        <div class="field"><label for="eliminarToni" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="eliminarToni"> Eliminar TONI</label></div>
         <button class="btn btn-ghost" id="btnDarkMode" type="button"><i class="fa-solid fa-moon"></i> Modo Claro/Escuro</button>
         <button class="btn btn-ghost" id="btnAtualizar" type="button"><i class="fa-solid fa-sync"></i> Atualizar</button>
         <button class="btn btn-ghost" id="btnExportar" type="button"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
@@ -190,11 +167,13 @@
   <div class="notification" id="notification"><i class="fas fa-info-circle"></i><span id="notificationText"></span></div>
 
   <script>
+    /* ====== CONFIG ====== */
     const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
     const CLUBES_SUPREMA = ['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
     const CLUBE_TONI = 'crisslots123@gmail.com';
     const TOP_N = 15;
 
+    /* ====== STATE ====== */
     let charts = {};
     let allRows = [];
     let baseAtual = [], baseAnterior = [];
@@ -203,11 +182,11 @@
     let COLS = null;
 
     const $ = id => document.getElementById(id);
-    const showLoaders = (on=true) => document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',on));
+    const showLoaders = (on=true)=>document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',on));
     function note(msg,type='info'){ const n=$('notification'),t=$('notificationText'),i=n.querySelector('i'); n.className='notification'; n.classList.add('show',type); i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':'fas fa-info-circle'; t.textContent=msg; setTimeout(()=>n.classList.remove('show'),3000); }
     function formatMoney(n){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0); }
 
-    // >>> CORREÇÃO principal (typo removido) + parser de datas robusto <<<
+    /* ====== PARSERS ====== */
     function parseCurrency(v){
       if(typeof v==='number') return v;
       if(v==null) return 0;
@@ -215,50 +194,52 @@
       s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-');
       const par=/^\(.*\)$/.test(s); if(par) s=s.replace(/[()]/g,'');
       s=s.replace(/[^0-9,.\-]/g,'');
-      const hasComma=s.includes(','), hasDot=s.includes('.');
-      if(hasComma && hasDot){
+      const c=s.includes(','), d=s.includes('.');
+      if(c&&d){
         const lc=s.lastIndexOf(','), ld=s.lastIndexOf('.');
         const dec = lc>ld ? ',' : '.';
-        const thousand = dec===',' ? '.' : ',';
-        s = s.split(thousand).join('');
+        const th  = dec===',' ? '.' : ',';
+        s=s.split(th).join('');
         if(dec===',') s=s.replace(',','.');
-      }else if(hasComma){
-        s = s.split('.').join('');
-        s = s.replace(',','.');
-      } // else: só ponto ou nada
-      let n=parseFloat(s); if(isNaN(n)) n=0;
-      if(par) n=-Math.abs(n);
-      return n;
+      }else if(c){ s=s.split('.').join(''); s=s.replace(',','.'); }
+      let n=parseFloat(s); if(isNaN(n)) n=0; if(par) n=-Math.abs(n); return n;
     }
     function parseDateStr(s){
       if(!s) return null;
-      const str = String(s).trim();
-      // YYYY-MM-DD
+      const str=String(s).trim();
       if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str+'T00:00:00');
-      // DD/MM/YYYY
       if(/^\d{2}\/\d{2}\/\d{4}$/.test(str)){ const [d,m,y]=str.split('/'); return new Date(`${y}-${m}-${d}T00:00:00`); }
-      // fallback
-      const d=new Date(str); return isNaN(d)? null : d;
+      const d=new Date(str); return isNaN(d)? null:d;
     }
 
+    /* ====== DETECÇÃO DE COLUNAS (precisa) ====== */
     function detectColumns(headers){
       const norm = s => (s||'').toString().trim().toLowerCase();
-      const find = (...cands) => headers.find(h => cands.some(c => norm(h).includes(c))) || null;
+      const find = (fn)=> headers.find(h=>fn(norm(h))) || null;
+
+      const ggrCalcHeader = find(n =>
+        n.includes('ggr') &&
+        (n.includes('cálculo') || n.includes('calculo') || n.includes('total')) &&
+        !n.includes('sportsbook') && !n.includes('cassino')
+      );
+
       const m = {
-        date:    find('data'),
-        club:    find('usuário - nome de usuário','nome de usuário','usuario - nome','clube','user'),
-        ftd:     find('ftd-montante','usuário - ftd','ftd'),
-        dep:     find('usuário - depósitos','depositos','depósitos'),
-        ggrCalc: find('cálculo - ggr','calculo - ggr','ggr'),
-        sb:      find('sportsbook - ggr','sportsbook'),
-        cs:      find('cassino - ggr','casino - ggr','cassino'),
-        hab:     find('jogos de habilidade','habilidade','w/l','win/loss'),
-        bonus:   find('bônus convertidos','bonus convertidos','bônus','bonus')
+        date:  find(n=> n.includes('data')),
+        club:  find(n=> n.includes('usuário - nome de usuário') || n.includes('nome de usuário') || n.includes('usuario - nome') || n.includes('clube') || n==='user' || n.includes('usuario')),
+        ftd:   find(n=> n.includes('ftd-montante') || n.includes('usuário - ftd') || n === 'ftd'),
+        dep:   find(n=> n.includes('usuário - depósitos') || n.includes('depositos') || n.includes('depósitos')),
+        ggrCalc: ggrCalcHeader,
+        sb:    find(n=> n.includes('sportsbook') && n.includes('ggr')),
+        cs:    find(n=> (n.includes('cassino') || n.includes('casino')) && n.includes('ggr')),
+        hab:   find(n=> n.includes('jogos de habilidade') || n.includes('habilidade') || n.includes('w/l') || n.includes('win/loss')),
+        bonus: find(n=> (n.includes('bônus') || n.includes('bonus')) && n.includes('convert'))
       };
+
       if(!m.date || !m.club) throw new Error('Não encontrei colunas obrigatórias (DATA/CLUBE).');
       return m;
     }
 
+    /* ====== FETCH + FALLBACK ====== */
     async function fetchAll(){
       try{
         const res = await fetch(SPREADSHEET_URL,{cache:'no-store'});
@@ -284,15 +265,13 @@
     document.addEventListener('DOMContentLoaded', ()=>{
       $('btnImportar').addEventListener('click', ()=> $('fileCsv').click());
       $('fileCsv').addEventListener('change', (ev)=>{
-        const f = ev.target.files && ev.target.files[0];
-        if(!f) return;
-        const reader = new FileReader();
-        reader.onload = e=>{
+        const f=ev.target.files?.[0]; if(!f) return;
+        const reader=new FileReader();
+        reader.onload=e=>{
           try{
-            const text = e.target.result;
-            Papa.parse(text, {
+            Papa.parse(e.target.result,{
               header:true, skipEmptyLines:true,
-              complete: r=>{
+              complete:r=>{
                 if(r.errors.length){ console.error(r.errors); note('Erro ao ler CSV','error'); return; }
                 if(!r.data.length){ note('CSV vazio','error'); return; }
                 COLS = detectColumns(Object.keys(r.data[0]||{}));
@@ -304,24 +283,42 @@
             });
           }catch(ex){ console.error(ex); note('Falha no CSV','error'); }
         };
-        reader.readAsText(f, 'utf-8');
+        reader.readAsText(f,'utf-8');
       });
     });
 
+    /* ====== CÁLCULO DE GGR ROBUSTO ====== */
+    function computeGGR(row, c){
+      const sb  = parseCurrency(row[c.sb]);
+      const cs  = parseCurrency(row[c.cs]);
+      const hab = parseCurrency(row[c.hab]);
+      const sum = (sb||0) + (cs||0) + (hab||0);
+
+      if (c.ggrCalc){
+        const raw = parseCurrency(row[c.ggrCalc]);
+        const close = (sum===0) ? Math.abs(raw) < 1e-6 : Math.abs((raw-sum)/sum) <= 0.05;
+        if (isFinite(raw) && close) return raw;
+      }
+      return sum;
+    }
+
+    /* ====== TRANSFORM / SERIES ====== */
     function transform(rows){
       if(!rows.length) return null;
       const c={ date:COLS.date, club:COLS.club, ftd:COLS.ftd, dep:COLS.dep, ggrCalc:COLS.ggrCalc, sb:COLS.sb, cs:COLS.cs, hab:COLS.hab, bonus:COLS.bonus };
       const dates=[...new Set(rows.map(r=>r[c.date]))].sort((a,b)=> (parseDateStr(a)-parseDateStr(b)));
+
       const totals={ftd:0,dep:0,ggr:0,sb:0,cs:0,bonus:0};
       const series={ggr:Array(dates.length).fill(0),dep:Array(dates.length).fill(0),ftd:Array(dates.length).fill(0),sb:Array(dates.length).fill(0),cs:Array(dates.length).fill(0)};
 
       rows.forEach(r=>{
         const di=dates.indexOf(r[c.date]);
-        const vFTD=parseCurrency(r[c.ftd]), vDep=parseCurrency(r[c.dep]);
-        const vSB=parseCurrency(r[c.sb]), vCS=parseCurrency(r[c.cs]);
-        const vHab=parseCurrency(r[c.hab]), vGGRc=parseCurrency(r[c.ggrCalc]);
-        const vGGR=(Number.isFinite(vGGRc) && vGGRc!==0)? vGGRc : (vSB+vCS+vHab);
-        const vBN=parseCurrency(r[c.bonus]);
+        const vFTD=parseCurrency(r[c.ftd]);
+        const vDep=parseCurrency(r[c.dep]);
+        const vSB =parseCurrency(r[c.sb]);
+        const vCS =parseCurrency(r[c.cs]);
+        const vGGR=computeGGR(r,c);
+        const vBN =parseCurrency(r[c.bonus]);
 
         totals.ftd+=vFTD; totals.dep+=vDep; totals.sb+=vSB; totals.cs+=vCS; totals.ggr+=vGGR; totals.bonus+=vBN;
         if(di>-1){ series.ggr[di]+=vGGR; series.dep[di]+=vDep; series.ftd[di]+=vFTD; series.sb[di]+=vSB; series.cs[di]+=vCS; }
@@ -331,11 +328,11 @@
         kpis:{ ftd:totals.ftd, depositos:totals.dep, ggr:totals.ggr, sportsbook:totals.sb, cassino:totals.cs, bonus:totals.bonus },
         charts:{
           comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'], dataA:[totals.ftd, totals.dep, totals.ggr, totals.sb, totals.cs, totals.bonus]},
-          ggr:{labels:dates,data:series.ggr},
-          depositos:{labels:dates,data:series.dep},
-          ftd:{labels:dates,data:series.ftd},
-          sportsbook:{labels:dates,data:series.sb},
-          cassino:{labels:dates,data:series.cs}
+          ggr:{labels:dates, data:series.ggr},
+          depositos:{labels:dates, data:series.dep},
+          ftd:{labels:dates, data:series.ftd},
+          sportsbook:{labels:dates, data:series.sb},
+          cassino:{labels:dates, data:series.cs}
         }
       };
     }
@@ -351,11 +348,7 @@
         else if(metric==='sportsbook') v=parseCurrency(r[c.sb]);
         else if(metric==='cassino') v=parseCurrency(r[c.cs]);
         else if(metric==='bonus') v=parseCurrency(r[c.bonus]);
-        else if(metric==='ggr'){
-          const vCalc=parseCurrency(r[c.ggrCalc]);
-          const vSum=parseCurrency(r[c.sb])+parseCurrency(r[c.cs])+parseCurrency(r[c.hab]);
-          v=(Number.isFinite(vCalc) && vCalc!==0) ? vCalc : vSum;
-        }
+        else if(metric==='ggr') v=computeGGR(r,c);
         map[club]=(map[club]||0)+v;
       });
       return map;
@@ -372,57 +365,48 @@
         else if(metric==='ftd') v=parseCurrency(r[c.ftd]);
         else if(metric==='sportsbook') v=parseCurrency(r[c.sb]);
         else if(metric==='cassino') v=parseCurrency(r[c.cs]);
-        else if(metric==='ggr'){
-          const vCalc=parseCurrency(r[c.ggrCalc]);
-          const vSum=parseCurrency(r[c.sb])+parseCurrency(r[c.cs])+parseCurrency(r[c.hab]);
-          v=(Number.isFinite(vCalc) && vCalc!==0) ? vCalc : vSum;
-        }
+        else if(metric==='ggr') v=computeGGR(r,c);
         serie[di]+=v;
       });
       return {labels:dates, data:serie};
     }
 
+    /* ====== INSIGHTS / KPIs / CHARTS / RANKING ====== */
     function gerarInsights(){
       if(!aggAtual){ $('chipResumo').textContent='Sem dados no período.'; return; }
       const compOn = $('chkComparar').checked && aggAnterior;
       const delta=(a,b)=>!compOn?null:a-(b??0);
-      const dDep = delta(aggAtual.kpis.depositos, aggAnterior?.kpis?.depositos);
-      const dGgr = delta(aggAtual.kpis.ggr, aggAnterior?.kpis?.ggr);
-      const dFtd = delta(aggAtual.kpis.ftd, aggAnterior?.kpis?.ftd);
+      const dDep=delta(aggAtual.kpis.depositos, aggAnterior?.kpis?.depositos);
+      const dGgr=delta(aggAtual.kpis.ggr, aggAnterior?.kpis?.ggr);
+      const dFtd=delta(aggAtual.kpis.ftd, aggAnterior?.kpis?.ftd);
 
-      const metric = $('selRanking').value;
-      const curMap = sumByClub(rowsAtual, metric);
-      const prevMap = $('chkComparar').checked ? sumByClub(rowsAnterior, metric) : {};
-      const linhas = Object.entries(curMap).map(([clube,valor])=>{
-        const prev = prevMap[clube]??0; return {clube, delta: valor-prev};
+      const metric=$('selRanking').value;
+      const curMap=sumByClub(rowsAtual, metric);
+      const prevMap=$('chkComparar').checked?sumByClub(rowsAnterior, metric):{};
+      const linhas=Object.entries(curMap).map(([clube,valor])=>{
+        const prev=prevMap[clube]??0; return {clube, delta:valor-prev};
       }).sort((a,b)=>b.delta-a.delta);
-      const top = linhas[0]; const worst = linhas[linhas.length-1];
+      const top=linhas[0], worst=linhas[linhas.length-1];
 
-      const mk=v=>formatMoney(Math.abs(v||0));
-      const dir=v=>v>=0?'↑':'↓';
-      let txt = `Depósitos ${!compOn?'—':`${dir(dDep)} ${mk(dDep)}`} | GGR ${!compOn?'—':`${dir(dGgr)} ${mk(dGgr)}`} | FTD ${!compOn?'—':`${dir(dFtd)} ${mk(dFtd)}`}.`;
-      if(top && worst){ txt += ` Destaques: ↑ ${top.clube} (maior crescimento em ${metric}); ↓ ${worst.clube} (maior queda).`; }
+      const mk=v=>formatMoney(Math.abs(v||0)), dir=v=>v>=0?'↑':'↓';
+      let txt=`Depósitos ${!compOn?'—':`${dir(dDep)} ${mk(dDep)}`} | GGR ${!compOn?'—':`${dir(dGgr)} ${mk(dGgr)}`} | FTD ${!compOn?'—':`${dir(dFtd)} ${mk(dFtd)}`}.`;
+      if(top && worst){ txt+=` Destaques: ↑ ${top.clube} (maior crescimento em ${metric}); ↓ ${worst.clube} (maior queda).`; }
       $('chipResumo').textContent=txt;
     }
 
     function setKPI(id, val, prev, metricKey){
       const el=$(id);
       el.querySelector('.value').textContent = metricKey==='margem' ? (isFinite(val)? `${val.toFixed(2)}%` : '—') : formatMoney(val);
-      const varEl = el.querySelector('.var');
+      const varEl=el.querySelector('.var');
       if(metricKey==='margem' || metricKey==='ticket'){
         if(prev==null || !$('chkComparar').checked){ varEl.textContent='—'; varEl.className='var muted'; return; }
-        const delta = val - prev;
-        varEl.textContent = `${delta>=0?'+':''}${metricKey==='margem' ? delta.toFixed(2)+'pp' : formatMoney(delta)}`;
-        varEl.className = `var ${delta>=0?'up':'down'}`;
-        return;
+        const delta=val-prev; varEl.textContent=`${delta>=0?'+':''}${metricKey==='margem' ? delta.toFixed(2)+'pp' : formatMoney(delta)}`; varEl.className=`var ${delta>=0?'up':'down'}`; return;
       }
       if(!$('chkComparar').checked || prev==null){ varEl.textContent='—'; varEl.className='var muted'; return; }
-      const delta = val - prev;
-      const pct = (prev===0) ? (val===0?0:100) : (delta/Math.abs(prev))*100;
-      const positiveIsGood = metricKey !== 'bonus';
+      const delta=val-prev; const pct=(prev===0)?(val===0?0:100):(delta/Math.abs(prev))*100;
+      const positiveIsGood = metricKey!=='bonus';
       const good = (delta>=0 && positiveIsGood) || (delta<0 && !positiveIsGood);
-      varEl.textContent = `${delta>=0?'+':''}${formatMoney(delta)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`;
-      varEl.className = `var ${good?'up':'down'}`;
+      varEl.textContent=`${delta>=0?'+':''}${formatMoney(delta)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`; varEl.className=`var ${good?'up':'down'}`;
     }
 
     function renderKPIs(){
@@ -457,55 +441,50 @@
       const ctxSc=$('chartScatter').getContext('2d');
 
       const clubA=$('filtroClubeA').value, clubB=$('filtroClubeB').value;
-      const compararClubes = !!(clubA || clubB);
-      $('tComp').innerHTML = `<i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa${compararClubes?' — A vs B':''}`;
-      $('tGgr').innerHTML = `<i class="fa-solid fa-chart-line"></i> Evolução do GGR${compararClubes?' — A vs B':''}`;
-      $('tDep').innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos${compararClubes?' — A vs B':''}`;
-      $('tFtd').innerHTML = `<i class="fa-solid fa-user-plus"></i> Evolução do FTD${compararClubes?' — A vs B':''}`;
-      $('tSb').innerHTML = `<i class="fa-solid fa-futbol"></i> Evolução do Sportsbook${compararClubes?' — A vs B':''}`;
-      $('tCs').innerHTML = `<i class="fa-solid fa-dice"></i> Evolução do Cassino${compararClubes?' — A vs B':''}`;
+      const compararClubes=!!(clubA||clubB);
+      $('tComp').innerHTML=`<i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa${compararClubes?' — A vs B':''}`;
+      $('tGgr').innerHTML=`<i class="fa-solid fa-chart-line"></i> Evolução do GGR${compararClubes?' — A vs B':''}`;
+      $('tDep').innerHTML=`<i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos${compararClubes?' — A vs B':''}`;
+      $('tFtd').innerHTML=`<i class="fa-solid fa-user-plus"></i> Evolução do FTD${compararClubes?' — A vs B':''}`;
+      $('tSb').innerHTML=`<i class="fa-solid fa-futbol"></i> Evolução do Sportsbook${compararClubes?' — A vs B':''}`;
+      $('tCs').innerHTML=`<i class="fa-solid fa-dice"></i> Evolução do Cassino${compararClubes?' — A vs B':''}`;
 
       if(charts.comp) charts.comp.destroy();
       if(compararClubes){
         const metrics=['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'];
-        const totalClub = (rows) => { const a=transform(rows); return a ? a.kpis : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0}; };
-        const kpiA = clubA ? totalClub(baseAtual.filter(r=> r[COLS.club]===clubA)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
-        const kpiB = clubB ? totalClub(baseAtual.filter(r=> r[COLS.club]===clubB)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
-        charts.comp = new Chart(ctxComp,{
-          type:'bar',
-          data:{labels:metrics,
-            datasets:[
-              {label: clubA||'—', data:[kpiA.ftd,kpiA.depositos,kpiA.ggr,kpiA.sportsbook,kpiA.cassino,kpiA.bonus], backgroundColor:'rgba(73,182,255,.7)', borderColor:'rgba(73,182,255,1)', borderWidth:1},
-              {label: clubB||'—', data:[kpiB.ftd,kpiB.depositos,kpiB.ggr,kpiB.sportsbook,kpiB.cassino,kpiB.bonus], backgroundColor:'rgba(255,184,107,.7)', borderColor:'rgba(255,184,107,1)', borderWidth:1}
-            ]},
-          options: common
-        });
+        const totalClub=rows=>{ const a=transform(rows); return a?a.kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0}; };
+        const kpiA = clubA ? totalClub(baseAtual.filter(r=>r[COLS.club]===clubA)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
+        const kpiB = clubB ? totalClub(baseAtual.filter(r=>r[COLS.club]===clubB)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
+        charts.comp=new Chart(ctxComp,{type:'bar',data:{labels:metrics,datasets:[
+          {label:clubA||'—',data:[kpiA.ftd,kpiA.depositos,kpiA.ggr,kpiA.sportsbook,kpiA.cassino,kpiA.bonus],backgroundColor:'rgba(73,182,255,.7)',borderColor:'rgba(73,182,255,1)',borderWidth:1},
+          {label:clubB||'—',data:[kpiB.ftd,kpiB.depositos,kpiB.ggr,kpiB.sportsbook,kpiB.cassino,kpiB.bonus],backgroundColor:'rgba(255,184,107,.7)',borderColor:'rgba(255,184,107,1)',borderWidth:1}
+        ]},options:common});
       }else{
-        const ds=[{label:'Período Atual', data:aggAtual.charts.comparativo.dataA, backgroundColor:'rgba(73,182,255,.72)', borderColor:'rgba(73,182,255,1)', borderWidth:1}];
+        const ds=[{label:'Período Atual',data:aggAtual.charts.comparativo.dataA,backgroundColor:'rgba(73,182,255,.72)',borderColor:'rgba(73,182,255,1)',borderWidth:1}];
         if($('chkComparar').checked && aggAnterior){
-          ds.push({label:'Período Anterior', data:aggAnterior.charts.comparativo.dataA, backgroundColor:'rgba(159,179,194,.72)', borderColor:'rgba(159,179,194,1)', borderWidth:1});
+          ds.push({label:'Período Anterior',data:aggAnterior.charts.comparativo.dataA,backgroundColor:'rgba(159,179,194,.72)',borderColor:'rgba(159,179,194,1)',borderWidth:1});
         }
-        charts.comp = new Chart(ctxComp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
+        charts.comp=new Chart(ctxComp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
       }
 
-      const mkSerie = (metricKey) => ({
-        atual: aggAtual.charts[metricKey],
-        anterior: aggAnterior?.charts[metricKey],
-        A: seriesPorClube(baseAtual.filter(r=> r[COLS.club]===$('filtroClubeA').value), metricKey==='depositos'?'depositos':metricKey),
-        B: seriesPorClube(baseAtual.filter(r=> r[COLS.club]===$('filtroClubeB').value), metricKey==='depositos'?'depositos':metricKey)
+      const mkSerie=(metric)=>({
+        atual:aggAtual.charts[metric],
+        anterior:aggAnterior?.charts[metric],
+        A:seriesPorClube(baseAtual.filter(r=>r[COLS.club]===$('filtroClubeA').value), metric==='depositos'?'depositos':metric),
+        B:seriesPorClube(baseAtual.filter(r=>r[COLS.club]===$('filtroClubeB').value), metric==='depositos'?'depositos':metric)
       });
 
       const makeLine=(ctx,key,serie)=>{
         if(charts[key]) charts[key].destroy();
         if(compararClubes){
           const ds=[];
-          if($('filtroClubeA').value){ ds.push({label:`${$('filtroClubeA').value}`, data:serie.A.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}); }
-          if($('filtroClubeB').value){ ds.push({label:`${$('filtroClubeB').value}`, data:serie.B.data, borderColor:'#ffb86b', backgroundColor:'rgba(255,184,107,.15)', tension:.35, fill:true}); }
-          charts[key]=new Chart(ctx,{type:'line', data:{labels:serie.A.labels.length?serie.A.labels:serie.B.labels, datasets:ds}, options:common});
+          if($('filtroClubeA').value) ds.push({label:$('filtroClubeA').value,data:serie.A.data,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true});
+          if($('filtroClubeB').value) ds.push({label:$('filtroClubeB').value,data:serie.B.data,borderColor:'#ffb86b',backgroundColor:'rgba(255,184,107,.15)',tension:.35,fill:true});
+          charts[key]=new Chart(ctx,{type:'line',data:{labels:serie.A.labels.length?serie.A.labels:serie.B.labels,datasets:ds},options:common});
         }else{
-          const ds=[{label:`${key} (Atual)`, data:serie.atual.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}];
-          if($('chkComparar').checked && serie.anterior){ ds.push({label:`${key} (Anterior)`, data:serie.anterior.data, borderColor:'#9fb3c2', backgroundColor:'rgba(159,179,194,.15)', tension:.35, fill:true}); }
-          charts[key]=new Chart(ctx,{type:'line', data:{labels:serie.atual.labels, datasets:ds}, options:common});
+          const ds=[{label:`${key} (Atual)`,data:serie.atual.data,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true}];
+          if($('chkComparar').checked && serie.anterior) ds.push({label:`${key} (Anterior)`,data:serie.anterior.data,borderColor:'#9fb3c2',backgroundColor:'rgba(159,179,194,.15)',tension:.35,fill:true});
+          charts[key]=new Chart(ctx,{type:'line',data:{labels:serie.atual.labels,datasets:ds},options:common});
         }
       };
 
@@ -516,60 +495,51 @@
       makeLine(ctxCS,'Cassino', mkSerie('cassino'));
 
       if(charts.scatter) charts.scatter.destroy();
-      const curMapG = sumByClub(baseAtual,'ggr');
-      const curMapD = sumByClub(baseAtual,'depositos');
-      const points = Object.keys(curMapG).map(clube=>({clube, x:curMapD[clube]||0, y:curMapG[clube]||0})).sort((a,b)=>b.y-a.y).slice(0,50);
-      charts.scatter = new Chart(ctxSc,{
-        type:'scatter',
-        data:{ datasets:[{label:'Clubes (Top 50 por GGR)', data:points, parsing:false, pointRadius:4, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.4)'}] },
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          plugins:{legend:{labels:{color:'#e9f3ff'}}, tooltip:{callbacks:{label:(ctx)=>`${ctx.raw.clube}: Dep ${formatMoney(ctx.raw.x)} | GGR ${formatMoney(ctx.raw.y)}`}}},
-          scales:{
-            x:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')}, title:{display:true,text:'Depósitos',color:'#e9f3ff',font:{weight:800}}},
-            y:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')}, title:{display:true,text:'GGR',color:'#e9f3ff',font:{weight:800}}}
-          }
-        }
-      });
+      const curMapG=sumByClub(baseAtual,'ggr');
+      const curMapD=sumByClub(baseAtual,'depositos');
+      const points=Object.keys(curMapG).map(clube=>({clube,x:curMapD[clube]||0,y:curMapG[clube]||0})).sort((a,b)=>b.y-a.y).slice(0,50);
+      charts.scatter=new Chart(ctxSc,{type:'scatter',data:{datasets:[{label:'Clubes (Top 50 por GGR)',data:points,parsing:false,pointRadius:4,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.4)'}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#e9f3ff'}},tooltip:{callbacks:{label:(c)=>`${c.raw.clube}: Dep ${formatMoney(c.raw.x)} | GGR ${formatMoney(c.raw.y)}`}}},
+          scales:{x:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')},title:{display:true,text:'Depósitos',color:'#e9f3ff',font:{weight:800}}},
+                  y:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')},title:{display:true,text:'GGR',color:'#e9f3ff',font:{weight:800)}}}});
     }
 
     function renderRanking(){
-      const metric = $('selRanking').value;
+      const metric=$('selRanking').value;
       localStorage.setItem('dash_ranking_metric', metric);
-      const curMap = sumByClub(rowsAtual, metric);
-      const compareOn = $('chkComparar').checked;
-      const prevMap = compareOn ? sumByClub(rowsAnterior, metric) : {};
-      const rows = Object.entries(curMap).map(([clube, valor])=>{
-        const prev = compareOn ? (prevMap[clube] ?? 0) : null;
-        let delta = null, pct = null, badge = '';
-        if (compareOn) { delta = valor - prev; pct = (prev > 0) ? ((valor - prev)/Math.abs(prev))*100 : null; if (prev===0) badge=' (novo)'; }
-        return {clube, valor, delta, pct, badge};
-      }).sort((a,b)=> b.valor - a.valor).slice(0, TOP_N);
+      const curMap=sumByClub(rowsAtual, metric);
+      const compareOn=$('chkComparar').checked;
+      const prevMap=compareOn?sumByClub(rowsAnterior, metric):{};
+      const rows=Object.entries(curMap).map(([clube,valor])=>{
+        const prev=compareOn?(prevMap[clube]??0):null;
+        let delta=null,pct=null,badge=''; if(compareOn){ delta=valor-prev; pct=(prev>0)?((valor-prev)/Math.abs(prev))*100:null; if(prev===0) badge=' (novo)'; }
+        return {clube,valor,delta,pct,badge};
+      }).sort((a,b)=>b.valor-a.valor).slice(0,TOP_N);
 
-      $('rankingInfo').textContent = `Top ${TOP_N} — ${metric.charAt(0).toUpperCase()+metric.slice(1)}`;
-      const tb = $('rankingTable').querySelector('tbody'); tb.innerHTML = rows.length?'' : '<tr><td colspan="4">Sem dados</td></tr>';
-
-      rows.forEach((r,idx)=>{
+      $('rankingInfo').textContent=`Top ${TOP_N} — ${metric.charAt(0).toUpperCase()+metric.slice(1)}`;
+      const tb=$('rankingTable').querySelector('tbody'); tb.innerHTML=rows.length?'':'<tr><td colspan="4">Sem dados</td></tr>';
+      rows.forEach((r,i)=>{
         let cls='flat', deltaText='—';
-        if (r.delta !== null) {
-          const isBonus = metric==='bonus';
-          const good = (r.delta>=0 && !isBonus) || (r.delta<0 && isBonus);
-          cls = good ? 'up' : 'down';
-          const pctText = (r.pct==null) ? '—' : `${r.pct>=0?'+':''}${r.pct.toFixed(2)}%`;
-          deltaText = `${r.delta>=0?'+':''}${formatMoney(r.delta)} (${pctText})${r.badge||''}`;
+        if(r.delta!==null){
+          const isBonus=metric==='bonus';
+          const good=(r.delta>=0 && !isBonus)||(r.delta<0 && isBonus);
+          cls=good?'up':'down';
+          const pctText=(r.pct==null)?'—':`${r.pct>=0?'+':''}${r.pct.toFixed(2)}%`;
+          deltaText=`${r.delta>=0?'+':''}${formatMoney(r.delta)} (${pctText})${r.badge||''}`;
         }
         const tr=document.createElement('tr');
-        tr.dataset.clube = r.clube;
-        tr.innerHTML = `<td>${idx+1}</td><td>${r.clube}</td><td>${formatMoney(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
-        tr.addEventListener('click', ()=>{ $('filtroClubeA').value = r.clube; updateAll(); note(`Clube A definido: ${r.clube}`,'success'); });
+        tr.dataset.clube=r.clube;
+        tr.innerHTML=`<td>${i+1}</td><td>${r.clube}</td><td>${formatMoney(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
+        tr.addEventListener('click',()=>{ $('filtroClubeA').value=r.clube; updateAll(); note(`Clube A definido: ${r.clube}`,'success');});
         tb.appendChild(tr);
       });
     }
 
+    /* ====== FILTROS / PREFS ====== */
     function getDateRange(){
       let ini=new Date($('filtroInicio').value+'T00:00:00');
       let fim=new Date($('filtroFim').value+'T23:59:59');
-      if(ini>fim){ const t=ini; ini=fim; fim=t; $('filtroInicio').value=ini.toISOString().split('T')[0]; $('filtroFim').value=fim.toISOString().split('T')[0]; note('Datas invertidas — corrigi pra você');}
+      if(ini>fim){ const t=ini; ini=fim; fim=t; $('filtroInicio').value=ini.toISOString().split('T')[0]; $('filtroFim').value=fim.toISOString().split('T')[0]; note('Datas invertidas — corrigi pra você'); }
       return {ini,fim};
     }
     function applyNameFilters(rows){
@@ -580,7 +550,7 @@
     function populateClubSelects(all,p){
       const clubs=[...new Set(all.map(r=>(r[COLS.club]||'(Clube não informado)')))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
       const sA=$('filtroClubeA'), sB=$('filtroClubeB');
-      [sA,sB].forEach(sel=>{ sel.innerHTML='<option value="">(Todos)</option>'; clubs.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);}); });
+      [sA,sB].forEach(sel=>{ sel.innerHTML='<option value="">(Todos)</option>'; clubs.forEach(c=>{ const o=document.createElement('option');o.value=c;o.textContent=c; sel.appendChild(o); }); });
       if(p?.a && [...sA.options].some(o=>o.value===p.a)) sA.value=p.a;
       if(p?.b && [...sB.options].some(o=>o.value===p.b)) sB.value=p.b;
     }
@@ -596,6 +566,7 @@
       }catch{ return {}; }
     }
 
+    /* ====== PIPELINE ====== */
     function filterWindows(){
       const {ini,fim}=getDateRange();
       const days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
@@ -645,6 +616,7 @@
       }
     }
 
+    /* ====== EVENTS ====== */
     document.addEventListener('DOMContentLoaded', ()=>{
       const on=(id,ev,fn)=>{ const el=$(id); if(el) el.addEventListener(ev,fn); };
       on('btnAplicar','click', updateAll);
