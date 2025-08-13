@@ -853,7 +853,7 @@
         Papa.parse(csvData, {
           header: true,
           skipEmptyLines: true,
-          dynamicTyping: true,
+          dynamicTyping: false, // Desativar para garantir que parseCurrency funcione de forma consistente
           complete: function(results) {
             if (results.errors.length > 0) {
               reject(results.errors);
@@ -870,97 +870,116 @@
     
     // Função para transformar dados brutos em formato do dashboard
     function transformData(rawData) {
-      if (!rawData || rawData.length === 0) return null;
-      const columns = {
-        date: 'Data', club: 'Clube', ftd: 'FTD', depositos: 'Depósitos',
-        ggr: 'GGR', sportsbook: 'Sportsbook', cassino: 'Cassino', bonus: 'Bônus'
-      };
-      const dates = [...new Set(rawData.map(row => row[columns.date]))].sort();
-      const totals = { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
-      const chartsData = {
-        ggr: Array(dates.length).fill(0), depositos: Array(dates.length).fill(0),
-        ftd: Array(dates.length).fill(0), sportsbook: Array(dates.length).fill(0),
-        cassino: Array(dates.length).fill(0)
-      };
-      const tablesData = {
-        depositos: {}, ftd: {}, ggr: {}, sportsbook: {}, cassino: {}, bonus: {}
-      };
-      rawData.forEach(row => {
-        const date = row[columns.date];
-        const club = row[columns.club];
-        const dateIndex = dates.indexOf(date);
-        const ftdValue = parseCurrency(row[columns.ftd]);
-        const depValue = parseCurrency(row[columns.depositos]);
-        const ggrValue = parseCurrency(row[columns.ggr]);
-        const sbValue = parseCurrency(row[columns.sportsbook]);
-        const csValue = parseCurrency(row[columns.cassino]);
-        const bnValue = parseCurrency(row[columns.bonus]);
-        totals.ftd += ftdValue;
-        totals.depositos += depValue;
-        totals.ggr += ggrValue;
-        totals.sportsbook += sbValue;
-        totals.cassino += csValue;
-        totals.bonus += bnValue;
-        if (dateIndex !== -1) {
-          chartsData.ggr[dateIndex] += ggrValue;
-          chartsData.depositos[dateIndex] += depValue;
-          chartsData.ftd[dateIndex] += ftdValue;
-          chartsData.sportsbook[dateIndex] += sbValue;
-          chartsData.cassino[dateIndex] += csValue;
-        }
-        if (!tablesData.depositos[club]) {
-          tablesData.depositos[club] = 0; tablesData.ftd[club] = 0;
-          tablesData.ggr[club] = 0; tablesData.sportsbook[club] = 0;
-          tablesData.cassino[club] = 0; tablesData.bonus[club] = 0;
-        }
-        tablesData.depositos[club] += depValue;
-        tablesData.ftd[club] += ftdValue;
-        tablesData.ggr[club] += ggrValue;
-        tablesData.sportsbook[club] += sbValue;
-        tablesData.cassino[club] += csValue;
-        tablesData.bonus[club] += bnValue;
-      });
-      const top10 = (data) => {
-        return Object.entries(data)
-          .map(([clube, valor]) => ({
-            clube, valor, variacao: valor, delta: `+${valor.toLocaleString('pt-BR')}`
-          }))
-          .sort((a, b) => b.valor - a.valor)
-          .slice(0, 10);
-      };
-      return {
-        kpis: {
-          ftd: { value: totals.ftd, variation: 0, previous: 0 },
-          depositos: { value: totals.depositos, variation: 0, previous: 0 },
-          ggr: { value: totals.ggr, variation: 0, previous: 0 },
-          sportsbook: { value: totals.sportsbook, variation: 0, previous: 0 },
-          cassino: { value: totals.cassino, variation: 0, previous: 0 },
-          bonus: { value: totals.bonus, variation: 0, previous: 0 }
-        },
-        charts: {
-          comparativo: {
-            labels: ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'],
-            dataA: [totals.ftd, totals.depositos, totals.ggr, totals.sportsbook, totals.cassino, totals.bonus],
-            dataB: [0, 0, 0, 0, 0, 0]
-          },
-          ggr: { labels: dates, data: chartsData.ggr },
-          depositos: { labels: dates, data: chartsData.depositos },
-          ftd: { labels: dates, data: chartsData.ftd },
-          sportsbook: { labels: dates, data: chartsData.sportsbook },
-          cassino: { labels: dates, data: chartsData.cassino }
-        },
-        tables: {
-          depositos: top10(tablesData.depositos),
-          ftd: top10(tablesData.ftd),
-          ggr: top10(tablesData.ggr),
-          sportsbook: top10(tablesData.sportsbook),
-          cassino: top10(tablesData.cassino),
-          bonus: top10(tablesData.bonus)
-        }
-      };
+        if (!rawData || rawData.length === 0) return null;
+
+        // Mapeamento de colunas atualizado para corresponder exatamente ao seu CSV.
+        const columns = {
+            date: 'DATA', // Corrigido para maiúscula
+            club: 'Usuário - Nome de usuário', // Corrigido para o nome real da coluna
+            ftd: 'Usuário - FTD-Montante', // Corrigido
+            depositos: 'Usuário - Depósitos', // Corrigido
+            ggr: 'GGR', // Usando a coluna de GGR total
+            sportsbook: 'Sportsbook - GGR', // Usando o GGR específico do Sportsbook
+            cassino: 'Cassino - GGR', // Usando o GGR específico do Cassino
+            bonus: 'Cálculo - bônus convertidos' // Usando bônus convertidos para o KPI
+        };
+
+        const dates = [...new Set(rawData.map(row => row[columns.date]))].sort();
+        const totals = { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
+        const chartsData = {
+            ggr: Array(dates.length).fill(0), depositos: Array(dates.length).fill(0),
+            ftd: Array(dates.length).fill(0), sportsbook: Array(dates.length).fill(0),
+            cassino: Array(dates.length).fill(0)
+        };
+        const tablesData = {
+            depositos: {}, ftd: {}, ggr: {}, sportsbook: {}, cassino: {}, bonus: {}
+        };
+
+        rawData.forEach(row => {
+            const club = row[columns.club];
+            if (!club) return; // Ignora linhas sem nome de clube
+
+            const date = row[columns.date];
+            const dateIndex = dates.indexOf(date);
+
+            const ftdValue = parseCurrency(row[columns.ftd]);
+            const depValue = parseCurrency(row[columns.depositos]);
+            const ggrValue = parseCurrency(row[columns.ggr]);
+            const sbValue = parseCurrency(row[columns.sportsbook]);
+            const csValue = parseCurrency(row[columns.cassino]);
+            const bnValue = parseCurrency(row[columns.bonus]);
+
+            totals.ftd += ftdValue;
+            totals.depositos += depValue;
+            totals.ggr += ggrValue;
+            totals.sportsbook += sbValue;
+            totals.cassino += csValue;
+            totals.bonus += bnValue;
+
+            if (dateIndex !== -1) {
+                chartsData.ggr[dateIndex] += ggrValue;
+                chartsData.depositos[dateIndex] += depValue;
+                chartsData.ftd[dateIndex] += ftdValue;
+                chartsData.sportsbook[dateIndex] += sbValue;
+                chartsData.cassino[dateIndex] += csValue;
+            }
+
+            if (!tablesData.depositos[club]) {
+                tablesData.depositos[club] = 0; tablesData.ftd[club] = 0;
+                tablesData.ggr[club] = 0; tablesData.sportsbook[club] = 0;
+                tablesData.cassino[club] = 0; tablesData.bonus[club] = 0;
+            }
+            
+            tablesData.depositos[club] += depValue;
+            tablesData.ftd[club] += ftdValue;
+            tablesData.ggr[club] += ggrValue;
+            tablesData.sportsbook[club] += sbValue;
+            tablesData.cassino[club] += csValue;
+            tablesData.bonus[club] += bnValue;
+        });
+
+        const top10 = (data) => {
+            return Object.entries(data)
+                .map(([clube, valor]) => ({
+                    clube, valor, variacao: valor, delta: `+${valor.toLocaleString('pt-BR')}`
+                }))
+                .sort((a, b) => b.valor - a.valor)
+                .slice(0, 10);
+        };
+
+        return {
+            kpis: {
+                ftd: { value: totals.ftd, variation: 0, previous: 0 },
+                depositos: { value: totals.depositos, variation: 0, previous: 0 },
+                ggr: { value: totals.ggr, variation: 0, previous: 0 },
+                sportsbook: { value: totals.sportsbook, variation: 0, previous: 0 },
+                cassino: { value: totals.cassino, variation: 0, previous: 0 },
+                bonus: { value: totals.bonus, variation: 0, previous: 0 }
+            },
+            charts: {
+                comparativo: {
+                    labels: ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'],
+                    dataA: [totals.ftd, totals.depositos, totals.ggr, totals.sportsbook, totals.cassino, totals.bonus],
+                    dataB: [0, 0, 0, 0, 0, 0]
+                },
+                ggr: { labels: dates, data: chartsData.ggr },
+                depositos: { labels: dates, data: chartsData.depositos },
+                ftd: { labels: dates, data: chartsData.ftd },
+                sportsbook: { labels: dates, data: chartsData.sportsbook },
+                cassino: { labels: dates, data: chartsData.cassino }
+            },
+            tables: {
+                depositos: top10(tablesData.depositos),
+                ftd: top10(tablesData.ftd),
+                ggr: top10(tablesData.ggr),
+                sportsbook: top10(tablesData.sportsbook),
+                cassino: top10(tablesData.cassino),
+                bonus: top10(tablesData.bonus)
+            }
+        };
     }
     
-    // Função para buscar e processar dados (COM DEPURAÇÃO)
+    // Função para buscar e processar dados
     async function fetchData() {
       try {
         showNotification('Carregando dados...', 'info');
@@ -972,23 +991,12 @@
           }
         });
         
-        // --- PONTO DE VERIFICAÇÃO 1: O que a URL está a devolver? ---
         const csvData = await fetchSpreadsheetData();
-        console.log('--- DEBUG 1: DADOS BRUTOS RECEBIDOS (CSV) ---');
-        console.log(csvData);
-
-        // --- PONTO DE VERIFICAÇÃO 2: Como o PapaParse processou os dados? ---
         const rawData = await processCSVData(csvData);
-        console.log('--- DEBUG 2: DADOS PARSEADOS PELA BIBLIOTECA ---');
-        console.log(rawData);
-        
-        // --- PONTO DE VERIFICAÇÃO 3: Como os dados ficaram após a nossa transformação? ---
         dashboardData = transformData(rawData);
-        console.log('--- DEBUG 3: DADOS FINAIS PARA O DASHBOARD ---');
-        console.log(dashboardData);
 
         if (!dashboardData) {
-            throw new Error("A transformação dos dados falhou. Verifique os logs de DEBUG.");
+            throw new Error("A transformação dos dados falhou.");
         }
 
         applyFilters();
@@ -1003,10 +1011,10 @@
         document.getElementById('ultimaAtualizacao').textContent = 
           `Atualizado em ${now.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
         
-        showNotification('Processamento concluído!', 'success');
+        showNotification('Dados atualizados com sucesso!', 'success');
         
       } catch (error) {
-        console.error('ERRO CRÍTICO NO FETCH:', error);
+        console.error('ERRO CRÍTICO:', error);
         showNotification('Erro ao carregar dados. Verifique o console (F12).', 'error');
         
         document.querySelectorAll('.loading').forEach(el => el.remove());
