@@ -853,7 +853,7 @@
         Papa.parse(csvData, {
           header: true,
           skipEmptyLines: true,
-          dynamicTyping: false, // Desativar para garantir que parseCurrency funcione de forma consistente
+          dynamicTyping: false,
           complete: function(results) {
             if (results.errors.length > 0) {
               reject(results.errors);
@@ -868,20 +868,19 @@
       });
     }
     
-    // Função para transformar dados brutos em formato do dashboard
+    // Função para transformar dados brutos em formato do dashboard ( MAPEAMENTO CORRIGIDO )
     function transformData(rawData) {
         if (!rawData || rawData.length === 0) return null;
 
-        // Mapeamento de colunas atualizado para corresponder exatamente ao seu CSV.
         const columns = {
-            date: 'DATA', // Corrigido para maiúscula
-            club: 'Usuário - Nome de usuário', // Corrigido para o nome real da coluna
-            ftd: 'Usuário - FTD-Montante', // Corrigido
-            depositos: 'Usuário - Depósitos', // Corrigido
-            ggr: 'GGR', // Usando a coluna de GGR total
-            sportsbook: 'Sportsbook - GGR', // Usando o GGR específico do Sportsbook
-            cassino: 'Cassino - GGR', // Usando o GGR específico do Cassino
-            bonus: 'Cálculo - bônus convertidos' // Usando bônus convertidos para o KPI
+            date: 'DATA',
+            club: 'Usuário - Nome de usuário',
+            ftd: 'Usuário - FTD-Montante',
+            depositos: 'Usuário - Depósitos',
+            ggr: 'Cálculo - GGR', // <-- CORREÇÃO APLICADA AQUI
+            sportsbook: 'Sportsbook - GGR',
+            cassino: 'Cassino - GGR',
+            bonus: 'Cálculo - bônus convertidos'
         };
 
         const dates = [...new Set(rawData.map(row => row[columns.date]))].sort();
@@ -897,7 +896,7 @@
 
         rawData.forEach(row => {
             const club = row[columns.club];
-            if (!club) return; // Ignora linhas sem nome de clube
+            if (!club) return; 
 
             const date = row[columns.date];
             const dateIndex = dates.indexOf(date);
@@ -979,7 +978,7 @@
         };
     }
     
-    // Função para buscar e processar dados
+    // Função para buscar e processar dados ( COM FILTRO DE DATA )
     async function fetchData() {
       try {
         showNotification('Carregando dados...', 'info');
@@ -993,7 +992,18 @@
         
         const csvData = await fetchSpreadsheetData();
         const rawData = await processCSVData(csvData);
-        dashboardData = transformData(rawData);
+
+        // Lógica de filtro de data
+        const dataInicio = new Date(document.getElementById('filtroInicio').value + 'T00:00:00');
+        const dataFim = new Date(document.getElementById('filtroFim').value + 'T23:59:59');
+
+        const dadosFiltradosPorData = rawData.filter(row => {
+            const rowDate = new Date(row.DATA + 'T00:00:00');
+            return rowDate >= dataInicio && rowDate <= dataFim;
+        });
+
+        // Passa apenas os dados já filtrados pela data para serem transformados
+        dashboardData = transformData(dadosFiltradosPorData);
 
         if (!dashboardData) {
             throw new Error("A transformação dos dados falhou.");
@@ -1216,8 +1226,10 @@
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-      document.getElementById('filtroInicio').value = yesterday.toISOString().split('T')[0];
-      document.getElementById('filtroFim').value = yesterday.toISOString().split('T')[0];
+      
+      const yesterdayString = yesterday.toISOString().split('T')[0];
+      document.getElementById('filtroInicio').value = yesterdayString;
+      document.getElementById('filtroFim').value = yesterdayString;
       
       // Configurar eventos
       document.getElementById('btnAplicar').addEventListener('click', fetchData);
@@ -1228,22 +1240,23 @@
       document.getElementById('btnOntem').addEventListener('click', function() {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        document.getElementById('filtroInicio').value = yesterday.toISOString().split('T')[0];
-        document.getElementById('filtroFim').value = yesterday.toISOString().split('T')[0];
+        const yesterdayString = yesterday.toISOString().split('T')[0];
+        document.getElementById('filtroInicio').value = yesterdayString;
+        document.getElementById('filtroFim').value = yesterdayString;
         fetchData();
       });
       document.getElementById('btnUltimos7').addEventListener('click', function() {
         const today = new Date();
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(today.getDate() - 7);
         document.getElementById('filtroInicio').value = sevenDaysAgo.toISOString().split('T')[0];
         document.getElementById('filtroFim').value = today.toISOString().split('T')[0];
         fetchData();
       });
       document.getElementById('btnUltimos30').addEventListener('click', function() {
         const today = new Date();
-        const thirtyDaysAgo = new Date(today);
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
         document.getElementById('filtroInicio').value = thirtyDaysAgo.toISOString().split('T')[0];
         document.getElementById('filtroFim').value = today.toISOString().split('T')[0];
         fetchData();
