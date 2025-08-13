@@ -992,14 +992,13 @@
             });
 
             const csvData = await fetchSpreadsheetData();
-            const rawData = await processCSVData(csvData);
-            
+            let rawData = await processCSVData(csvData);
+
             const dataInicio = new Date(document.getElementById('filtroInicio').value + 'T00:00:00');
             const dataFim = new Date(document.getElementById('filtroFim').value + 'T23:59:59');
 
             const dadosFiltradosPorData = rawData.filter(row => {
                 const rowDate = new Date(row.DATA + 'T00:00:00');
-                // Apenas inclui a linha se a data for válida E estiver no intervalo
                 return rowDate && !isNaN(rowDate) && rowDate >= dataInicio && rowDate <= dataFim;
             });
 
