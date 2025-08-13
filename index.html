@@ -2,17 +2,16 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Relatório dos clubes</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Relatório dos clubes — com Relatório de Bugs</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 <style>
 :root{
   --bg:#0e1621;--bg2:#0b1926;--card:#101f2d;--card2:#0f2130;
-  --txt:#e9f3ff;--muted:#98a9b7;--accent:#49b6ff;
-  --good:#28d07f;--bad:#ff5c5c;--border:rgba(255,255,255,.07);
-  --shadow:0 10px 30px rgba(0,0,0,.35)
+  --txt:#e9f3ff;--muted:#98a9b7;--accent:#49b6ff;--good:#28d07f;--bad:#ff5c5c;
+  --border:rgba(255,255,255,.07);--shadow:0 10px 30px rgba(0,0,0,.35)
 }
 *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
 body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--txt)}
@@ -20,6 +19,7 @@ body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(
 header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
 header h1{margin:0;font-size:28px;font-weight:900;display:flex;gap:10px;align-items:center}
 header .sub{color:var(--muted);font-weight:600}
+
 .panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
 .controls{padding:16px 16px 10px;margin-bottom:12px}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
@@ -32,8 +32,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 
 .btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
 .btn-ghost{background:#0e2c43;border:1px solid rgba(73,182,255,.35);color:var(--accent)}
 .btn-apply{background:#133822;border:1px solid rgba(40,208,127,.35);color:#bfffe1}
-.insights{padding:10px 14px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start}
-.chip{background:#0b2435;border:1px solid var(--border);padding:8px 10px;border-radius:12px;color:var(--muted);font-weight:700}
+
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px}
 .kpi{padding:12px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));position:relative}
 .kpi:before{content:'';position:absolute;left:0;top:0;height:100%;width:4px;background:var(--accent)}
@@ -41,6 +40,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 
 .kpi .value{font-size:22px;font-weight:900;margin:8px 0 2px}
 .kpi .var{font-weight:900;font-size:12px}
 .up{color:var(--good)}.down{color:var(--bad)}.muted{color:var(--muted)}
+
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:10px;grid-auto-rows:380px;margin-bottom:12px}
 .card{padding:12px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
 .card h3{margin:0 0 8px;color:var(--accent);display:flex;gap:8px;align-items:center}
@@ -49,95 +49,77 @@ input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 
 .loader.show{display:flex}
 .spinner{width:36px;height:36px;border:4px solid rgba(255,255,255,.12);border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ranking-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.ranking-head .left{display:flex;gap:12px;align-items:center}
-table{width:100%;border-collapse:separate;border-spacing:0 8px}
-thead th{color:var(--muted);font-size:.85rem;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;text-align:left}
-tbody tr{background:rgba(255,255,255,.03);border:1px solid var(--border);cursor:pointer}
-tbody td{padding:10px 10px}
-tbody tr:hover{background:rgba(73,182,255,.08)}
-.delta.up{color:var(--good)}.delta.down{color:var(--bad)}.delta.flat{color:var(--muted)}
-.notification{position:fixed;right:16px;bottom:16px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;opacity:0;transform:translateY(12px);transition:all .2s}
-.notification.show{opacity:1;transform:translateY(0)}
-.notification.success{border-left-color:var(--good)}.notification.error{border-left-color:var(--bad)}
+
+/* Debug Panel */
+.debug{position:fixed;left:0;right:0;bottom:0;background:#0b2435;border-top:1px solid var(--border);max-height:38vh;display:flex;flex-direction:column}
+.debug header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px}
+.debug header h3{margin:0;color:#ffc46b;font-size:14px;display:flex;gap:8px;align-items:center}
+.debug .actions{display:flex;gap:8px}
+.debug pre{margin:0;padding:10px 12px;overflow:auto;white-space:pre-wrap;background:#081b2a;color:#dbe9ff;border-top:1px solid var(--border);flex:1}
+.tag{display:inline-block;padding:2px 6px;border-radius:10px;border:1px solid var(--border);background:#09253a;color:#b5cbe0;font-size:12px;font-weight:800;margin-right:6px}
 </style>
 </head>
 <body>
-<div class="container" role="application">
+<div class="container">
   <header>
     <div>
-      <h1><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Relatório dos clubes</h1>
+      <h1><i class="fa-solid fa-chart-line"></i> Relatório dos clubes</h1>
       <div class="sub">Visão executiva com comparação automática e ranking dinâmico</div>
     </div>
-    <div class="sub" id="ultimaAtualizacao" aria-live="polite">—</div>
+    <div class="sub" id="ultimaAtualizacao">—</div>
   </header>
 
-  <div class="panel controls" id="controls">
-    <div class="row" role="group" aria-label="Período">
-      <div class="field"><label for="filtroInicio">De</label><input type="date" id="filtroInicio"/></div>
-      <div class="field"><label for="filtroFim">até</label><input type="date" id="filtroFim"/></div>
+  <div class="panel controls">
+    <div class="row">
+      <div class="field"><label for="filtroInicio">De</label><input type="date" id="filtroInicio"></div>
+      <div class="field"><label for="filtroFim">até</label><input type="date" id="filtroFim"></div>
       <button class="btn btn-ghost" id="btnOntem" type="button"><i class="fa-solid fa-calendar-day"></i> Ontem</button>
       <button class="btn btn-ghost" id="btnUltimos7" type="button"><i class="fa-solid fa-calendar-week"></i> Últimos 7 dias</button>
       <button class="btn btn-ghost" id="btnUltimos30" type="button"><i class="fa-solid fa-calendar-alt"></i> Últimos 30 dias</button>
-      <div class="field" style="margin-left:10px">
-        <label for="chkComparar" style="display:flex;align-items:center;gap:6px">
-          <input type="checkbox" id="chkComparar"> Comparar c/ período anterior
-        </label>
-      </div>
+      <label style="display:flex;align-items:center;gap:6px;margin-left:10px"><input type="checkbox" id="chkComparar"> Comparar c/ período anterior</label>
       <button class="btn btn-apply" id="btnAplicar" type="button"><i class="fa-solid fa-filter"></i> Aplicar</button>
     </div>
-
     <div class="row">
-      <div class="field grow"><label for="searchClub">Pesquisar clube</label><input type="text" id="searchClub" placeholder="Digite para filtrar opções..."></div>
+      <div class="field grow"><label for="searchClub">Pesquisar clube</label><input id="searchClub" placeholder="Digite para filtrar opções..."></div>
     </div>
-
     <div class="row" style="gap:16px">
       <div class="field grow"><label for="filtroClubeA">Clube A</label><select id="filtroClubeA"></select></div>
       <div class="field grow"><label for="filtroClubeB">Clube B</label><select id="filtroClubeB"></select></div>
     </div>
-
     <div class="row" style="gap:16px">
-      <div class="field"><label for="eliminarSuprema" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="eliminarSuprema"> Eliminar Clubes Suprema</label></div>
-      <div class="field"><label for="eliminarToni" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="eliminarToni"> Eliminar TONI</label></div>
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="eliminarSuprema"> Eliminar Clubes Suprema</label>
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="eliminarToni"> Eliminar TONI</label>
       <button class="btn btn-ghost" id="btnDarkMode" type="button"><i class="fa-solid fa-moon"></i> Modo Claro/Escuro</button>
       <button class="btn btn-ghost" id="btnAtualizar" type="button"><i class="fa-solid fa-sync"></i> Atualizar</button>
       <button class="btn btn-ghost" id="btnExportar" type="button"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
       <button class="btn btn-ghost" id="btnImportar" type="button"><i class="fa-solid fa-file-arrow-up"></i> Importar CSV</button>
-      <input id="fileCsv" type="file" accept=".csv,text/csv" style="display:none"/>
+      <input id="fileCsv" type="file" accept=".csv,text/csv" style="display:none">
     </div>
   </div>
 
-  <div class="panel insights" id="insights" aria-live="polite">
-    <div class="chip" id="chipResumo">Gerando insights…</div>
-  </div>
-
-  <div class="kpis" role="region" aria-label="Indicadores">
+  <div class="kpis">
     <div class="kpi" id="kpi-ftd"><div class="title"><i class="fa-solid fa-user-plus"></i> FTD</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
     <div class="kpi" id="kpi-dep"><div class="title"><i class="fa-solid fa-coins"></i> Depósitos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
     <div class="kpi" id="kpi-ggr"><div class="title"><i class="fa-solid fa-chart-line"></i> GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
-    <div class="kpi" id="kpi-sb"><div class="title"><i class="fa-solid fa-futbol"></i> Sportsbook GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
-    <div class="kpi" id="kpi-cs"><div class="title"><i class="fa-solid fa-dice"></i> Cassino GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
-    <div class="kpi" id="kpi-bn"><div class="title"><i class="fa-solid fa-gift"></i> Bônus Convertidos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
-    <div class="kpi" id="kpi-margem"><div class="title"><i class="fa-solid fa-percentage"></i> Margem</div><div class="value">0%</div><div class="var muted">—</div></div>
-    <div class="kpi" id="kpi-ticket"><div class="title"><i class="fa-solid fa-ticket"></i> Ticket Médio de Depósito</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
+    <div class="kpi" id="kpi-sb"><div class="title"><i class="fa-solid fa-futbol"></i> Sportsbook</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
+    <div class="kpi" id="kpi-cs"><div class="title"><i class="fa-solid fa-dice"></i> Cassino</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
+    <div class="kpi" id="kpi-bn"><div class="title"><i class="fa-solid fa-gift"></i> Bônus</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
   </div>
 
   <div class="grid">
-    <div class="card"><h3 id="tComp"><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartComparativo"></canvas></div></div>
-    <div class="card"><h3 id="tGgr"><i class="fa-solid fa-chart-line"></i> Evolução do GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartGGR"></canvas></div></div>
-    <div class="card"><h3 id="tDep"><i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
-    <div class="card"><h3 id="tFtd"><i class="fa-solid fa-user-plus"></i> Evolução do FTD</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartFTD"></canvas></div></div>
-    <div class="card"><h3 id="tSb"><i class="fa-solid fa-futbol"></i> Evolução do Sportsbook</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartSportsbook"></canvas></div></div>
-    <div class="card"><h3 id="tCs"><i class="fa-solid fa-dice"></i> Evolução do Cassino</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartCassino"></canvas></div></div>
-    <div class="card"><h3><i class="fa-solid fa-braille"></i> Correlação Depósitos × GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartScatter"></canvas></div></div>
+    <div class="card"><h3><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartComparativo"></canvas></div></div>
+    <div class="card"><h3><i class="fa-solid fa-chart-line"></i> Evolução do GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartGGR"></canvas></div></div>
+    <div class="card"><h3><i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
+    <div class="card"><h3><i class="fa-solid fa-user-plus"></i> Evolução do FTD</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartFTD"></canvas></div></div>
+    <div class="card"><h3><i class="fa-solid fa-futbol"></i> Evolução do Sportsbook</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartSportsbook"></canvas></div></div>
+    <div class="card"><h3><i class="fa-solid fa-dice"></i> Evolução do Cassino</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartCassino"></canvas></div></div>
   </div>
 
   <div class="card">
     <div class="ranking-head">
       <div class="left">
         <h3><i class="fa-solid fa-trophy"></i> Ranking de Clubes</h3>
-        <div class="field">
-          <label for="selRanking">Métrica</label>
+        <div class="field"><label for="selRanking">Métrica</label>
           <select id="selRanking">
             <option value="depositos">Depósitos</option>
             <option value="ftd">FTD</option>
@@ -150,466 +132,430 @@ tbody tr:hover{background:rgba(73,182,255,.08)}
       </div>
       <div class="sub" id="rankingInfo">Top 15 — GGR</div>
     </div>
-    <div class="loader"><div class="spinner"></div></div>
-    <table id="rankingTable">
+    <table id="rankingTable" style="width:100%">
       <thead><tr><th>#</th><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead>
       <tbody><tr><td colspan="4">Carregando…</td></tr></tbody>
     </table>
   </div>
 </div>
 
-<div class="notification" id="notification"><i class="fas fa-info-circle"></i><span id="notificationText"></span></div>
+<!-- Painel de Debug -->
+<div class="debug" id="dbg">
+  <header>
+    <h3><i class="fa-solid fa-bug"></i> Relatório de Bugs / Diagnóstico</h3>
+    <div class="actions">
+      <span class="tag" id="tagStatus">status: —</span>
+      <button class="btn btn-ghost" id="btnCopyLog" type="button"><i class="fa-regular fa-clipboard"></i> Copiar Log</button>
+      <button class="btn btn-ghost" id="btnDownloadLog" type="button"><i class="fa-solid fa-download"></i> Baixar Log</button>
+      <button class="btn btn-apply" id="btnToggleDbg" type="button"><i class="fa-solid fa-eye-slash"></i> Ocultar</button>
+    </div>
+  </header>
+  <pre id="logBox">⏳ Aguardando inicialização…</pre>
+</div>
 
 <script>
-/* ===== CONFIG ===== */
-const SPREADSHEET_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
-const CLUBES_SUPREMA=['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
-const CLUBE_TONI='crisslots123@gmail.com';
-const TOP_N=15;
+/* ================== DEBUG/LOGGER ================== */
+const LOG = [];
+const logBox = () => document.getElementById('logBox');
+function pushLog(kind, msg, data) {
+  const line = { ts: new Date().toISOString(), kind, msg, data: (data===undefined?null:data) };
+  LOG.push(line);
+  const pretty = (o)=> {
+    try { return JSON.stringify(o, null, 2); } catch(e){ return String(o); }
+  };
+  const t = `[${line.ts}] ${kind.toUpperCase()} — ${msg}` + (data ? `\n${pretty(data)}` : '');
+  const box = logBox();
+  box.textContent += (box.textContent ? '\n' : '') + t;
+  box.scrollTop = box.scrollHeight;
+  const tag = document.getElementById('tagStatus');
+  tag.textContent = 'status: ' + kind;
+}
+window.onerror = function (msg, src, line, col, err) {
+  pushLog('error', `window.onerror: ${msg} @ ${src}:${line}:${col}`, (err && err.stack) ? err.stack : null);
+};
+window.onunhandledrejection = function (ev) {
+  pushLog('error', 'Promise unhandled rejection', ev.reason ? (ev.reason.stack || ev.reason) : ev);
+};
+document.getElementById('btnCopyLog').onclick = function(){
+  const all = LOG.map(l => `[${l.ts}] ${l.kind.toUpperCase()} — ${l.msg}${l.data?'\n'+(typeof l.data==='string'?l.data:JSON.stringify(l.data,null,2)):''}`).join('\n');
+  navigator.clipboard.writeText(all).then(()=>pushLog('info','Log copiado para a área de transferência'));
+};
+document.getElementById('btnDownloadLog').onclick = function(){
+  const blob = new Blob([JSON.stringify(LOG,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `relatorio_bugs_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  pushLog('info','Log baixado');
+};
+document.getElementById('btnToggleDbg').onclick = function(){
+  const dbg = document.getElementById('dbg');
+  const hidden = dbg.style.maxHeight === '0px';
+  dbg.style.maxHeight = hidden ? '38vh' : '0px';
+  this.innerHTML = hidden ? '<i class="fa-solid fa-eye-slash"></i> Ocultar' : '<i class="fa-solid fa-eye"></i> Mostrar';
+};
+pushLog('info','Debug pronto');
 
-/* ===== STATE/UTILS ===== */
-let charts={},allRows=[],baseAtual=[],baseAnterior=[],rowsAtual=[],rowsAnterior=[],aggAtual=null,aggAnterior=null,COLS=null;
-const $=id=>document.getElementById(id);
-const showLoaders=(on)=>document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',!!on));
-function note(msg,type){const n=$('notification'),t=$('notificationText'),i=n.querySelector('i');n.className='notification';n.classList.add('show',type||'info');i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':'fas fa-info-circle';t.textContent=msg;setTimeout(()=>n.classList.remove('show'),3000)}
-const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0);
-const num=v=>Number.isFinite(v)?v:0;
+/* ================== CONFIG ================== */
+const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
+const CLUBES_SUPREMA = ['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
+const CLUBE_TONI = 'crisslots123@gmail.com';
+const TOP_N = 15;
 
-/* ===== PARSERS ===== */
+/* ================== STATE ================== */
+let charts = {};
+let allRows = [];
+let COLS = null;
+let baseAtual=[], baseAnterior=[], rowsAtual=[], rowsAnterior=[];
+let aggAtual=null, aggAnterior=null;
+
+/* ================== HELPERS ================== */
+const $ = (id)=>document.getElementById(id);
+const money = (n)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0);
+const num = (v)=>Number.isFinite(v)?v:0;
+const sanSeries = (a)=> (a||[]).map(v=> num(v));
+const sanLabels = (a)=> (a||[]).map(v=> String(v||'').trim());
+function showLoaders(on){
+  document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',!!on));
+}
+
+/* ================== PARSE ================== */
 function parseCurrency(v){
-  if(typeof v==='number')return v;
-  if(v==null)return 0;
-  var s=String(v).trim();if(!s)return 0;
+  if(typeof v==='number') return v;
+  if(v==null) return 0;
+  let s=String(v).trim(); if(!s) return 0;
   s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-');
-  var par=/^\(.*\)$/.test(s);if(par)s=s.replace(/[()]/g,'');
+  const par=/^\(.*\)$/.test(s); if(par) s=s.replace(/[()]/g,'');
   s=s.replace(/[^0-9,.\-]/g,'');
-  var c=s.indexOf(',')>-1,d=s.indexOf('.')>-1;
-  if(c&&d){var lc=s.lastIndexOf(','),ld=s.lastIndexOf('.');var dec=lc>ld?',':'.',th=dec===','?'.':',';s=s.split(th).join('');if(dec===',')s=s.replace(',','.')}
-  else if(c){s=s.split('.').join('');s=s.replace(',','.')}
-  var n=parseFloat(s);if(isNaN(n))n=0;if(par)n=-Math.abs(n);return n
+  const c=s.includes(','), d=s.includes('.');
+  if(c&&d){
+    const lc=s.lastIndexOf(','), ld=s.lastIndexOf('.');
+    const dec = lc>ld ? ',' : '.';
+    const th  = dec===',' ? '.' : ',';
+    s=s.split(th).join('');
+    if(dec===',') s=s.replace(',','.');
+  }else if(c){ s=s.split('.').join(''); s=s.replace(',','.'); }
+  let n=parseFloat(s); if(isNaN(n)) n=0; if(par) n=-Math.abs(n); return n;
 }
 function parseDateStr(s){
-  if(!s)return null;var str=String(s).trim();
-  if(/^\d{4}-\d{2}-\d{2}$/.test(str))return new Date(str+'T00:00:00');
-  if(/^\d{2}\/\d{2}\/\d{4}$/.test(str)){var a=str.split('/');return new Date(a[2]+'-'+a[1]+'-'+a[0]+'T00:00:00')}
-  var d=new Date(str);return isNaN(d)?null:d
+  if(!s) return null;
+  const str=String(s).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str+'T00:00:00');
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(str)){ const [d,m,y]=str.split('/'); return new Date(`${y}-${m}-${d}T00:00:00`); }
+  const d=new Date(str); return isNaN(d)? null : d;
 }
 
-/* ===== COLUNAS ===== */
+/* ================== COLUNAS ================== */
 function detectColumns(headers){
-  function norm(s){return (s||'').toString().trim().toLowerCase()}
-  function find(fn){for(var i=0;i<headers.length;i++){if(fn(norm(headers[i])))return headers[i]}return null}
-  var ggrCalcHeader=find(function(n){return n.indexOf('ggr')>-1&&(n.indexOf('cálculo')>-1||n.indexOf('calculo')>-1||n.indexOf('total')>-1)&&n.indexOf('sportsbook')===-1&&n.indexOf('cassino')===-1});
-  var m={
-    date:find(function(n){return n.indexOf('data')>-1}),
-    club:find(function(n){return n.indexOf('usuário - nome de usuário')>-1||n.indexOf('nome de usuário')>-1||n.indexOf('usuario - nome')>-1||n.indexOf('clube')>-1||n==='user'||n.indexOf('usuario')>-1}),
-    ftd:find(function(n){return n.indexOf('ftd-montante')>-1||n.indexOf('usuário - ftd')>-1||n==='ftd'}),
-    dep:find(function(n){return n.indexOf('usuário - depósitos')>-1||n.indexOf('depositos')>-1||n.indexOf('depósitos')>-1}),
-    ggrCalc:ggrCalcHeader,
-    sb:find(function(n){return n.indexOf('sportsbook')>-1&&n.indexOf('ggr')>-1}),
-    cs:find(function(n){return (n.indexOf('cassino')>-1||n.indexOf('casino')>-1)&&n.indexOf('ggr')>-1}),
-    hab:find(function(n){return n.indexOf('jogos de habilidade')>-1||n.indexOf('habilidade')>-1||n.indexOf('w/l')>-1||n.indexOf('win/loss')>-1}),
-    bonus:find(function(n){return (n.indexOf('bônus')>-1||n.indexOf('bonus')>-1)&&n.indexOf('convert')>-1})
+  pushLog('info','Detectando colunas', headers);
+  const norm = s => (s||'').toString().trim().toLowerCase();
+  const find = fn => headers.find(h=> fn(norm(h))) || null;
+  const ggrCalcHeader = find(n => n.includes('ggr') && (n.includes('cálculo')||n.includes('calculo')||n.includes('total')) && !n.includes('sportsbook') && !n.includes('cassino'));
+  const m = {
+    date: find(n=> n.includes('data')),
+    club: find(n=> n.includes('usuário - nome de usuário') || n.includes('nome de usuário') || n.includes('usuario - nome') || n.includes('clube') || n==='user' || n.includes('usuario')),
+    ftd:  find(n=> n.includes('ftd-montante') || n.includes('usuário - ftd') || n==='ftd'),
+    dep:  find(n=> n.includes('usuário - depósitos') || n.includes('depositos') || n.includes('depósitos')),
+    ggrCalc: ggrCalcHeader,
+    sb:   find(n=> n.includes('sportsbook') && n.includes('ggr')),
+    cs:   find(n=> (n.includes('cassino')||n.includes('casino')) && n.includes('ggr')),
+    hab:  find(n=> n.includes('habilidade') || n.includes('jogos de habilidade') || n.includes('w/l') || n.includes('win/loss')),
+    bonus:find(n=> (n.includes('bônus')||n.includes('bonus')) && n.includes('convert'))
   };
-  if(!m.date||!m.club)throw new Error('Não encontrei colunas obrigatórias (DATA/CLUBE).');
-  return m
+  if(!m.date || !m.club) throw new Error('Colunas mínimas não encontradas (DATA/CLUBE).');
+  pushLog('info','Colunas detectadas', m);
+  return m;
 }
 
-/* ===== FETCH ===== */
+/* ================== FETCH ================== */
 async function fetchAll(){
-  const res=await fetch(SPREADSHEET_URL,{cache:'no-store'});
-  if(!res.ok)throw new Error('Falha ao acessar a planilha: '+res.status);
-  const txt=await res.text();
-  const parsed=await new Promise(function(resolve,reject){
-    Papa.parse(txt,{header:true,skipEmptyLines:true,dynamicTyping:false,
-      complete:function(r){if(r.errors&&r.errors.length)reject(r.errors);else resolve(r.data)},
-      error:reject
-    })
-  });
-  if(!parsed.length)throw new Error('CSV vazio.');
-  COLS=detectColumns(Object.keys(parsed[0]||{}));
-  return parsed
+  pushLog('step','Fetch CSV', SPREADSHEET_URL);
+  const res = await fetch(SPREADSHEET_URL,{cache:'no-store'});
+  if(!res.ok){ pushLog('error','HTTP não OK', res.status); throw new Error('HTTP '+res.status); }
+  const text = await res.text();
+  pushLog('step','CSV baixado', {bytes:text.length});
+  const parsed = await new Promise((resolve,reject)=>Papa.parse(text,{
+    header:true, skipEmptyLines:true, dynamicTyping:false,
+    complete:r=> r.errors.length ? reject(r.errors) : resolve(r.data),
+    error:reject
+  }));
+  pushLog('step','CSV parseado', {rows:parsed.length});
+  if(!parsed.length) throw new Error('CSV vazio');
+  COLS = detectColumns(Object.keys(parsed[0]||{}));
+  return parsed;
 }
 
-/* ===== GGR ===== */
-function computeGGR(row,c){
-  var sb=parseCurrency(row[c.sb]),cs=parseCurrency(row[c.cs]),hab=parseCurrency(row[c.hab]);
-  var sum=num(sb)+num(cs)+num(hab);
-  if(c.ggrCalc){var raw=parseCurrency(row[c.ggrCalc]);var close=sum===0?Math.abs(raw)<1e-6:Math.abs((raw-sum)/sum)<=0.05;if(isFinite(raw)&&close)return raw}
-  return sum
+/* ================== GGR ================== */
+function computeGGR(row, c){
+  const sb=parseCurrency(row[c.sb]); const cs=parseCurrency(row[c.cs]); const hab=parseCurrency(row[c.hab]);
+  const sum = num(sb)+num(cs)+num(hab);
+  if(c.ggrCalc){
+    const raw = parseCurrency(row[c.ggrCalc]);
+    const close = (sum===0) ? Math.abs(raw)<1e-6 : Math.abs((raw-sum)/sum)<=0.05;
+    if(isFinite(raw) && close) return raw;
+  }
+  return sum;
 }
 
-/* ===== TRANSFORM ===== */
+/* ================== TRANSFORM ================== */
 function transform(rows){
-  if(!rows.length)return null;
-  var c={date:COLS.date,club:COLS.club,ftd:COLS.ftd,dep:COLS.dep,ggrCalc:COLS.ggrCalc,sb:COLS.sb,cs:COLS.cs,hab:COLS.hab,bonus:COLS.bonus};
-  var dates=[].concat(Array.from(new Set(rows.map(function(r){return r[c.date]})))).sort(function(a,b){return parseDateStr(a)-parseDateStr(b)});
-  var totals={ftd:0,dep:0,ggr:0,sb:0,cs:0,bonus:0};
-  var series={ggr:Array(dates.length).fill(0),dep:Array(dates.length).fill(0),ftd:Array(dates.length).fill(0),sb:Array(dates.length).fill(0),cs:Array(dates.length).fill(0)};
-  rows.forEach(function(r){
-    var di=dates.indexOf(r[c.date]);
-    var vFTD=parseCurrency(r[c.ftd]),vDep=parseCurrency(r[c.dep]),vSB=parseCurrency(r[c.sb]),vCS=parseCurrency(r[c.cs]),vGGR=computeGGR(r,c),vBN=parseCurrency(r[c.bonus]);
-    totals.ftd+=num(vFTD);totals.dep+=num(vDep);totals.sb+=num(vSB);totals.cs+=num(vCS);totals.ggr+=num(vGGR);totals.bonus+=num(vBN);
-    if(di>-1){series.ggr[di]+=num(vGGR);series.dep[di]+=num(vDep);series.ftd[di]+=num(vFTD);series.sb[di]+=num(vSB);series.cs[di]+=num(vCS)}
+  if(!rows.length) return null;
+  const c={ date:COLS.date, club:COLS.club, ftd:COLS.ftd, dep:COLS.dep, ggrCalc:COLS.ggrCalc, sb:COLS.sb, cs:COLS.cs, hab:COLS.hab, bonus:COLS.bonus };
+  const dates = [...new Set(rows.map(r=>r[c.date]))].sort((a,b)=> parseDateStr(a)-parseDateStr(b));
+  const totals={ftd:0,dep:0,ggr:0,sb:0,cs:0,bonus:0};
+  const series={ggr:Array(dates.length).fill(0),dep:Array(dates.length).fill(0),ftd:Array(dates.length).fill(0),sb:Array(dates.length).fill(0),cs:Array(dates.length).fill(0)};
+  rows.forEach(r=>{
+    const di=dates.indexOf(r[c.date]);
+    const vFTD=parseCurrency(r[c.ftd]);
+    const vDep=parseCurrency(r[c.dep]);
+    const vSB =parseCurrency(r[c.sb]);
+    const vCS =parseCurrency(r[c.cs]);
+    const vGGR=computeGGR(r,c);
+    const vBN =parseCurrency(r[c.bonus]);
+
+    totals.ftd+=num(vFTD); totals.dep+=num(vDep); totals.sb+=num(vSB); totals.cs+=num(vCS); totals.ggr+=num(vGGR); totals.bonus+=num(vBN);
+    if(di>-1){ series.ggr[di]+=num(vGGR); series.dep[di]+=num(vDep); series.ftd[di]+=num(vFTD); series.sb[di]+=num(vSB); series.cs[di]+=num(vCS); }
   });
   return {
-    kpis:{ftd:totals.ftd,depositos:totals.dep,ggr:totals.ggr,sportsbook:totals.sb,cassino:totals.cs,bonus:totals.bonus},
+    kpis:{ ftd:totals.ftd, depositos:totals.dep, ggr:totals.ggr, sportsbook:totals.sb, cassino:totals.cs, bonus:totals.bonus },
     charts:{
-      comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[totals.ftd,totals.dep,totals.ggr,totals.sb,totals.cs,totals.bonus]},
-      ggr:{labels:dates,data:series.ggr},
-      depositos:{labels:dates,data:series.dep},
-      ftd:{labels:dates,data:series.ftd},
-      sportsbook:{labels:dates,data:series.sb},
-      cassino:{labels:dates,data:series.cs}
+      comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'], dataA:[totals.ftd, totals.dep, totals.ggr, totals.sb, totals.cs, totals.bonus]},
+      ggr:{labels:dates, data:series.ggr},
+      depositos:{labels:dates, data:series.dep},
+      ftd:{labels:dates, data:series.ftd},
+      sportsbook:{labels:dates, data:series.sb},
+      cassino:{labels:dates, data:series.cs}
     }
-  }
+  };
 }
-
-function sumByClub(rows,metric){
-  var c={club:COLS.club,ftd:COLS.ftd,depositos:COLS.dep,ggrCalc:COLS.ggrCalc,sb:COLS.sb,cs:COLS.cs,hab:COLS.hab,bonus:COLS.bonus};
-  var map={};
-  rows.forEach(function(r){
-    var club=r[c.club]||'(Clube não informado)';var v=0;
-    if(metric==='depositos')v=parseCurrency(r[c.depositos]);
-    else if(metric==='ftd')v=parseCurrency(r[c.ftd]);
-    else if(metric==='sportsbook')v=parseCurrency(r[c.sb]);
-    else if(metric==='cassino')v=parseCurrency(r[c.cs]);
-    else if(metric==='bonus')v=parseCurrency(r[c.bonus]);
-    else if(metric==='ggr')v=computeGGR(r,c);
-    map[club]=(map[club]||0)+num(v)
+function sumByClub(rows, metric){
+  const c={ club:COLS.club, ftd:COLS.ftd, depositos:COLS.dep, ggrCalc:COLS.ggrCalc, sb:COLS.sb, cs:COLS.cs, hab:COLS.hab, bonus:COLS.bonus };
+  const map={};
+  rows.forEach(r=>{
+    const club=r[c.club]||'(Clube não informado)';
+    let v=0;
+    if(metric==='depositos') v=parseCurrency(r[c.depositos]);
+    else if(metric==='ftd') v=parseCurrency(r[c.ftd]);
+    else if(metric==='sportsbook') v=parseCurrency(r[c.sb]);
+    else if(metric==='cassino') v=parseCurrency(r[c.cs]);
+    else if(metric==='bonus') v=parseCurrency(r[c.bonus]);
+    else if(metric==='ggr') v=computeGGR(r,c);
+    map[club]=(map[club]||0)+num(v);
   });
-  return map
+  return map;
 }
 
-function seriesPorClube(rows,metric){
-  var c={date:COLS.date,ftd:COLS.ftd,dep:COLS.dep,ggrCalc:COLS.ggrCalc,sb:COLS.sb,cs:COLS.cs,hab:COLS.hab};
-  var dates=[].concat(Array.from(new Set(rows.map(function(r){return r[c.date]})))).sort(function(a,b){return parseDateStr(a)-parseDateStr(b)});
-  var serie=Array(dates.length).fill(0);
-  rows.forEach(function(r){
-    var di=dates.indexOf(r[c.date]);if(di<0)return;
-    var v=0;
-    if(metric==='depositos')v=parseCurrency(r[c.dep]);
-    else if(metric==='ftd')v=parseCurrency(r[c.ftd]);
-    else if(metric==='sportsbook')v=parseCurrency(r[c.sb]);
-    else if(metric==='cassino')v=parseCurrency(r[c.cs]);
-    else if(metric==='ggr')v=computeGGR(r,c);
-    serie[di]+=num(v)
-  });
-  return {labels:dates,data:serie}
-}
-
-/* ===== INSIGHTS/KPI ===== */
-function gerarInsights(){
-  if(!aggAtual){$('chipResumo').textContent='Sem dados no período.';return}
-  var compOn=$('chkComparar').checked&&aggAnterior;
-  function d(a,b){return !compOn?null:a-((b||0))}
-  var dDep=d(aggAtual.kpis.depositos,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.depositos:0);
-  var dGgr=d(aggAtual.kpis.ggr,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.ggr:0);
-  var dFtd=d(aggAtual.kpis.ftd,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.ftd:0);
-
-  var metric=$('selRanking').value;
-  var curMap=sumByClub(rowsAtual,metric);
-  var prevMap=$('chkComparar').checked?sumByClub(rowsAnterior,metric):{};
-  var linhas=Object.keys(curMap).map(function(clube){
-    var valor=curMap[clube];var prev=prevMap[clube]||0;return {clube:clube,delta:valor-prev}
-  }).sort(function(a,b){return b.delta-a.delta});
-  var top=linhas[0], worst=linhas[linhas.length-1];
-
-  function mk(v){return money(Math.abs(v||0))}
-  function dir(v){return v>=0?'↑':'↓'}
-  var txt='Depósitos '+(!compOn?'—':(dir(dDep)+' '+mk(dDep)))+' | GGR '+(!compOn?'—':(dir(dGgr)+' '+mk(dGgr)))+' | FTD '+(!compOn?'—':(dir(dFtd)+' '+mk(dFtd)))+'.';
-  if(top&&worst){txt+=' Destaques: ↑ '+top.clube+' (maior crescimento em '+metric+'); ↓ '+worst.clube+' (maior queda).'}
-  $('chipResumo').textContent=txt
-}
-
-function setKPI(id,val,prev,metricKey){
-  var el=$(id);
-  el.querySelector('.value').textContent=metricKey==='margem'?(isFinite(val)?(val.toFixed(2)+'%'):'—'):money(val);
-  var varEl=el.querySelector('.var');
-  if(metricKey==='margem'||metricKey==='ticket'){
-    if(prev==null||!$('chkComparar').checked){varEl.textContent='—';varEl.className='var muted';return}
-    var delta=val-prev;varEl.textContent=(delta>=0?'+':'')+(metricKey==='margem'?delta.toFixed(2)+'pp':money(delta));varEl.className='var '+(delta>=0?'up':'down');return
-  }
-  if(!$('chkComparar').checked||prev==null){varEl.textContent='—';varEl.className='var muted';return}
-  var d=val-prev;var pct=prev===0?(val===0?0:100):(d/Math.abs(prev))*100;
-  var positiveGood=metricKey!=='bonus';var good=(d>=0&&positiveGood)||(d<0&&!positiveGood);
-  varEl.textContent=(d>=0?'+':'')+money(d)+' ('+(pct>=0?'+':'')+pct.toFixed(2)+'%)';varEl.className='var '+(good?'up':'down')
-}
-
-function renderKPIs(){
-  setKPI('kpi-ftd',aggAtual.kpis.ftd,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.ftd:null,'ftd');
-  setKPI('kpi-dep',aggAtual.kpis.depositos,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.depositos:null,'depositos');
-  setKPI('kpi-ggr',aggAtual.kpis.ggr,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.ggr:null,'ggr');
-  setKPI('kpi-sb',aggAtual.kpis.sportsbook,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.sportsbook:null,'sportsbook');
-  setKPI('kpi-cs',aggAtual.kpis.cassino,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.cassino:null,'cassino');
-  setKPI('kpi-bn',aggAtual.kpis.bonus,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.bonus:null,'bonus');
-  var margemAtual=aggAtual.kpis.ggr?((aggAtual.kpis.ggr-aggAtual.kpis.bonus)/aggAtual.kpis.ggr)*100:0;
-  var margemAnterior=(aggAnterior&&aggAnterior.kpis&&aggAnterior.kpis.ggr)?((aggAnterior.kpis.ggr-aggAnterior.kpis.bonus)/aggAnterior.kpis.ggr)*100:null;
-  setKPI('kpi-margem',margemAtual,margemAnterior,'margem');
-  var ticketAtual=aggAtual.kpis.ftd?(aggAtual.kpis.depositos/aggAtual.kpis.ftd):0;
-  var ticketAnterior=(aggAnterior&&aggAnterior.kpis&&aggAnterior.kpis.ftd)?(aggAnterior.kpis.depositos/aggAnterior.kpis.ftd):null;
-  setKPI('kpi-ticket',ticketAtual,ticketAnterior,'ticket')
-}
-
-/* ===== CHARTS ===== */
-function destroyCharts(){Object.keys(charts).forEach(function(k){try{charts[k].destroy()}catch(e){}});charts={}}
-function sanSeries(a){return (a||[]).map(function(v){return num(v)})}
-function sanLabels(a){return (a||[]).map(function(v){return String(v||'').trim()})}
-
-function renderCharts(){
-  var textColor='#e9f3ff',gridColor='rgba(255,255,255,.1)';
-  var common={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor}}},scales:{y:{grid:{color:gridColor},ticks:{color:textColor,callback:function(v){return 'R$ '+Number(v).toLocaleString('pt-BR')}}},x:{grid:{display:false},ticks:{color:textColor}}}};
-
-  var ctxComp=$('chartComparativo').getContext('2d');
-  var ctxGGR=$('chartGGR').getContext('2d');
-  var ctxDep=$('chartDepositos').getContext('2d');
-  var ctxFTD=$('chartFTD').getContext('2d');
-  var ctxSB=$('chartSportsbook').getContext('2d');
-  var ctxCS=$('chartCassino').getContext('2d');
-  var ctxSc=$('chartScatter').getContext('2d');
-
-  var clubA=$('filtroClubeA').value, clubB=$('filtroClubeB').value;
-  var compararClubes=!!(clubA||clubB);
-  $('tComp').innerHTML='<i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa'+(compararClubes?' — A vs B':'');
-  $('tGgr').innerHTML='<i class="fa-solid fa-chart-line"></i> Evolução do GGR'+(compararClubes?' — A vs B':'');
-  $('tDep').innerHTML='<i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos'+(compararClubes?' — A vs B':'');
-  $('tFtd').innerHTML='<i class="fa-solid fa-user-plus"></i> Evolução do FTD'+(compararClubes?' — A vs B':'');
-  $('tSb').innerHTML='<i class="fa-solid fa-futbol"></i> Evolução do Sportsbook'+(compararClubes?' — A vs B':'');
-  $('tCs').innerHTML='<i class="fa-solid fa-dice"></i> Evolução do Cassino'+(compararClubes?' — A vs B':'');
-
-  if(charts.comp)charts.comp.destroy();
-  if(compararClubes){
-    var metrics=['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'];
-    function totalClub(rows){var a=transform(rows);return a?a.kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0}}
-    var kA=clubA?totalClub(baseAtual.filter(function(r){return r[COLS.club]===clubA})):{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
-    var kB=clubB?totalClub(baseAtual.filter(function(r){return r[COLS.club]===clubB})):{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
-    charts.comp=new Chart(ctxComp,{type:'bar',data:{labels:metrics,datasets:[
-      {label:clubA||'—',data:sanSeries([kA.ftd,kA.depositos,kA.ggr,kA.sportsbook,kA.cassino,kA.bonus]),backgroundColor:'rgba(73,182,255,.7)',borderColor:'rgba(73,182,255,1)',borderWidth:1},
-      {label:clubB||'—',data:sanSeries([kB.ftd,kB.depositos,kB.ggr,kB.sportsbook,kB.cassino,kB.bonus]),backgroundColor:'rgba(255,184,107,.7)',borderColor:'rgba(255,184,107,1)',borderWidth:1}
-    ]},options:common})
-  }else{
-    var ds=[{label:'Período Atual',data:sanSeries(aggAtual.charts.comparativo.dataA),backgroundColor:'rgba(73,182,255,.72)',borderColor:'rgba(73,182,255,1)',borderWidth:1}];
-    if($('chkComparar').checked&&aggAnterior){
-      ds.push({label:'Período Anterior',data:sanSeries(aggAnterior.charts.comparativo.dataA),backgroundColor:'rgba(159,179,194,.72)',borderColor:'rgba(159,179,194,1)',borderWidth:1})
-    }
-    charts.comp=new Chart(ctxComp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common})
-  }
-
-  function mkSerie(metric){
-    return {
-      atual:{labels:sanLabels(aggAtual.charts[metric].labels),data:sanSeries(aggAtual.charts[metric].data)},
-      anterior:(aggAnterior&&aggAnterior.charts&&aggAnterior.charts[metric])?{labels:sanLabels(aggAnterior.charts[metric].labels),data:sanSeries(aggAnterior.charts[metric].data)}:null,
-      A:seriesPorClube(baseAtual.filter(function(r){return r[COLS.club]===$('filtroClubeA').value}),metric==='depositos'?'depositos':metric),
-      B:seriesPorClube(baseAtual.filter(function(r){return r[COLS.club]===$('filtroClubeB').value}),metric==='depositos'?'depositos':metric)
-    }
-  }
-
-  function makeLine(ctx,key,serie){
-    if(charts[key])charts[key].destroy();
-    if(compararClubes){
-      var ds=[];
-      if($('filtroClubeA').value)ds.push({label:$('filtroClubeA').value,data:sanSeries(serie.A.data),borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true});
-      if($('filtroClubeB').value)ds.push({label:$('filtroClubeB').value,data:sanSeries(serie.B.data),borderColor:'#ffb86b',backgroundColor:'rgba(255,184,107,.15)',tension:.35,fill:true});
-      var labels=serie.A.labels.length?serie.A.labels:serie.B.labels;
-      charts[key]=new Chart(ctx,{type:'line',data:{labels:sanLabels(labels),datasets:ds},options:common})
-    }else{
-      var ds2=[{label:key+' (Atual)',data:sanSeries(serie.atual.data),borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true}];
-      if($('chkComparar').checked&&serie.anterior){ds2.push({label:key+' (Anterior)',data:sanSeries(serie.anterior.data),borderColor:'#9fb3c2',backgroundColor:'rgba(159,179,194,.15)',tension:.35,fill:true})}
-      charts[key]=new Chart(ctx,{type:'line',data:{labels:sanLabels(serie.atual.labels),datasets:ds2},options:common})
-    }
-  }
-
-  makeLine(ctxGGR,'GGR',mkSerie('ggr'));
-  makeLine(ctxDep,'Depósitos',mkSerie('depositos'));
-  makeLine(ctxFTD,'FTD',mkSerie('ftd'));
-  makeLine(ctxSB,'Sportsbook',mkSerie('sportsbook'));
-  makeLine(ctxCS,'Cassino',mkSerie('cassino'));
-
-  if(charts.scatter)charts.scatter.destroy();
-  var curMapG=sumByClub(baseAtual,'ggr');
-  var curMapD=sumByClub(baseAtual,'depositos');
-  var points=Object.keys(curMapG).map(function(clube){return {clube:clube,x:num(curMapD[clube]||0),y:num(curMapG[clube]||0)}}).sort(function(a,b){return b.y-a.y}).slice(0,50);
-  charts.scatter=new Chart(ctxSc,{type:'scatter',data:{datasets:[{label:'Clubes (Top 50 por GGR)',data:points,parsing:false,pointRadius:4,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.4)'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#e9f3ff'}},tooltip:{callbacks:{label:function(c){return c.raw.clube+': Dep '+money(c.raw.x)+' | GGR '+money(c.raw.y)}}}},
-      scales:{x:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:function(v){return 'R$ '+Number(v).toLocaleString('pt-BR')}},title:{display:true,text:'Depósitos',color:'#e9f3ff',font:{weight:800}}},
-              y:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:function(v){return 'R$ '+Number(v).toLocaleString('pt-BR')}},title:{display:true,text:'GGR',color:'#e9f3ff',font:{weight:800)}}}})
-}
-
-/* ===== RANKING ===== */
-function renderRanking(){
-  var metric=$('selRanking').value;
-  localStorage.setItem('dash_ranking_metric',metric);
-  var curMap=sumByClub(rowsAtual,metric);
-  var compareOn=$('chkComparar').checked;
-  var prevMap=compareOn?sumByClub(rowsAnterior,metric):{};
-  var list=Object.keys(curMap).map(function(clube){
-    var valor=num(curMap[clube]);var prev=compareOn?(prevMap[clube]||0):null;
-    var delta=null,pct=null,badge='';
-    if(compareOn){delta=valor-prev;pct=prev>0?((valor-prev)/Math.abs(prev))*100:null;if(prev===0)badge=' (novo)'}
-    return {clube:clube,valor:valor,delta:delta,pct:pct,badge:badge}
-  }).sort(function(a,b){return b.valor-a.valor}).slice(0,TOP_N);
-
-  $('rankingInfo').textContent='Top '+TOP_N+' — '+metric.charAt(0).toUpperCase()+metric.slice(1);
-  var tb=$('rankingTable').querySelector('tbody');tb.innerHTML=list.length?'':'<tr><td colspan="4">Sem dados</td></tr>';
-  list.forEach(function(r,i){
-    var cls='flat',deltaText='—';
-    if(r.delta!==null){
-      var isBonus=metric==='bonus';var good=(r.delta>=0&&!isBonus)||(r.delta<0&&isBonus);
-      cls=good?'up':'down';var pctText=(r.pct==null)?'—':((r.pct>=0?'+':'')+r.pct.toFixed(2)+'%');
-      deltaText=(r.delta>=0?'+':'')+money(r.delta)+' ('+pctText+')'+(r.badge||'')
-    }
-    var tr=document.createElement('tr');
-    tr.dataset.clube=r.clube;
-    tr.innerHTML='<td>'+(i+1)+'</td><td>'+r.clube+'</td><td>'+money(r.valor)+'</td><td class="delta '+cls+'">'+deltaText+'</td>';
-    tr.addEventListener('click',function(){$('filtroClubeA').value=r.clube;updateAll();note('Clube A definido: '+r.clube,'success')});
-    tb.appendChild(tr)
-  })
-}
-
-/* ===== FILTROS/PREFS ===== */
+/* ================== FILTROS/PREFS ================== */
 function getDateRange(){
-  var ini=new Date($('filtroInicio').value+'T00:00:00');var fim=new Date($('filtroFim').value+'T23:59:59');
-  if(ini>fim){var t=ini;ini=fim;fim=t;$('filtroInicio').value=ini.toISOString().split('T')[0];$('filtroFim').value=fim.toISOString().split('T')[0];note('Datas invertidas — corrigi pra você')}
-  return {ini:ini,fim:fim}
+  let ini=new Date($('filtroInicio').value+'T00:00:00');
+  let fim=new Date($('filtroFim').value+'T23:59:59');
+  if(ini>fim){ const t=ini; ini=fim; fim=t; $('filtroInicio').value=ini.toISOString().split('T')[0]; $('filtroFim').value=fim.toISOString().split('T')[0]; pushLog('warn','Datas invertidas — corrigido automaticamente'); }
+  return {ini,fim};
 }
 function applyNameFilters(rows){
-  var sup=$('eliminarSuprema').checked,toni=$('eliminarToni').checked;
-  var supList=CLUBES_SUPREMA.map(function(s){return s.toLowerCase()}),toniName=CLUBE_TONI.toLowerCase();
-  return rows.filter(function(r){var name=(r[COLS.club]||'').toString().trim().toLowerCase();if(sup&&supList.indexOf(name)>-1)return false;if(toni&&name===toniName)return false;return true})
-}
-function populateClubSelects(all,p){
-  var clubs=[].concat(Array.from(new Set(all.map(function(r){return r[COLS.club]||'(Clube não informado)'})))).sort(function(a,b){return a.localeCompare(b,'pt-BR')});
-  var sA=$('filtroClubeA'),sB=$('filtroClubeB');
-  [sA,sB].forEach(function(sel){
-    sel.innerHTML='<option value="">(Todos)</option>';
-    clubs.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)})
+  const sup=$('eliminarSuprema').checked;
+  const toni=$('eliminarToni').checked;
+  const supList=CLUBES_SUPREMA.map(s=>s.toLowerCase());
+  const toniName=CLUBE_TONI.toLowerCase();
+  return rows.filter(r=>{
+    const name=(r[COLS.club]||'').toString().trim().toLowerCase();
+    if(sup && supList.includes(name)) return false;
+    if(toni && name===toniName) return false;
+    return true;
   });
-  if(p&&p.a&&Array.prototype.some.call(sA.options,function(o){return o.value===p.a}))sA.value=p.a;
-  if(p&&p.b&&Array.prototype.some.call(sB.options,function(o){return o.value===p.b}))sB.value=p.b
 }
-function savePrefs(){
-  var prefs={ini:$('filtroInicio').value,fim:$('filtroFim').value,a:$('filtroClubeA').value,b:$('filtroClubeB').value,sup:$('eliminarSuprema').checked,toni:$('eliminarToni').checked,comp:$('chkComparar').checked,metric:$('selRanking').value};
-  localStorage.setItem('rel_clubes_prefs',JSON.stringify(prefs))
-}
-function loadPrefs(){
-  try{var p=JSON.parse(localStorage.getItem('rel_clubes_prefs')||'{}');if(p.ini)$('filtroInicio').value=p.ini;if(p.fim)$('filtroFim').value=p.fim;if(p.sup!=null)$('eliminarSuprema').checked=p.sup;if(p.toni!=null)$('eliminarToni').checked=p.toni;if(p.comp!=null)$('chkComparar').checked=p.comp;if(p.metric)$('selRanking').value=p.metric;return p}catch(e){return {}}
+function populateClubSelects(all){
+  const clubs=[...new Set(all.map(r=> r[COLS.club] || '(Clube não informado)'))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  ['filtroClubeA','filtroClubeB'].forEach(id=>{
+    const sel=$(id); sel.innerHTML='<option value="">(Todos)</option>';
+    clubs.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+  });
 }
 
-/* ===== PIPELINE ===== */
+/* ================== RENDER ================== */
+function setKPI(id, val){ $(id).querySelector('.value').textContent = money(val); }
+function renderKPIs(){
+  setKPI('kpi-ftd', aggAtual.kpis.ftd);
+  setKPI('kpi-dep', aggAtual.kpis.depositos);
+  setKPI('kpi-ggr', aggAtual.kpis.ggr);
+  setKPI('kpi-sb', aggAtual.kpis.sportsbook);
+  setKPI('kpi-cs', aggAtual.kpis.cassino);
+  setKPI('kpi-bn', aggAtual.kpis.bonus);
+}
+
+function destroyCharts(){ Object.values(charts).forEach(c=>{try{c.destroy()}catch{}}); charts={}; }
+
+function renderCharts(){
+  const textColor='#e9f3ff', gridColor='rgba(255,255,255,.1)';
+  const common={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor}}},scales:{y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')}},x:{grid:{display:false},ticks:{color:textColor}}}};
+
+  function makeBarComparativo(){
+    const ctx=$('chartComparativo').getContext('2d');
+    if(charts.comp) charts.comp.destroy();
+    const labels = aggAtual.charts.comparativo.labels||[];
+    const dataA = sanSeries(aggAtual.charts.comparativo.dataA||[]);
+    if(!labels.length){ pushLog('warn','Comparativo sem labels, gráfico suprimido'); return; }
+    charts.comp = new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Atual',data:dataA,backgroundColor:'rgba(73,182,255,.72)',borderColor:'rgba(73,182,255,1)'}]},options:common});
+  }
+  function makeLine(id, serie, key){
+    const ctx=$(id).getContext('2d');
+    if(charts[key]) charts[key].destroy();
+    const labels = sanLabels(serie.labels||[]);
+    const data = sanSeries(serie.data||[]);
+    if(!labels.length){ pushLog('warn',`Gráfico ${key} sem labels — suprimido`); return; }
+    charts[key]=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:key,data,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true}]},options:common});
+  }
+
+  makeBarComparativo();
+  makeLine('chartGGR', aggAtual.charts.ggr, 'GGR');
+  makeLine('chartDepositos', aggAtual.charts.depositos, 'Depósitos');
+  makeLine('chartFTD', aggAtual.charts.ftd, 'FTD');
+  makeLine('chartSportsbook', aggAtual.charts.sportsbook, 'Sportsbook');
+  makeLine('chartCassino', aggAtual.charts.cassino, 'Cassino');
+}
+
+/* ================== RANKING ================== */
+function renderRanking(){
+  const metric=$('selRanking').value;
+  const curMap=sumByClub(rowsAtual, metric);
+  const prevMap=$('chkComparar').checked ? sumByClub(rowsAnterior, metric) : {};
+  const rows=Object.entries(curMap).map(([clube,valor])=>{
+    const prev=prevMap[clube]||0; const delta=valor-prev; const pct=prev>0?((valor-prev)/Math.abs(prev))*100:null;
+    return {clube,valor:num(valor),delta,pct};
+  }).sort((a,b)=>b.valor-a.valor).slice(0,TOP_N);
+
+  $('rankingInfo').textContent=`Top ${TOP_N} — ${metric}`;
+  const tb=$('rankingTable').querySelector('tbody'); tb.innerHTML='';
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="4">Sem dados</td></tr>'; return; }
+  rows.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    const pct = (r.pct==null) ? '—' : `${r.pct>=0?'+':''}${r.pct.toFixed(2)}%`;
+    const cls = (metric==='bonus'? (r.delta<0?'up':'down') : (r.delta>=0?'up':'down'));
+    const delta = `${r.delta>=0?'+':''}${money(r.delta)} (${pct})`;
+    tr.innerHTML=`<td>${i+1}</td><td>${r.clube}</td><td>${money(r.valor)}</td><td class="delta ${cls}">${delta}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/* ================== PIPELINE ================== */
 function filterWindows(){
-  var r=getDateRange();var ini=r.ini,fim=r.fim;
-  var days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
-  var prevEnd=new Date(ini);prevEnd.setDate(ini.getDate()-1);
-  var prevStart=new Date(prevEnd);prevStart.setDate(prevEnd.getDate()-(days-1));
-  function inRange(d,a,b){return d&&(!isNaN(d))&&d>=a&&d<=b}
-  var cur=allRows.filter(function(r){return inRange(parseDateStr(r[COLS.date]),ini,fim)});
-  var prv=allRows.filter(function(r){return inRange(parseDateStr(r[COLS.date]),prevStart,prevEnd)});
-  baseAtual=applyNameFilters(cur);baseAnterior=applyNameFilters(prv);
-  var a=$('filtroClubeA').value,b=$('filtroClubeB').value;
-  rowsAtual=(!a&&!b)?baseAtual:baseAtual.filter(function(r){return (a&&r[COLS.club]===a)||(b&&r[COLS.club]===b)});
-  rowsAnterior=(!a&&!b)?baseAnterior:baseAnterior.filter(function(r){return (a&&r[COLS.club]===a)||(b&&r[COLS.club]===b)})
+  const {ini,fim}=getDateRange();
+  const days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
+  const prevEnd=new Date(ini); prevEnd.setDate(ini.getDate()-1);
+  const prevStart=new Date(prevEnd); prevStart.setDate(prevEnd.getDate()-(days-1));
+  const inRange=(d,a,b)=> d && !isNaN(d) && d>=a && d<=b;
+
+  const cur=allRows.filter(r=> inRange(parseDateStr(r[COLS.date]), ini, fim));
+  const prv=allRows.filter(r=> inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd));
+  pushLog('step','Filtro por datas',{atual:cur.length, anterior:prv.length, ini, fim, prevStart, prevEnd});
+
+  const afterNames = applyNameFilters(cur);
+  const afterNamesPrev = applyNameFilters(prv);
+  pushLog('step','Aplicados filtros por nome',{atual:afterNames.length, anterior:afterNamesPrev.length});
+
+  baseAtual=afterNames; baseAnterior=afterNamesPrev;
+  rowsAtual=baseAtual; rowsAnterior=baseAnterior; // (sem clubes A/B no debug para simplificar)
 }
 
 function updateAll(){
   showLoaders(true);
-  filterWindows();
-  aggAtual=transform(rowsAtual)||{kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0},charts:{comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[0,0,0,0,0,0]},ggr:{labels:[],data:[]},depositos:{labels:[],data:[]},ftd:{labels:[],data:[]},sportsbook:{labels:[],data:[]},cassino:{labels:[],data:[]}}};
-  aggAnterior=rowsAnterior.length?transform(rowsAnterior):null;
-  renderKPIs();destroyCharts();renderCharts();renderRanking();gerarInsights();
-  showLoaders(false);savePrefs();
-  $('ultimaAtualizacao').textContent='Atualizado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
-}
-
-async function init(){
-  var today=new Date();var y=new Date(today);y.setDate(today.getDate()-1);
-  $('filtroInicio').value=y.toISOString().split('T')[0];$('filtroFim').value=y.toISOString().split('T')[0];
-  var prefs=loadPrefs();
   try{
-    note('Carregando dados...');
-    allRows=await fetchAll();
-    populateClubSelects(allRows,prefs);
-    updateAll();
-    note('Dados carregados','success')
+    filterWindows();
+    aggAtual = transform(rowsAtual) || {kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0},charts:{comparativo:{labels:[],dataA:[]},ggr:{labels:[],data:[]},depositos:{labels:[],data:[]},ftd:{labels:[],data:[]},sportsbook:{labels:[],data:[]},cassino:{labels:[],data:[]}}};
+    aggAnterior = $('chkComparar').checked && rowsAnterior.length ? transform(rowsAnterior) : null;
+    pushLog('step','Transform concluído',{kpis:aggAtual.kpis, charts:{
+      ggr:aggAtual.charts.ggr.labels.length,
+      dep:aggAtual.charts.depositos.labels.length,
+      ftd:aggAtual.charts.ftd.labels.length
+    }});
+    renderKPIs(); destroyCharts(); renderCharts(); renderRanking();
+    $('ultimaAtualizacao').textContent = 'Atualizado em ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    pushLog('info','Atualização completa');
   }catch(e){
-    console.warn('Falha ao buscar planilha. Você pode usar "Importar CSV".');
-    note('Erro ao buscar planilha. Use "Importar CSV".','error')
+    pushLog('error','Falha no updateAll', e.stack || e);
+  }finally{
+    showLoaders(false);
   }
 }
 
-/* ===== EVENTS ===== */
-document.addEventListener('DOMContentLoaded',function(){
-  function on(id,ev,fn){var el=$(id);if(el)el.addEventListener(ev,fn)}
-  on('btnAplicar','click',updateAll);
-  on('btnAtualizar','click',updateAll);
-  on('filtroClubeA','change',updateAll);
-  on('filtroClubeB','change',updateAll);
-  on('eliminarSuprema','change',updateAll);
-  on('eliminarToni','change',updateAll);
-  on('chkComparar','change',function(){updateAll();renderRanking()});
-  on('selRanking','change',renderRanking);
+async function init(){
+  try{
+    // datas padrão: ontem
+    const t=new Date(); const y=new Date(); y.setDate(t.getDate()-1);
+    $('filtroInicio').value = y.toISOString().split('T')[0];
+    $('filtroFim').value    = t.toISOString().split('T')[0];
 
-  on('btnOntem','click',function(){
-    var d=new Date();d.setDate(d.getDate()-1);
-    var s=d.toISOString().split('T')[0];
-    $('filtroInicio').value=s;$('filtroFim').value=s;updateAll()
+    pushLog('info','Iniciando fetch');
+    allRows = await fetchAll();
+    pushLog('info','Linhas carregadas', allRows.length);
+    populateClubSelects(allRows);
+    updateAll();
+  }catch(err){
+    pushLog('error','init falhou', err.stack || err);
+  }
+}
+
+/* ================== EVENTS (handlers estáveis) ================== */
+document.addEventListener('DOMContentLoaded', function(){
+  function on(id,ev,fn){ const el=$(id); if(el) el.addEventListener(ev,fn); }
+
+  on('btnAplicar','click', updateAll);
+  on('btnAtualizar','click', updateAll);
+  on('selRanking','change', renderRanking);
+
+  on('btnOntem','click', function(){
+    const d=new Date(); d.setDate(d.getDate()-1);
+    const s=d.toISOString().split('T')[0];
+    $('filtroInicio').value=s; $('filtroFim').value=s; updateAll();
   });
 
-  /* corrigido */
-  on('btnUltimos7','click',function(){
-    var t=new Date();var s=new Date();s.setDate(t.getDate()-7);
+  on('btnUltimos7','click', function(){
+    const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7);
     $('filtroInicio').value=s.toISOString().split('T')[0];
     $('filtroFim').value=t.toISOString().split('T')[0];
-    updateAll()
+    updateAll();
   });
 
-  on('btnUltimos30','click',function(){
-    var t=new Date();var s=new Date();s.setDate(t.getDate()-30);
+  on('btnUltimos30','click', function(){
+    const t=new Date(); const s=new Date(); s.setDate(t.getDate()-30);
     $('filtroInicio').value=s.toISOString().split('T')[0];
     $('filtroFim').value=t.toISOString().split('T')[0];
-    updateAll()
+    updateAll();
   });
 
-  on('btnDarkMode','click',function(){
-    document.body.classList.toggle('light-mode');
-    document.body.classList.toggle('dark-mode');
-    destroyCharts();renderCharts()
-  });
-
-  on('searchClub','input',function(){
-    var term=this.value.toLowerCase();['filtroClubeA','filtroClubeB'].forEach(function(id){
-      var sel=$(id);if(!sel)return;
-      Array.prototype.forEach.call(sel.options,function(o){
-        if(o.value===''){o.style.display='';return}
-        o.style.display=(o.value.toLowerCase().indexOf(term)>-1||o.textContent.toLowerCase().indexOf(term)>-1)?'':'none'
-      })
-    })
-  });
-
-  $('btnImportar').addEventListener('click',function(){$('fileCsv').click()});
-  $('fileCsv').addEventListener('change',function(ev){
-    var f=ev.target.files&&ev.target.files[0];if(!f)return;
-    var reader=new FileReader();
-    reader.onload=function(e){
+  $('btnImportar').addEventListener('click', ()=> $('fileCsv').click());
+  $('fileCsv').addEventListener('change', function(ev){
+    const f=ev.target.files && ev.target.files[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload = e=>{
       try{
-        Papa.parse(e.target.result,{header:true,skipEmptyLines:true,complete:function(r){
-          if(r.errors&&r.errors.length){console.error(r.errors);note('Erro ao ler CSV','error');return}
-          if(!r.data.length){note('CSV vazio','error');return}
-          COLS=detectColumns(Object.keys(r.data[0]||{}));
-          allRows=r.data;populateClubSelects(allRows,loadPrefs());updateAll();note('CSV local carregado','success')
-        }})
-      }catch(ex){console.error(ex);note('Falha no CSV','error')}
+        Papa.parse(e.target.result,{
+          header:true, skipEmptyLines:true,
+          complete:r=>{
+            if(r.errors && r.errors.length){ pushLog('error','PapaParse erros', r.errors); return; }
+            if(!r.data.length){ pushLog('warn','CSV vazio'); return; }
+            COLS = detectColumns(Object.keys(r.data[0]||{}));
+            allRows = r.data; populateClubSelects(allRows); updateAll(); pushLog('info','CSV local carregado', r.data.length);
+          }
+        });
+      }catch(ex){ pushLog('error','Falha ao importar CSV', ex.stack || ex); }
     };
-    reader.readAsText(f,'utf-8')
+    reader.readAsText(f,'utf-8');
   });
 
-  $('btnExportar').addEventListener('click',function(){
-    var metric=$('selRanking').value,curMap=sumByClub(rowsAtual,metric);
-    var rows=Object.keys(curMap).map(function(clube){return {clube:clube,valor:num(curMap[clube])}}).sort(function(a,b){return b.valor-a.valor});
-    var csv="data:text/csv;charset=utf-8,Clube,Valor\n";rows.forEach(function(r){csv+='"'+r.clube+'",'+r.valor+"\n"});
-    var a=document.createElement('a');a.href=encodeURI(csv);a.download='ranking_'+metric+'_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove()
+  $('btnExportar').addEventListener('click', function(){
+    const metric=$('selRanking').value, curMap=sumByClub(rowsAtual, metric);
+    const rows=Object.entries(curMap).map(([clube,valor])=>({clube,valor:num(valor)})).sort((a,b)=>b.valor-a.valor);
+    let csv="data:text/csv;charset=utf-8,Clube,Valor\n";
+    rows.forEach(r=> csv+=`"${r.clube}",${r.valor}\n`);
+    const a=document.createElement('a'); a.href=encodeURI(csv);
+    a.download=`ranking_${metric}_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    pushLog('info','Exportado CSV', {metric, linhas:rows.length});
   });
 
-  init()
+  init();
 });
 </script>
 </body>
