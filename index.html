@@ -66,10 +66,6 @@
     tbody td{padding:10px 10px}
     tbody tr:hover{background:rgba(73,182,255,.08)}
     .delta.up{color:var(--good)} .delta.down{color:var(--bad)} .delta.flat{color:var(--muted)}
-
-    .legend-chip{display:inline-flex;gap:6px;align-items:center;font-weight:800;color:var(--muted);font-size:12px}
-    .dotA{width:10px;height:10px;border-radius:50%;background:#49b6ff;display:inline-block}
-    .dotB{width:10px;height:10px;border-radius:50%;background:#ffb86b;display:inline-block}
   </style>
 </head>
 <body>
@@ -131,6 +127,8 @@
         <button class="btn btn-ghost" id="btnDarkMode" type="button"><i class="fa-solid fa-moon"></i> Modo Claro/Escuro</button>
         <button class="btn btn-ghost" id="btnAtualizar" type="button"><i class="fa-solid fa-sync"></i> Atualizar</button>
         <button class="btn btn-ghost" id="btnExportar" type="button"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
+        <button class="btn btn-ghost" id="btnImportar" type="button"><i class="fa-solid fa-file-arrow-up"></i> Importar CSV</button>
+        <input id="fileCsv" type="file" accept=".csv,text/csv" style="display:none"/>
       </div>
     </div>
 
@@ -202,22 +200,120 @@
     let allRows = [];
     let baseAtual = [], baseAnterior = [];
     let rowsAtual = [], rowsAnterior = [];
-    let rowsA = [], rowsB = [];
     let aggAtual = null, aggAnterior = null;
+
+    // mapeamento de colunas detectado dinamicamente
+    let COLS = null;
 
     const $ = id => document.getElementById(id);
     const showLoaders = (on=true) => document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',on));
 
     /* ====== UTILS ====== */
     function formatMoney(n){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0); }
-    function note(msg,type='info'){ const n=$('notification'),t=$('notificationText'),i=n.querySelector('i'); n.className='notification'; n.classList.add('show',type); i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':'fas fa-info-circle'; t.textContent=msg; setTimeout(()=>n.classList.remove('show'),2200); }
-    function parseCurrency(v){ if(typeof v==='number') return v; if(v==null) return 0; let s=String(v).trim(); if(!s) return 0; s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-'); const par=/^\(.*\)$/.test(s); if(par) s=s.replace(/[()]/g,''); s=s.replace(/[^0-9,.\-]/g,''); const c=s.includes(','),d=s.includes('.'); if(c&&d){const lc=s.lastIndexOf(','),ld=s.lastIndexOf('.'); const dec=lc>ld?',':'.',th=dec===','?'.':','; s=s.split(th).join(''); if(dec===',') s=s.replace(',','.');} else if(c){ s=s.split('.').join(''); s=s.replace(',', '.'); } else { s=s.replace(/,/g,''); } let n=parseFloat(s); if(isNaN(n)) n=0; if(par) n=-Math.abs(n); return n; }
+    function note(msg,type='info'){
+      const n=$('notification'),t=$('notificationText'),i=n.querySelector('i');
+      n.className='notification'; n.classList.add('show',type);
+      i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':'fas fa-info-circle';
+      t.textContent=msg;
+      setTimeout(()=>n.classList.remove('show'),3000);
+    }
+    function parseCurrency(v){
+      if(typeof v==='number') return v;
+      if(v==null) return 0;
+      let s=String(v).trim(); if(!s) return 0;
+      s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-');
+      const par=/^\(.*\)$/.test(s); if(par) s=s.replace(/[()]/g,'');
+      s=s.replace(/[^0-9,.\-]/g,'');
+      const c=s.includes(','), d=s.includes('.');
+      if(c&&d){
+        const lc=s.lastIndexOf(','), ld=s.lastIndexOf('.');
+        const dec=lc>ld?',':'.', th=dec===','?'.':',';
+        s=s.split(th).join('');
+        if(dec===',') s=s.replace(',','.');
+      }else if(c){ s=s.split('.').join(''); s=s.replace(',','.'); }
+      else { s=s.replace(/,/g,''); }
+      let n=parseFloat(s); if(isNaN(n)) n=0;
+      if(par) n=-Math.abs(n);
+      return n;
+    }
+
+    /* ====== DETECÇÃO DE COLUNAS ====== */
+    function detectColumns(headers){
+      const norm = s => (s||'').toString().trim().toLowerCase();
+      const find = (...cands) => headers.find(h => {
+        const n=norm(h);
+        return cands.some(c => n.includes(c));
+      }) || null;
+
+      const m = {
+        date:    find('data'),
+        club:    find('usuário - nome de usuário','nome de usuário','usuario - nome','clube','user'),
+        ftd:     find('ftd-montante','usuário - ftd','ftd'),
+        dep:     find('usuário - depósitos','depositos','depósitos'),
+        ggrCalc: find('cálculo - ggr','calculo - ggr','ggr'),
+        sb:      find('sportsbook - ggr','sportsbook'),
+        cs:      find('cassino - ggr','casino - ggr','cassino'),
+        hab:     find('jogos de habilidade','habilidade','w/l','win/loss'),
+        bonus:   find('bônus convertidos','bonus convertidos','bônus','bonus')
+      };
+      if(!m.date || !m.club) throw new Error('Não encontrei colunas obrigatórias (DATA/CLUBE).');
+      return m;
+    }
+
+    /* ====== FETCH + FALLBACK ====== */
+    async function fetchAll(){
+      try{
+        const res = await fetch(SPREADSHEET_URL,{cache:'no-store'});
+        if(!res.ok) throw new Error('Falha ao acessar a planilha (HTTP '+res.status+')');
+        const text = await res.text();
+        const parsed = await new Promise((resolve,reject)=>Papa.parse(text,{
+          header:true, skipEmptyLines:true, dynamicTyping:false,
+          complete:r=>r.errors.length?reject(r.errors):resolve(r.data),
+          error:reject
+        }));
+        if(!parsed.length) throw new Error('CSV vazio.');
+        COLS = detectColumns(Object.keys(parsed[0]||{}));
+        note('Dados carregados','success');
+        return parsed;
+      }catch(err){
+        console.error('Erro ao buscar planilha:', err);
+        note('Erro ao buscar planilha. Use "Importar CSV".','error');
+        throw err;
+      }
+    }
+
+    // Importar CSV local (fallback)
+    document.addEventListener('DOMContentLoaded', ()=>{
+      $('btnImportar').addEventListener('click', ()=> $('fileCsv').click());
+      $('fileCsv').addEventListener('change', (ev)=>{
+        const f = ev.target.files && ev.target.files[0];
+        if(!f) return;
+        const reader = new FileReader();
+        reader.onload = e=>{
+          try{
+            const text = e.target.result;
+            Papa.parse(text, {
+              header:true, skipEmptyLines:true,
+              complete: r=>{
+                if(r.errors.length){ console.error(r.errors); note('Erro ao ler CSV','error'); return; }
+                if(!r.data.length){ note('CSV vazio','error'); return; }
+                COLS = detectColumns(Object.keys(r.data[0]||{}));
+                allRows = r.data;
+                populateClubSelects(allRows, loadPrefs());
+                updateAll();
+                note('CSV local carregado','success');
+              }
+            });
+          }catch(ex){ console.error(ex); note('Falha no CSV','error'); }
+        };
+        reader.readAsText(f, 'utf-8');
+      });
+    });
 
     /* ====== TRANSFORM ====== */
     function transform(rows){
       if(!rows.length) return null;
-      const c={date:'DATA', club:'Usuário - Nome de usuário', ftd:'Usuário - FTD-Montante', dep:'Usuário - Depósitos',
-               ggrCalc:'Cálculo - GGR', sb:'Sportsbook - GGR', cs:'Cassino - GGR', hab:'Jogos de habilidade - W/L', bonus:'Cálculo - bônus convertidos'};
+      const c={ date:COLS.date, club:COLS.club, ftd:COLS.ftd, dep:COLS.dep, ggrCalc:COLS.ggrCalc, sb:COLS.sb, cs:COLS.cs, hab:COLS.hab, bonus:COLS.bonus };
       const dates=[...new Set(rows.map(r=>r[c.date]))].sort();
       const totals={ftd:0,dep:0,ggr:0,sb:0,cs:0,bonus:0};
       const series={ggr:Array(dates.length).fill(0),dep:Array(dates.length).fill(0),ftd:Array(dates.length).fill(0),sb:Array(dates.length).fill(0),cs:Array(dates.length).fill(0)};
@@ -248,7 +344,7 @@
     }
 
     function sumByClub(rows, metric){
-      const c={club:'Usuário - Nome de usuário', ftd:'Usuário - FTD-Montante', depositos:'Usuário - Depósitos', ggrCalc:'Cálculo - GGR', sb:'Sportsbook - GGR', cs:'Cassino - GGR', hab:'Jogos de habilidade - W/L', bonus:'Cálculo - bônus convertidos'};
+      const c={ club:COLS.club, ftd:COLS.ftd, depositos:COLS.dep, ggrCalc:COLS.ggrCalc, sb:COLS.sb, cs:COLS.cs, hab:COLS.hab, bonus:COLS.bonus };
       const map={};
       rows.forEach(r=>{
         const club=r[c.club]||'(Clube não informado)';
@@ -269,8 +365,7 @@
     }
 
     function seriesPorClube(rows, metric){
-      const c={date:'DATA', club:'Usuário - Nome de usuário', ftd:'Usuário - FTD-Montante', dep:'Usuário - Depósitos',
-               ggrCalc:'Cálculo - GGR', sb:'Sportsbook - GGR', cs:'Cassino - GGR', hab:'Jogos de habilidade - W/L'};
+      const c={ date:COLS.date, ftd:COLS.ftd, dep:COLS.dep, ggrCalc:COLS.ggrCalc, sb:COLS.sb, cs:COLS.cs, hab:COLS.hab };
       const dates=[...new Set(rows.map(r=>r[c.date]))].sort();
       const serie=Array(dates.length).fill(0);
       rows.forEach(r=>{
@@ -376,12 +471,13 @@
       $('tSb').innerHTML = `<i class="fa-solid fa-futbol"></i> Evolução do Sportsbook${compararClubes?' — A vs B':''}`;
       $('tCs').innerHTML = `<i class="fa-solid fa-dice"></i> Evolução do Cassino${compararClubes?' — A vs B':''}`;
 
+      // Comparativo
       if(charts.comp) charts.comp.destroy();
       if(compararClubes){
         const metrics=['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'];
         const totalClub = (rows) => { const a=transform(rows); return a ? a.kpis : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0}; };
-        const kpiA = clubA ? totalClub(baseAtual.filter(r=> r['Usuário - Nome de usuário']===clubA)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
-        const kpiB = clubB ? totalClub(baseAtual.filter(r=> r['Usuário - Nome de usuário']===clubB)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
+        const kpiA = clubA ? totalClub(baseAtual.filter(r=> r[COLS.club]===clubA)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
+        const kpiB = clubB ? totalClub(baseAtual.filter(r=> r[COLS.club]===clubB)) : {ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
         charts.comp = new Chart(ctxComp,{
           type:'bar',
           data:{labels:metrics,
@@ -399,27 +495,33 @@
         charts.comp = new Chart(ctxComp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
       }
 
-      const makeLine=(ctx,key,serieAtual,serieAnterior)=>{
+      // Linhas helpers
+      const mkSerie = (metric) => ({
+        atual: aggAtual.charts[metric],
+        anterior: aggAnterior?.charts[metric],
+        A: seriesPorClube(baseAtual.filter(r=> r[COLS.club]===$('filtroClubeA').value), metric==='depositos'?'depositos':metric),
+        B: seriesPorClube(baseAtual.filter(r=> r[COLS.club]===$('filtroClubeB').value), metric==='depositos'?'depositos':metric)
+      });
+
+      const makeLine=(ctx,key,serie)=>{
         if(charts[key]) charts[key].destroy();
         if(compararClubes){
-          const serieA = seriesPorClube(baseAtual.filter(r=> r['Usuário - Nome de usuário']===$('filtroClubeA').value),'ggr'.includes(key.toLowerCase())?'ggr': key==='Depósitos'?'depositos': key==='FTD'?'ftd': key==='Sportsbook'?'sportsbook':'cassino');
-          const serieB = seriesPorClube(baseAtual.filter(r=> r['Usuário - Nome de usuário']===$('filtroClubeB').value),'ggr'.includes(key.toLowerCase())?'ggr': key==='Depósitos'?'depositos': key==='FTD'?'ftd': key==='Sportsbook'?'sportsbook':'cassino');
           const ds=[];
-          if($('filtroClubeA').value){ ds.push({label:`${$('filtroClubeA').value}`, data:serieA.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}); }
-          if($('filtroClubeB').value){ ds.push({label:`${$('filtroClubeB').value}`, data:serieB.data, borderColor:'#ffb86b', backgroundColor:'rgba(255,184,107,.15)', tension:.35, fill:true}); }
-          charts[key]=new Chart(ctx,{type:'line', data:{labels:serieA.labels.length?serieA.labels:serieB.labels, datasets:ds}, options:common});
+          if($('filtroClubeA').value){ ds.push({label:`${$('filtroClubeA').value}`, data:serie.A.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}); }
+          if($('filtroClubeB').value){ ds.push({label:`${$('filtroClubeB').value}`, data:serie.B.data, borderColor:'#ffb86b', backgroundColor:'rgba(255,184,107,.15)', tension:.35, fill:true}); }
+          charts[key]=new Chart(ctx,{type:'line', data:{labels:serie.A.labels.length?serie.A.labels:serie.B.labels, datasets:ds}, options:common});
         }else{
-          const ds=[{label:`${key} (Atual)`, data:serieAtual.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}];
-          if($('chkComparar').checked && serieAnterior){ ds.push({label:`${key} (Anterior)`, data:serieAnterior.data, borderColor:'#9fb3c2', backgroundColor:'rgba(159,179,194,.15)', tension:.35, fill:true}); }
-          charts[key]=new Chart(ctx,{type:'line', data:{labels:serieAtual.labels, datasets:ds}, options:common});
+          const ds=[{label:`${key} (Atual)`, data:serie.atual.data, borderColor:'#49b6ff', backgroundColor:'rgba(73,182,255,.12)', tension:.35, fill:true}];
+          if($('chkComparar').checked && serie.anterior){ ds.push({label:`${key} (Anterior)`, data:serie.anterior.data, borderColor:'#9fb3c2', backgroundColor:'rgba(159,179,194,.15)', tension:.35, fill:true}); }
+          charts[key]=new Chart(ctx,{type:'line', data:{labels:serie.atual.labels, datasets:ds}, options:common});
         }
       };
 
-      makeLine(ctxGGR,'GGR',aggAtual.charts.ggr,aggAnterior?.charts.ggr);
-      makeLine(ctxDep,'Depósitos',aggAtual.charts.depositos,aggAnterior?.charts.depositos);
-      makeLine(ctxFTD,'FTD',aggAtual.charts.ftd,aggAnterior?.charts.ftd);
-      makeLine(ctxSB,'Sportsbook',aggAtual.charts.sportsbook,aggAnterior?.charts.sportsbook);
-      makeLine(ctxCS,'Cassino',aggAtual.charts.cassino,aggAnterior?.charts.cassino);
+      makeLine(ctxGGR,'GGR', mkSerie('ggr'));
+      makeLine(ctxDep,'Depósitos', mkSerie('depositos'));
+      makeLine(ctxFTD,'FTD', mkSerie('ftd'));
+      makeLine(ctxSB,'Sportsbook', mkSerie('sportsbook'));
+      makeLine(ctxCS,'Cassino', mkSerie('cassino'));
 
       // Scatter
       if(charts.scatter) charts.scatter.destroy();
@@ -447,10 +549,9 @@
       const compareOn = $('chkComparar').checked;
       const prevMap = compareOn ? sumByClub(rowsAnterior, metric) : {};
       const rows = Object.entries(curMap).map(([clube, valor])=>{
-        const hasPrev = compareOn && Object.prototype.hasOwnProperty.call(prevMap, clube);
-        const prev = compareOn ? (hasPrev ? prevMap[clube] : 0) : null;
+        const prev = compareOn ? (prevMap[clube] ?? 0) : null;
         let delta = null, pct = null, badge = '';
-        if (compareOn) { delta = valor - prev; pct = (prev > 0) ? ((valor - prev)/Math.abs(prev))*100 : null; if (!hasPrev) badge = ' (novo)'; }
+        if (compareOn) { delta = valor - prev; pct = (prev > 0) ? ((valor - prev)/Math.abs(prev))*100 : null; if (prev===0) badge=' (novo)'; }
         return {clube, valor, delta, pct, badge};
       }).sort((a,b)=> b.valor - a.valor).slice(0, TOP_N);
 
@@ -484,10 +585,10 @@
     function applyNameFilters(rows){
       const sup=$('eliminarSuprema').checked, toni=$('eliminarToni').checked;
       const supList=CLUBES_SUPREMA.map(s=>s.toLowerCase()); const toniName=CLUBE_TONI.toLowerCase();
-      return rows.filter(r=>{ const name=(r['Usuário - Nome de usuário']||'').toString().trim().toLowerCase(); if(sup && supList.includes(name)) return false; if(toni && name===toniName) return false; return true; });
+      return rows.filter(r=>{ const name=(r[COLS.club]||'').toString().trim().toLowerCase(); if(sup && supList.includes(name)) return false; if(toni && name===toniName) return false; return true; });
     }
     function populateClubSelects(all,p){
-      const clubs=[...new Set(all.map(r=>(r['Usuário - Nome de usuário']||'(Clube não informado)')))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+      const clubs=[...new Set(all.map(r=>(r[COLS.club]||'(Clube não informado)')))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
       const sA=$('filtroClubeA'), sB=$('filtroClubeB');
       [sA,sB].forEach(sel=>{ sel.innerHTML='<option value="">(Todos)</option>'; clubs.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);}); });
       if(p?.a && [...sA.options].some(o=>o.value===p.a)) sA.value=p.a;
@@ -505,13 +606,7 @@
       }catch{ return {}; }
     }
 
-    /* ====== FETCH/FLOW ====== */
-    async function fetchAll(){
-      const res=await fetch(SPREADSHEET_URL); if(!res.ok) throw new Error('Falha ao acessar planilha');
-      const text=await res.text();
-      return new Promise((resolve,reject)=>Papa.parse(text,{header:true,skipEmptyLines:true,dynamicTyping:false,complete:r=>r.errors.length?reject(r.errors):resolve(r.data),error:reject}));
-    }
-
+    /* ====== PIPELINE ====== */
     function filterWindows(){
       const {ini,fim}=getDateRange();
       const days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
@@ -519,20 +614,21 @@
       const prevStart=new Date(prevEnd); prevStart.setDate(prevEnd.getDate()-(days-1));
       const inRange=(d,a,b)=>d && !isNaN(d) && d>=a && d<=b;
 
-      const cur=allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), ini, fim));
-      const prv=allRows.filter(r=>inRange(new Date((r['DATA']||'')+'T00:00:00'), prevStart, prevEnd));
+      const cur=allRows.filter(r=>inRange(new Date((r[COLS.date]||'')+'T00:00:00'), ini, fim));
+      const prv=allRows.filter(r=>inRange(new Date((r[COLS.date]||'')+'T00:00:00'), prevStart, prevEnd));
 
       baseAtual = applyNameFilters(cur);
       baseAnterior = applyNameFilters(prv);
 
       const a=$('filtroClubeA').value, b=$('filtroClubeB').value;
-      rowsAtual = (!a && !b) ? baseAtual : baseAtual.filter(r=> (a && r['Usuário - Nome de usuário']===a) || (b && r['Usuário - Nome de usuário']===b));
-      rowsAnterior = (!a && !b) ? baseAnterior : baseAnterior.filter(r=> (a && r['Usuário - Nome de usuário']===a) || (b && r['Usuário - Nome de usuário']===b));
+      rowsAtual = (!a && !b) ? baseAtual : baseAtual.filter(r=> (a && r[COLS.club]===a) || (b && r[COLS.club]===b));
+      rowsAnterior = (!a && !b) ? baseAnterior : baseAnterior.filter(r=> (a && r[COLS.club]===a) || (b && r[COLS.club]===b));
     }
 
     function updateAll(){
       showLoaders(true);
       filterWindows();
+
       aggAtual = transform(rowsAtual) || {kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0},charts:{comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[0,0,0,0,0,0]},ggr:{labels:[],data:[]},depositos:{labels:[],data:[]},ftd:{labels:[],data:[]},sportsbook:{labels:[],data:[]},cassino:{labels:[],data:[]}}};
       aggAnterior = rowsAnterior.length ? transform(rowsAnterior) : null;
 
@@ -549,8 +645,15 @@
       const today=new Date(); const y=new Date(today); y.setDate(today.getDate()-1);
       $('filtroInicio').value=y.toISOString().split('T')[0]; $('filtroFim').value=y.toISOString().split('T')[0];
       const prefs=loadPrefs();
-      try{ note('Carregando dados...'); allRows=await fetchAll(); populateClubSelects(allRows,prefs); updateAll(); note('Dados carregados','success'); }
-      catch(e){ console.error(e); note('Erro ao carregar dados','error'); }
+      try{
+        note('Carregando dados...');
+        allRows=await fetchAll();
+        populateClubSelects(allRows,prefs);
+        updateAll();
+        note('Dados carregados','success');
+      }catch(e){
+        console.warn('Você pode importar um CSV local pelo botão "Importar CSV".');
+      }
     }
 
     /* ====== EVENTS ====== */
