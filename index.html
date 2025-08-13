@@ -867,8 +867,63 @@
         });
       });
     }
-    
-    // Função para transformar dados brutos em formato do dashboard ( MAPEAMENTO CORRIGIDO )
+
+    // Função "Inspetora" de Dados
+    function gerarRelatorioQualidadeDados(rawData) {
+        console.clear();
+        console.log("%c--- RELATÓRIO DE QUALIDADE DOS DADOS ---", "color: yellow; font-size: 16px; font-weight: bold;");
+
+        let totalFtdCalculado = 0;
+        let linhasComErroDeData = [];
+        let linhasComErroDeFtd = [];
+        
+        const colData = 'DATA';
+        const colFtd = 'Usuário - FTD-Montante';
+
+        rawData.forEach((row, index) => {
+            const numeroLinha = index + 2;
+            let temErro = false;
+
+            const dataOriginal = row[colData];
+            if (!dataOriginal || isNaN(new Date(dataOriginal).getTime())) {
+                linhasComErroDeData.push(`Linha ${numeroLinha}: Data inválida ou vazia ('${dataOriginal}')`);
+                temErro = true;
+            }
+
+            const ftdOriginal = row[colFtd];
+            const ftdParsed = parseCurrency(ftdOriginal);
+            if (isNaN(ftdParsed)) {
+                 linhasComErroDeFtd.push(`Linha ${numeroLinha}: Valor de FTD inválido ou não numérico ('${ftdOriginal}')`);
+                 temErro = true;
+            }
+
+            if (!temErro) {
+                totalFtdCalculado += ftdParsed;
+            }
+        });
+
+        console.log(`Total de linhas no ficheiro: ${rawData.length}`);
+        console.log("-----------------------------------------");
+        console.log(`SOMA TOTAL DE FTD (de todas as linhas válidas): R$ ${totalFtdCalculado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+        console.log("-----------------------------------------");
+
+        if (linhasComErroDeData.length > 0) {
+            console.warn(`Encontrados ${linhasComErroDeData.length} ERROS DE DATA (estas linhas não serão incluídas no filtro):`);
+            console.table(linhasComErroDeData);
+        } else {
+            console.log("✅ Nenhuma linha com erro de data encontrada.");
+        }
+
+        if (linhasComErroDeFtd.length > 0) {
+            console.error(`Encontrados ${linhasComErroDeFtd.length} ERROS NO VALOR DE FTD (a soma pode estar incorreta):`);
+            console.table(linhasComErroDeFtd);
+        } else {
+            console.log("✅ Nenhuma linha com erro de valor de FTD encontrada.");
+        }
+        console.log("%c--- FIM DO RELATÓRIO ---", "color: yellow; font-weight: bold;");
+    }
+
+    // Função para transformar os dados para o dashboard
     function transformData(rawData) {
         if (!rawData || rawData.length === 0) return null;
 
@@ -877,7 +932,7 @@
             club: 'Usuário - Nome de usuário',
             ftd: 'Usuário - FTD-Montante',
             depositos: 'Usuário - Depósitos',
-            ggr: 'Cálculo - GGR', // <-- CORREÇÃO APLICADA AQUI
+            ggr: 'Cálculo - GGR',
             sportsbook: 'Sportsbook - GGR',
             cassino: 'Cassino - GGR',
             bonus: 'Cálculo - bônus convertidos'
@@ -895,12 +950,13 @@
         };
 
         rawData.forEach(row => {
-            const club = row[columns.club];
-            if (!club) return; 
-
+            let club = row[columns.club];
+            if (!club || club.trim() === '') {
+                club = "(Clube não informado)";
+            }
             const date = row[columns.date];
             const dateIndex = dates.indexOf(date);
-
+            
             const ftdValue = parseCurrency(row[columns.ftd]);
             const depValue = parseCurrency(row[columns.depositos]);
             const ggrValue = parseCurrency(row[columns.ggr]);
@@ -914,7 +970,7 @@
             totals.sportsbook += sbValue;
             totals.cassino += csValue;
             totals.bonus += bnValue;
-
+            
             if (dateIndex !== -1) {
                 chartsData.ggr[dateIndex] += ggrValue;
                 chartsData.depositos[dateIndex] += depValue;
@@ -978,60 +1034,63 @@
         };
     }
     
-    // Função para buscar e processar dados ( COM FILTRO DE DATA )
+    // Função principal que orquestra o processo
     async function fetchData() {
-      try {
-        showNotification('Carregando dados...', 'info');
-        
-        document.querySelectorAll('.card, .table').forEach(el => {
-          if (!el.querySelector('.loading')) {
-            el.style.position = 'relative';
-            el.innerHTML += '<div class="loading"><div class="spinner"></div></div>';
-          }
-        });
-        
-        const csvData = await fetchSpreadsheetData();
-        const rawData = await processCSVData(csvData);
+        try {
+            showNotification('Iniciando verificação de dados...', 'info');
+            
+            document.querySelectorAll('.card, .table').forEach(el => {
+                if (!el.querySelector('.loading')) {
+                    el.style.position = 'relative';
+                    el.innerHTML += '<div class="loading"><div class="spinner"></div></div>';
+                }
+            });
 
-        // Lógica de filtro de data
-        const dataInicio = new Date(document.getElementById('filtroInicio').value + 'T00:00:00');
-        const dataFim = new Date(document.getElementById('filtroFim').value + 'T23:59:59');
+            const csvData = await fetchSpreadsheetData();
+            const rawData = await processCSVData(csvData);
 
-        const dadosFiltradosPorData = rawData.filter(row => {
-            const rowDate = new Date(row.DATA + 'T00:00:00');
-            return rowDate >= dataInicio && rowDate <= dataFim;
-        });
+            // 1. Gera o relatório de qualidade no console com todos os dados
+            gerarRelatorioQualidadeDados(rawData); 
+            
+            // 2. Filtra os dados pela data selecionada na interface
+            const dataInicio = new Date(document.getElementById('filtroInicio').value + 'T00:00:00');
+            const dataFim = new Date(document.getElementById('filtroFim').value + 'T23:59:59');
 
-        // Passa apenas os dados já filtrados pela data para serem transformados
-        dashboardData = transformData(dadosFiltradosPorData);
+            const dadosFiltradosPorData = rawData.filter(row => {
+                const rowDate = new Date(row.DATA + 'T00:00:00');
+                // Apenas inclui a linha se a data for válida E estiver no intervalo
+                return rowDate && !isNaN(rowDate) && rowDate >= dataInicio && rowDate <= dataFim;
+            });
 
-        if (!dashboardData) {
-            throw new Error("A transformação dos dados falhou.");
+            // 3. Transforma os dados já filtrados para exibição no dashboard
+            dashboardData = transformData(dadosFiltradosPorData);
+
+            if (!dashboardData) {
+                throw new Error("A transformação dos dados falhou.");
+            }
+
+            applyFilters();
+            
+            document.querySelectorAll('.loading').forEach(el => el.remove());
+            
+            updateKPIs();
+            updateCharts();
+            updateTables();
+            
+            const now = new Date();
+            document.getElementById('ultimaAtualizacao').textContent = 
+            `Atualizado em ${now.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+            
+            showNotification('Dados atualizados com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('ERRO CRÍTICO:', error);
+            showNotification('Erro ao carregar dados. Verifique o console (F12).', 'error');
+            document.querySelectorAll('.loading').forEach(el => el.remove());
         }
-
-        applyFilters();
-        
-        document.querySelectorAll('.loading').forEach(el => el.remove());
-        
-        updateKPIs();
-        updateCharts();
-        updateTables();
-        
-        const now = new Date();
-        document.getElementById('ultimaAtualizacao').textContent = 
-          `Atualizado em ${now.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
-        
-        showNotification('Dados atualizados com sucesso!', 'success');
-        
-      } catch (error) {
-        console.error('ERRO CRÍTICO:', error);
-        showNotification('Erro ao carregar dados. Verifique o console (F12).', 'error');
-        
-        document.querySelectorAll('.loading').forEach(el => el.remove());
-      }
     }
     
-    // Função para aplicar filtros
+    // Função para aplicar filtros de checkbox
     function applyFilters() {
       if (!dashboardData) return;
       filteredData = JSON.parse(JSON.stringify(dashboardData));
