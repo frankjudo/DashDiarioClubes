@@ -36,7 +36,6 @@
     .btn:hover{transform:translateY(-1px);filter:brightness(1.1)} .btn:active{transform:translateY(0)}
     .btn-ghost{background:#0e2c43;border:1px solid rgba(73,182,255,.35);color:var(--accent)}
     .btn-apply{background:#133822;border:1px solid rgba(40,208,127,.35);color:#bfffe1}
-    .btn-warning{background:#382213;border:1px solid rgba(208, 136, 40, 0.35);color:#ffd8b3}
 
     .insights{padding:10px 14px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start}
     .chip{background:#0b2435;border:1px solid var(--border);padding:8px 10px;border-radius:12px;color:var(--muted);font-weight:700}
@@ -58,7 +57,6 @@
     .spinner{width:36px;height:36px;border:4px solid rgba(255,255,255,.12);border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* Ranking */
     .ranking-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
     .ranking-head .left{display:flex;gap:12px;align-items:center}
     table{width:100%;border-collapse:separate;border-spacing:0 8px}
@@ -67,20 +65,11 @@
     tbody td{padding:10px 10px}
     tbody tr:hover{background:rgba(73,182,255,.08)}
     .delta.up{color:var(--good)} .delta.down{color:var(--bad)} .delta.flat{color:var(--muted)}
-    
-    /* Notification */
-    .notification{position:fixed;bottom:20px;right:20px;padding:12px 18px;border-radius:8px;background:#101f2d;color:#e9f3ff;border:1px solid var(--border);box-shadow:0 5px 15px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;transform:translateY(100px);opacity:0;transition:all .3s;z-index:1000}
-    .notification.show{transform:translateY(0);opacity:1}
-    .notification.info{border-left:3px solid #49b6ff}
-    .notification.success{border-left:3px solid #28d07f}
-    .notification.warning{border-left:3px solid #ffb86b}
-    .notification.error{border-left:3px solid #ff5c5c}
-    
-    /* URL warning */
-    .url-warning{padding:10px;background:#382213;border-radius:8px;border:1px solid rgba(255,184,107,.3);margin-top:10px}
-    .url-warning .title{display:flex;gap:8px;align-items:center;color:#ffb86b;font-weight:700}
-    .url-warning p{margin:8px 0;color:#ffd8b3;font-size:14px}
-    .url-warning .actions{display:flex;gap:8px;margin-top:10px}
+
+    .notification{position:fixed;right:16px;bottom:16px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;opacity:0;transform:translateY(12px);transition:all .2s}
+    .notification.show{opacity:1;transform:translateY(0)}
+    .notification.success{border-left-color:var(--good)}
+    .notification.error{border-left-color:var(--bad)}
   </style>
 </head>
 <body>
@@ -145,23 +134,12 @@
         <button class="btn btn-ghost" id="btnImportar" type="button"><i class="fa-solid fa-file-arrow-up"></i> Importar CSV</button>
         <input id="fileCsv" type="file" accept=".csv,text/csv" style="display:none"/>
       </div>
-      
-      <div class="url-warning" id="urlWarning">
-        <div class="title"><i class="fa-solid fa-triangle-exclamation"></i> Problema ao carregar dados</div>
-        <p>O sistema está tendo dificuldades para acessar os dados diretamente da planilha online. Você pode:</p>
-        <div class="actions">
-          <button class="btn btn-warning" id="btnProxy" type="button"><i class="fa-solid fa-wifi"></i> Tentar com proxy</button>
-          <button class="btn btn-ghost" id="btnImportar2" type="button"><i class="fa-solid fa-file-arrow-up"></i> Importar CSV</button>
-        </div>
-      </div>
     </div>
 
-    <!-- insights -->
     <div class="panel insights" id="insights" aria-live="polite">
       <div class="chip" id="chipResumo">Gerando insights…</div>
     </div>
 
-    <!-- KPIs -->
     <div class="kpis" role="region" aria-label="Indicadores">
       <div class="kpi" id="kpi-ftd"><div class="title"><i class="fa-solid fa-user-plus"></i> FTD</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-dep"><div class="title"><i class="fa-solid fa-coins"></i> Depósitos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
@@ -174,23 +152,22 @@
     </div>
 
     <div class="grid">
-      <div class="card"><h3 id="tComp"><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartComparativo" aria-label="Gráfico de barras comparativo"></canvas></div></div>
-      <div class="card"><h3 id="tGgr"><i class="fa-solid fa-chart-line"></i> Evolução do GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartGGR" aria-label="Evolução do GGR"></canvas></div></div>
-      <div class="card"><h3 id="tDep"><i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartDepositos" aria-label="Evolução de Depósitos"></canvas></div></div>
-      <div class="card"><h3 id="tFtd"><i class="fa-solid fa-user-plus"></i> Evolução do FTD</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartFTD" aria-label="Evolução do FTD"></canvas></div></div>
-      <div class="card"><h3 id="tSb"><i class="fa-solid fa-futbol"></i> Evolução do Sportsbook</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartSportsbook" aria-label="Evolução do Sportsbook"></canvas></div></div>
-      <div class="card"><h3 id="tCs"><i class="fa-solid fa-dice"></i> Evolução do Cassino</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartCassino" aria-label="Evolução do Cassino"></canvas></div></div>
-      <div class="card"><h3><i class="fa-solid fa-braille"></i> Correlação Depósitos × GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartScatter" aria-label="Correlação Depósitos e GGR"></canvas></div></div>
+      <div class="card"><h3 id="tComp"><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartComparativo"></canvas></div></div>
+      <div class="card"><h3 id="tGgr"><i class="fa-solid fa-chart-line"></i> Evolução do GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartGGR"></canvas></div></div>
+      <div class="card"><h3 id="tDep"><i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
+      <div class="card"><h3 id="tFtd"><i class="fa-solid fa-user-plus"></i> Evolução do FTD</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartFTD"></canvas></div></div>
+      <div class="card"><h3 id="tSb"><i class="fa-solid fa-futbol"></i> Evolução do Sportsbook</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartSportsbook"></canvas></div></div>
+      <div class="card"><h3 id="tCs"><i class="fa-solid fa-dice"></i> Evolução do Cassino</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartCassino"></canvas></div></div>
+      <div class="card"><h3><i class="fa-solid fa-braille"></i> Correlação Depósitos × GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartScatter"></canvas></div></div>
     </div>
 
-    <!-- Ranking único -->
     <div class="card">
       <div class="ranking-head">
         <div class="left">
           <h3><i class="fa-solid fa-trophy"></i> Ranking de Clubes</h3>
           <div class="field">
             <label for="selRanking">Métrica</label>
-            <select id="selRanking" aria-label="Selecionar métrica do ranking">
+            <select id="selRanking">
               <option value="depositos">Depósitos</option>
               <option value="ftd">FTD</option>
               <option value="ggr" selected>GGR</option>
@@ -203,46 +180,34 @@
         <div class="sub" id="rankingInfo">Top 15 — GGR</div>
       </div>
       <div class="loader"><div class="spinner"></div></div>
-      <table id="rankingTable" aria-label="Tabela de ranking de clubes">
+      <table id="rankingTable">
         <thead><tr><th>#</th><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead>
         <tbody><tr><td colspan="4">Carregando…</td></tr></tbody>
       </table>
     </div>
   </div>
 
-  <div class="notification" id="notification"><i class="fas fa-info-circle" aria-hidden="true"></i><span id="notificationText"></span></div>
+  <div class="notification" id="notification"><i class="fas fa-info-circle"></i><span id="notificationText"></span></div>
 
   <script>
-    /* ====== CONFIG ====== */
     const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
     const CLUBES_SUPREMA = ['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
     const CLUBE_TONI = 'crisslots123@gmail.com';
     const TOP_N = 15;
-    const CORS_PROXY = 'https://corsproxy.io/?'; // Proxy alternativo para resolver problemas de CORS
 
-    /* ====== STATE ====== */
     let charts = {};
     let allRows = [];
     let baseAtual = [], baseAnterior = [];
     let rowsAtual = [], rowsAnterior = [];
     let aggAtual = null, aggAnterior = null;
-    let useProxy = false; // Flag para usar proxy CORS
-
-    // mapeamento de colunas detectado dinamicamente
     let COLS = null;
 
     const $ = id => document.getElementById(id);
     const showLoaders = (on=true) => document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',on));
-
-    /* ====== UTILS ====== */
+    function note(msg,type='info'){ const n=$('notification'),t=$('notificationText'),i=n.querySelector('i'); n.className='notification'; n.classList.add('show',type); i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':'fas fa-info-circle'; t.textContent=msg; setTimeout(()=>n.classList.remove('show'),3000); }
     function formatMoney(n){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n||0); }
-    function note(msg,type='info'){
-      const n=$('notification'),t=$('notificationText'),i=n.querySelector('i');
-      n.className='notification'; n.classList.add('show',type);
-      i.className=type==='error'?'fas fa-exclamation-circle':type==='success'?'fas fa-check-circle':type==='warning'?'fas fa-triangle-exclamation':'fas fa-info-circle';
-      t.textContent=msg;
-      setTimeout(()=>n.classList.remove('show'),3000);
-    }
+
+    // >>> CORREÇÃO principal (typo removido) + parser de datas robusto <<<
     function parseCurrency(v){
       if(typeof v==='number') return v;
       if(v==null) return 0;
@@ -250,27 +215,35 @@
       s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-');
       const par=/^\(.*\)$/.test(s); if(par) s=s.replace(/[()]/g,'');
       s=s.replace(/[^0-9,.\-]/g,'');
-      const c=s.includes(','), d=s.includes('.');
-      if(c&&d){
+      const hasComma=s.includes(','), hasDot=s.includes('.');
+      if(hasComma && hasDot){
         const lc=s.lastIndexOf(','), ld=s.lastIndexOf('.');
-        const dec=lc>ld?',':'.', th=dec===','?'.':',';
-        s=s.split(th).join('');
+        const dec = lc>ld ? ',' : '.';
+        const thousand = dec===',' ? '.' : ',';
+        s = s.split(thousand).join('');
         if(dec===',') s=s.replace(',','.');
-      }else if(c){ s=s.split('.').join(''); s=s.replace(',','.'); }
-      else { s=s.replace(/,/g,''); }
+      }else if(hasComma){
+        s = s.split('.').join('');
+        s = s.replace(',','.');
+      } // else: só ponto ou nada
       let n=parseFloat(s); if(isNaN(n)) n=0;
       if(par) n=-Math.abs(n);
       return n;
     }
+    function parseDateStr(s){
+      if(!s) return null;
+      const str = String(s).trim();
+      // YYYY-MM-DD
+      if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str+'T00:00:00');
+      // DD/MM/YYYY
+      if(/^\d{2}\/\d{2}\/\d{4}$/.test(str)){ const [d,m,y]=str.split('/'); return new Date(`${y}-${m}-${d}T00:00:00`); }
+      // fallback
+      const d=new Date(str); return isNaN(d)? null : d;
+    }
 
-    /* ====== DETECÇÃO DE COLUNAS ====== */
     function detectColumns(headers){
       const norm = s => (s||'').toString().trim().toLowerCase();
-      const find = (...cands) => headers.find(h => {
-        const n=norm(h);
-        return cands.some(c => n.includes(c));
-      }) || null;
-
+      const find = (...cands) => headers.find(h => cands.some(c => norm(h).includes(c))) || null;
       const m = {
         date:    find('data'),
         club:    find('usuário - nome de usuário','nome de usuário','usuario - nome','clube','user'),
@@ -286,34 +259,11 @@
       return m;
     }
 
-    /* ====== FETCH + FALLBACK ====== */
     async function fetchAll(){
       try{
-        // Usar proxy se necessário
-        const url = useProxy ? `${CORS_PROXY}${encodeURIComponent(SPREADSHEET_URL)}` : SPREADSHEET_URL;
-        
-        // Exibir mensagem de carregamento
-        note(`Carregando dados ${useProxy ? 'com proxy' : 'diretamente'}...`);
-        
-        // Criar timeout para a requisição
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000); // 10 segundos
-        
-        const res = await fetch(url, {
-          cache: 'no-store',
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeout);
-        
+        const res = await fetch(SPREADSHEET_URL,{cache:'no-store'});
         if(!res.ok) throw new Error('Falha ao acessar a planilha (HTTP '+res.status+')');
         const text = await res.text();
-        
-        // Verificar se o conteúdo parece ser um CSV válido
-        if(!text.includes(',') || !text.includes('\n')){
-          throw new Error('O conteúdo retornado não parece ser um CSV válido');
-        }
-        
         const parsed = await new Promise((resolve,reject)=>Papa.parse(text,{
           header:true, skipEmptyLines:true, dynamicTyping:false,
           complete:r=>r.errors.length?reject(r.errors):resolve(r.data),
@@ -321,36 +271,18 @@
         }));
         if(!parsed.length) throw new Error('CSV vazio.');
         COLS = detectColumns(Object.keys(parsed[0]||{}));
-        note('Dados carregados com sucesso','success');
-        $('urlWarning').style.display = 'none'; // Esconder aviso
+        note('Dados carregados','success');
         return parsed;
       }catch(err){
         console.error('Erro ao buscar planilha:', err);
-        
-        // Mostrar aviso específico
-        $('urlWarning').style.display = 'block';
-        
-        // Determinar tipo de erro
-        let errorMsg = 'Erro ao buscar planilha. ';
-        if(err.name === 'AbortError'){
-          errorMsg += 'Tempo limite excedido. ';
-        } else if(err.message.includes('HTTP')){
-          errorMsg += 'Erro de rede. ';
-        } else {
-          errorMsg += 'Problema no formato. ';
-        }
-        errorMsg += 'Use "Importar CSV" ou tente com proxy.';
-        
-        note(errorMsg, 'error');
+        note('Erro ao buscar planilha. Use "Importar CSV".','error');
         throw err;
       }
     }
 
-    // Importar CSV local (fallback)
-    function setupCSVImport(){
+    // Fallback CSV local
+    document.addEventListener('DOMContentLoaded', ()=>{
       $('btnImportar').addEventListener('click', ()=> $('fileCsv').click());
-      $('btnImportar2').addEventListener('click', ()=> $('fileCsv').click());
-      
       $('fileCsv').addEventListener('change', (ev)=>{
         const f = ev.target.files && ev.target.files[0];
         if(!f) return;
@@ -367,21 +299,19 @@
                 allRows = r.data;
                 populateClubSelects(allRows, loadPrefs());
                 updateAll();
-                note('CSV local carregado com sucesso','success');
-                $('urlWarning').style.display = 'none'; // Esconder aviso
+                note('CSV local carregado','success');
               }
             });
-          }catch(ex){ console.error(ex); note('Falha ao processar CSV','error'); }
+          }catch(ex){ console.error(ex); note('Falha no CSV','error'); }
         };
         reader.readAsText(f, 'utf-8');
       });
-    }
+    });
 
-    /* ====== TRANSFORM ====== */
     function transform(rows){
       if(!rows.length) return null;
       const c={ date:COLS.date, club:COLS.club, ftd:COLS.ftd, dep:COLS.dep, ggrCalc:COLS.ggrCalc, sb:COLS.sb, cs:COLS.cs, hab:COLS.hab, bonus:COLS.bonus };
-      const dates=[...new Set(rows.map(r=>r[c.date]))].sort();
+      const dates=[...new Set(rows.map(r=>r[c.date]))].sort((a,b)=> (parseDateStr(a)-parseDateStr(b)));
       const totals={ftd:0,dep:0,ggr:0,sb:0,cs:0,bonus:0};
       const series={ggr:Array(dates.length).fill(0),dep:Array(dates.length).fill(0),ftd:Array(dates.length).fill(0),sb:Array(dates.length).fill(0),cs:Array(dates.length).fill(0)};
 
@@ -433,7 +363,7 @@
 
     function seriesPorClube(rows, metric){
       const c={ date:COLS.date, ftd:COLS.ftd, dep:COLS.dep, ggrCalc:COLS.ggrCalc, sb:COLS.sb, cs:COLS.cs, hab:COLS.hab };
-      const dates=[...new Set(rows.map(r=>r[c.date]))].sort();
+      const dates=[...new Set(rows.map(r=>r[c.date]))].sort((a,b)=> (parseDateStr(a)-parseDateStr(b)));
       const serie=Array(dates.length).fill(0);
       rows.forEach(r=>{
         const di=dates.indexOf(r[c.date]); if(di<0) return;
@@ -452,12 +382,10 @@
       return {labels:dates, data:serie};
     }
 
-    /* ====== INSIGHTS ====== */
     function gerarInsights(){
       if(!aggAtual){ $('chipResumo').textContent='Sem dados no período.'; return; }
       const compOn = $('chkComparar').checked && aggAnterior;
       const delta=(a,b)=>!compOn?null:a-(b??0);
-
       const dDep = delta(aggAtual.kpis.depositos, aggAnterior?.kpis?.depositos);
       const dGgr = delta(aggAtual.kpis.ggr, aggAnterior?.kpis?.ggr);
       const dFtd = delta(aggAtual.kpis.ftd, aggAnterior?.kpis?.ftd);
@@ -477,7 +405,6 @@
       $('chipResumo').textContent=txt;
     }
 
-    /* ====== RENDER KPIs/CHARTS/RANKING ====== */
     function setKPI(id, val, prev, metricKey){
       const el=$(id);
       el.querySelector('.value').textContent = metricKey==='margem' ? (isFinite(val)? `${val.toFixed(2)}%` : '—') : formatMoney(val);
@@ -538,7 +465,6 @@
       $('tSb').innerHTML = `<i class="fa-solid fa-futbol"></i> Evolução do Sportsbook${compararClubes?' — A vs B':''}`;
       $('tCs').innerHTML = `<i class="fa-solid fa-dice"></i> Evolução do Cassino${compararClubes?' — A vs B':''}`;
 
-      // Comparativo
       if(charts.comp) charts.comp.destroy();
       if(compararClubes){
         const metrics=['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'];
@@ -562,12 +488,11 @@
         charts.comp = new Chart(ctxComp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common});
       }
 
-      // Linhas helpers
-      const mkSerie = (metric) => ({
-        atual: aggAtual.charts[metric],
-        anterior: aggAnterior?.charts[metric],
-        A: seriesPorClube(baseAtual.filter(r=> r[COLS.club]===$('filtroClubeA').value), metric==='depositos'?'depositos':metric),
-        B: seriesPorClube(baseAtual.filter(r=> r[COLS.club]===$('filtroClubeB').value), metric==='depositos'?'depositos':metric)
+      const mkSerie = (metricKey) => ({
+        atual: aggAtual.charts[metricKey],
+        anterior: aggAnterior?.charts[metricKey],
+        A: seriesPorClube(baseAtual.filter(r=> r[COLS.club]===$('filtroClubeA').value), metricKey==='depositos'?'depositos':metricKey),
+        B: seriesPorClube(baseAtual.filter(r=> r[COLS.club]===$('filtroClubeB').value), metricKey==='depositos'?'depositos':metricKey)
       });
 
       const makeLine=(ctx,key,serie)=>{
@@ -590,7 +515,6 @@
       makeLine(ctxSB,'Sportsbook', mkSerie('sportsbook'));
       makeLine(ctxCS,'Cassino', mkSerie('cassino'));
 
-      // Scatter
       if(charts.scatter) charts.scatter.destroy();
       const curMapG = sumByClub(baseAtual,'ggr');
       const curMapD = sumByClub(baseAtual,'depositos');
@@ -642,7 +566,6 @@
       });
     }
 
-    /* ====== FILTROS/PREFS ====== */
     function getDateRange(){
       let ini=new Date($('filtroInicio').value+'T00:00:00');
       let fim=new Date($('filtroFim').value+'T23:59:59');
@@ -673,7 +596,6 @@
       }catch{ return {}; }
     }
 
-    /* ====== PIPELINE ====== */
     function filterWindows(){
       const {ini,fim}=getDateRange();
       const days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
@@ -681,8 +603,8 @@
       const prevStart=new Date(prevEnd); prevStart.setDate(prevEnd.getDate()-(days-1));
       const inRange=(d,a,b)=>d && !isNaN(d) && d>=a && d<=b;
 
-      const cur=allRows.filter(r=>inRange(new Date((r[COLS.date]||'')+'T00:00:00'), ini, fim));
-      const prv=allRows.filter(r=>inRange(new Date((r[COLS.date]||'')+'T00:00:00'), prevStart, prevEnd));
+      const cur=allRows.filter(r=>inRange(parseDateStr(r[COLS.date]), ini, fim));
+      const prv=allRows.filter(r=>inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd));
 
       baseAtual = applyNameFilters(cur);
       baseAnterior = applyNameFilters(prv);
@@ -713,18 +635,17 @@
       $('filtroInicio').value=y.toISOString().split('T')[0]; $('filtroFim').value=y.toISOString().split('T')[0];
       const prefs=loadPrefs();
       try{
+        note('Carregando dados...');
         allRows=await fetchAll();
         populateClubSelects(allRows,prefs);
         updateAll();
+        note('Dados carregados','success');
       }catch(e){
-        console.warn('Você pode importar um CSV local pelo botão "Importar CSV".');
+        console.warn('Use o botão "Importar CSV" para carregar um arquivo local.');
       }
     }
 
-    /* ====== EVENTS ====== */
     document.addEventListener('DOMContentLoaded', ()=>{
-      setupCSVImport();
-      
       const on=(id,ev,fn)=>{ const el=$(id); if(el) el.addEventListener(ev,fn); };
       on('btnAplicar','click', updateAll);
       on('btnAtualizar','click', updateAll);
@@ -745,15 +666,6 @@
         let csv="data:text/csv;charset=utf-8,Clube,Valor\n"; rows.forEach(r=>csv+=`"${r.clube}",${r.valor}\n`);
         const a=document.createElement('a'); a.href=encodeURI(csv); a.download=`ranking_${metric}_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); a.remove();
       });
-      on('btnProxy','click', ()=>{
-        useProxy = true;
-        note('Tentando carregar dados com proxy...', 'warning');
-        init();
-      });
-      
-      // Inicializar aviso como oculto
-      $('urlWarning').style.display = 'none';
-      
       init();
     });
   </script>
