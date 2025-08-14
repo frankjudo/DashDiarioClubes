@@ -240,27 +240,47 @@
       return m;
     }
 
-    /* ========= FETCH ========= */
+    /* ========= FETCH (COM PROXY CORS) ========= */
     async function fetchAll(){
       try{
-        const res = await fetch(SPREADSHEET_URL,{cache:'no-store'});
-        if(!res.ok) throw new Error('Falha ao acessar a planilha (HTTP '+res.status+')');
+        // Usando um proxy para evitar problemas de CORS, como sugerido
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const targetUrl = SPREADSHEET_URL;
+        
+        const res = await fetch(proxyUrl + targetUrl, {
+          cache: 'no-store',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        
+        if(!res.ok) throw new Error('Falha HTTP: ' + res.status);
+        
         const text = await res.text();
-        const parsed = await new Promise((resolve,reject)=>Papa.parse(text,{
-          header:true, skipEmptyLines:true, dynamicTyping:false,
-          complete:r=>r.errors.length?reject(r.errors):resolve(r.data),
-          error:reject
-        }));
-        if(!parsed.length) throw new Error('CSV vazio.');
-        COLS = detectColumns(Object.keys(parsed[0]||{}));
-        note('Dados carregados','success');
-        return parsed;
-      }catch(err){
-        console.error('Erro ao buscar planilha:', err);
-        note('Erro ao buscar planilha. Use "Importar CSV".','error');
+        const parsedResult = await new Promise((resolve, reject) => {
+          Papa.parse(text, {
+            header: true,
+            skipEmptyLines: true,
+            complete: result => resolve(result),
+            error: error => reject(error)
+          });
+        });
+
+        if (parsedResult.errors.length) {
+            throw new Error('Erro de parsing do CSV: ' + JSON.stringify(parsedResult.errors));
+        }
+        
+        const parsedData = parsedResult.data;
+        if(!parsedData.length) throw new Error('CSV vazio ou inválido.');
+
+        COLS = detectColumns(Object.keys(parsedData[0]));
+        note('Dados carregados com sucesso!', 'success');
+        return parsedData;
+      } catch(err) {
+        console.error('Erro detalhado ao buscar dados:', err);
+        note('Falha ao carregar dados da planilha. Use "Importar CSV".', 'error');
         throw err;
       }
     }
+
 
     // Fallback CSV local
     document.addEventListener('DOMContentLoaded', ()=>{
@@ -572,16 +592,22 @@
       }catch{ return {}; }
     }
 
-    /* ========= PIPELINE ========= */
+    /* ========= PIPELINE (COM FILTRO DE DATA ATUALIZADO) ========= */
     function filterWindows(){
       const {ini,fim}=getDateRange();
       const days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
       const prevEnd=new Date(ini); prevEnd.setDate(ini.getDate()-1);
       const prevStart=new Date(prevEnd); prevStart.setDate(prevEnd.getDate()-(days-1));
-      const inRange=(d,a,b)=>d && !isNaN(d) && d>=a && d<=b;
 
-      const cur=allRows.filter(r=>inRange(parseDateStr(r[COLS.date]), ini, fim));
-      const prv=allRows.filter(r=>inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd));
+      // Aplicando o filtro de data sugerido por você
+      const cur = allRows.filter(r => {
+        const date = parseDateStr(r[COLS.date]);
+        return date && date >= ini && date <= fim;
+      });
+      const prv = allRows.filter(r => {
+        const date = parseDateStr(r[COLS.date]);
+        return date && date >= prevStart && date <= prevEnd;
+      });
 
       baseAtual = applyNameFilters(cur);
       baseAnterior = applyNameFilters(prv);
@@ -616,9 +642,9 @@
         allRows=await fetchAll();
         populateClubSelects(allRows,prefs);
         updateAll();
-        note('Dados carregados','success');
       }catch(e){
-        console.warn('Use o botão "Importar CSV" para carregar um arquivo local.');
+        // O erro já é tratado dentro de fetchAll, então não precisamos fazer mais nada aqui
+        console.warn('Falha na inicialização. A função fetchAll() lidou com o erro.');
       }
     }
 
