@@ -137,7 +137,6 @@
   <div class="notification" id="notification"><i class="fas fa-info-circle"></i><span id="notificationText"></span></div>
 
 <script>
-    /* ========= CONFIG ========= */
     const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
     const CLUBES_SUPREMA = ['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
     const CLUBE_TONI = 'crisslots123@gmail.com';
@@ -178,16 +177,33 @@
         const prv = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd));
         baseAtual = applyNameFilters(cur);
         baseAnterior = applyNameFilters(prv);
-        
-        // ============ TESTE: Forçando o uso de todos os dados ============
-        // Esta alteração IGNORA os filtros de Clube A/B para os cálculos principais.
-        console.log("[TESTE] Ignorando filtros de Clube A/B para os KPIs.");
         rowsAtual = baseAtual;
         rowsAnterior = baseAnterior;
-        // ================================================================
     }
     
-    function updateAll() { showLoaders(true); filterWindows(); aggAtual = transform(rowsAtual) || { kpis: { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 }, charts: { comparativo: { labels: ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'], dataA: [0, 0, 0, 0, 0, 0] }, ggr: { labels: [], data: [] }, depositos: { labels: [], data: [] }, ftd: { labels: [], data: [] }, sportsbook: { labels: [], data: [] }, cassino: { labels: [], data: [] } } }; aggAnterior = rowsAnterior.length ? transform(rowsAnterior) : null; renderKPIs(); destroyCharts(); renderCharts(); renderRanking(); gerarInsights(); showLoaders(false); savePrefs(); $('ultimaAtualizacao').textContent = 'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
+    function updateAll() {
+        showLoaders(true);
+        filterWindows();
+        aggAtual = transform(rowsAtual) || { kpis: { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 }, charts: { comparativo: { labels: ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'], dataA: [0, 0, 0, 0, 0, 0] }, ggr: { labels: [], data: [] }, depositos: { labels: [], data: [] }, ftd: { labels: [], data: [] }, sportsbook: { labels: [], data: [] }, cassino: { labels: [], data: [] } } };
+        aggAnterior = rowsAnterior.length ? transform(rowsAnterior) : null;
+        
+        // ============ DIAGNÓSTICO FINAL AQUI ============
+        console.log("%c[DIAGNÓSTICO FINAL] Valores enviados para os KPIs:", "color: magenta; font-weight: bold;");
+        console.log("FTD Atual:", aggAtual.kpis.ftd);
+        console.log("FTD Anterior:", aggAnterior ? aggAnterior.kpis.ftd : 'N/A');
+        console.log("========================================");
+        // ================================================
+
+        renderKPIs();
+        destroyCharts();
+        renderCharts();
+        renderRanking();
+        gerarInsights();
+        showLoaders(false);
+        savePrefs();
+        $('ultimaAtualizacao').textContent = 'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
     async function init() { const today = new Date(); const y = new Date(today); y.setDate(today.getDate() - 1); $('filtroInicio').value = y.toISOString().slice(0, 10); $('filtroFim').value = y.toISOString().slice(0, 10); const prefs = loadPrefs(); try { note('Carregando dados...'); allRows = await fetchAll(); populateClubSelects(allRows, prefs); updateAll(); } catch (e) { console.warn('Falha na inicialização.'); } }
     document.addEventListener('DOMContentLoaded', () => { const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); }; on('btnAplicar', 'click', updateAll); on('btnAtualizar', 'click', init); on('filtroClubeA', 'change', updateAll); on('filtroClubeB', 'change', updateAll); on('eliminarSuprema', 'change', updateAll); on('eliminarToni', 'change', updateAll); on('chkComparar', 'change', () => { updateAll(); renderRanking(); }); on('selRanking', 'change', renderRanking); on('btnOntem', 'click', () => { const d = new Date(); d.setDate(d.getDate() - 1); const s = d.toISOString().slice(0, 10); $('filtroInicio').value = s; $('filtroFim').value = s; updateAll(); }); on('btnUltimos7', 'click', () => { const t = new Date(); const s = new Date(); s.setDate(t.getDate() - 7); $('filtroInicio').value = s.toISOString().slice(0, 10); $('filtroFim').value = t.toISOString().slice(0, 10); updateAll(); }); on('btnUltimos30', 'click', () => { const t = new Date(); const s = new Date(); s.setDate(t.getDate() - 30); $('filtroInicio').value = s.toISOString().slice(0, 10); $('filtroFim').value = t.toISOString().slice(0, 10); updateAll(); }); on('btnDarkMode', 'click', () => { document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode'); destroyCharts(); renderCharts(); }); on('searchClub', 'input', function () { const term = this.value.toLowerCase(); ['filtroClubeA', 'filtroClubeB'].forEach(id => { const sel = $(id); if (!sel) return;[...sel.options].forEach(o => { if (o.value === '') { o.style.display = ''; return; } o.style.display = (o.value.toLowerCase().includes(term) || o.textContent.toLowerCase().includes(term)) ? '' : 'none'; }); }); }); on('btnExportar', 'click', () => { const metric = $('selRanking').value; const curMap = sumByClub(rowsAtual, metric); const rows = Object.entries(curMap).map(([clube, valor]) => ({ clube, valor: num(valor) })).sort((a, b) => b.valor - a.valor); let csv = "data:text/csv;charset=utf-8,Clube,Valor\n"; rows.forEach(r => csv += `"${r.clube}",${r.valor}\n`); const a = document.createElement('a'); a.href = encodeURI(csv); a.download = `ranking_${metric}_${new Date().toISOString().slice(0, 10)}.csv`; document.body.appendChild(a); a.click(); a.remove(); }); init(); });
 </script>
