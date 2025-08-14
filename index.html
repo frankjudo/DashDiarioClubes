@@ -76,9 +76,7 @@
         <button class="btn btn-ghost" id="btnUltimos7" type="button"><i class="fa-solid fa-calendar-week"></i> Últimos 7 dias</button>
         <button class="btn btn-ghost" id="btnUltimos30" type="button"><i class="fa-solid fa-calendar-alt"></i> Últimos 30 dias</button>
         <div class="field" style="margin-left:10px">
-          <label for="chkComparar" style="display:flex;align-items:center;gap:6px">
-            <input type="checkbox" id="chkComparar"> Comparar c/ período anterior
-          </label>
+          <label for="chkComparar" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="chkComparar"> Comparar c/ período anterior</label>
         </div>
         <button class="btn btn-apply" id="btnAplicar" type="button"><i class="fa-solid fa-filter"></i> Aplicar</button>
       </div>
@@ -194,7 +192,7 @@
     const d = new Date(str); return isNaN(d) ? null : d;
   }
 
-  // ===== detectColumns reforçado com preferência por "FTD-Montante" =====
+  // ===== detectColumns reforçado com preferência por "FTD-Montante" + EMAIL =====
   function detectColumns(headers) {
     const norm = s => (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
     const exact = name => headers.find(h => norm(h) === norm(name)) || null;
@@ -209,6 +207,7 @@
     const m = {
       date: find(n => n.includes('data')),
       club: find(n => n.includes('usuario - nome de usuario') || n.includes('nome de usuario') || n.includes('usuario - nome') || n.includes('clube') || n === 'user' || n.includes('usuario')),
+      email: exact('Usuário - E-mail') || exact('Usuario - Email') || find(n => n.includes('e-mail') || n.includes('email')),
       ftd:  ftdPrefer || find(n => (n.includes('ftd') && n.includes('montante'))) || find(n => n.includes('ftd')),
       dep: find(n => n.includes('usuario - depositos') || n.includes('depositos') || n.includes('deposito')),
       ggrCalc: ggrCalcHeader,
@@ -542,28 +541,68 @@
     return { ini, fim };
   }
 
+  // === FILTRO POR EMAIL (Suprema/Toni) com fallback para campo "clube" ===
   function applyNameFilters(rows) {
     const sup = $('eliminarSuprema').checked, toni = $('eliminarToni').checked;
     const supList = CLUBES_SUPREMA.map(s => s.toLowerCase());
     const toniName = CLUBE_TONI.toLowerCase();
+
     return rows.filter(r => {
-      const name = (r[COLS.club] || '').toString().trim().toLowerCase();
-      if (sup && supList.includes(name)) return false;
-      if (toni && name === toniName) return false;
+      const valClub  = (r[COLS.club]  || '').toString().trim().toLowerCase();
+      const valEmail = COLS.email ? (r[COLS.email] || '').toString().trim().toLowerCase() : '';
+
+      if (sup && valEmail && supList.includes(valEmail)) return false;
+      if (toni && valEmail && valEmail === toniName)     return false;
+
+      if (sup && supList.includes(valClub)) return false; // fallback
+      if (toni && valClub === toniName)     return false;
+
       return true;
     });
   }
+  // =====================================================================
 
-  function populateClubSelects(all, p) {
-    const clubs = [...new Set(all.map(r => (r[COLS.club] || '(Clube não informado)')))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-    const sA = $('filtroClubeA'), sB = $('filtroClubeB');
-    [sA, sB].forEach(sel => {
-      sel.innerHTML = '<option value="">(Todos)</option>';
-      clubs.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
-    });
-    if (p?.a && [...sA.options].some(o => o.value === p.a)) sA.value = p.a;
-    if (p?.b && [...sB.options].some(o => o.value === p.b)) sB.value = p.b;
+  // === CONCERTO DO PERÍODO ANTERIOR: usa Math.floor para janela correta ===
+  function updateAll() {
+    showLoaders(true);
+
+    const { ini, fim } = getDateRange();
+    if (!ini || !fim) { showLoaders(false); return; }
+
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const days = Math.max(1, Math.floor((fim - ini) / msPerDay) + 1);
+    const prevEnd   = new Date(ini.getTime() - msPerDay);
+    const prevStart = new Date(prevEnd.getTime() - (days - 1) * msPerDay);
+
+    const inRange = (d, a, b) => d && d >= a && d <= b;
+
+    const cur = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), ini, fim));
+    const prv = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd));
+
+    baseAtual = applyNameFilters(cur);
+    baseAnterior = applyNameFilters(prv);
+
+    aggAtual = transform(baseAtual);
+    aggAnterior = $('chkComparar').checked ? transform(baseAnterior) : null;
+
+    renderKPIs(); destroyCharts(); renderCharts(); renderRanking(); gerarInsights();
+    showLoaders(false); 
+
+    // Cabeçalho com colunas detectadas
+    $('ultimaAtualizacao').textContent =
+      'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
+      ` • FTD: ${COLS.ftd || '(n/d)'} • Clube: ${COLS.club || '(n/d)'} • Email: ${COLS.email || '(n/d)'}`;
+
+    // Log de auditoria (útil p/ checar a janela)
+    if (aggAtual && aggAnterior && $('chkComparar').checked) {
+      const fmt = d => d.toLocaleDateString('pt-BR');
+      console.table([
+        {Periodo:'Atual',    Inicio: fmt(ini),      Fim: fmt(fim),      FTD: aggAtual.kpis.ftd},
+        {Periodo:'Anterior', Inicio: fmt(prevStart),Fim: fmt(prevEnd),  FTD: aggAnterior.kpis.ftd}
+      ]);
+    }
   }
+  // ===========================================================================
 
   function savePrefs() {
     const prefs = { ini: $('filtroInicio').value, fim: $('filtroFim').value, a: $('filtroClubeA').value, b: $('filtroClubeB').value, sup: $('eliminarSuprema').checked, toni: $('eliminarToni').checked, comp: $('chkComparar').checked, metric: $('selRanking').value };
@@ -582,47 +621,6 @@
     } catch { return {}; }
   }
 
-  // === CONCERTO DO PERÍODO ANTERIOR: usa Math.floor e calcula janela correta ===
-  function updateAll() {
-    showLoaders(true);
-
-    const { ini, fim } = getDateRange();
-    if (!ini || !fim) { showLoaders(false); return; }
-
-    const msPerDay = 24 * 60 * 60 * 1000;
-    // Inclusivo e sem "estourar" quando é 1 dia só
-    const days = Math.max(1, Math.floor((fim - ini) / msPerDay) + 1);
-    const prevEnd   = new Date(ini.getTime() - msPerDay);                    // dia imediatamente anterior ao início
-    const prevStart = new Date(prevEnd.getTime() - (days - 1) * msPerDay);   // mesma duração
-
-    const inRange = (d, a, b) => d && d >= a && d <= b;
-
-    const cur = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), ini, fim));
-    const prv = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd));
-
-    baseAtual = applyNameFilters(cur);
-    baseAnterior = applyNameFilters(prv);
-
-    aggAtual = transform(baseAtual);
-    aggAnterior = $('chkComparar').checked ? transform(baseAnterior) : null;
-
-    renderKPIs(); destroyCharts(); renderCharts(); renderRanking(); gerarInsights();
-    showLoaders(false); savePrefs();
-
-    $('ultimaAtualizacao').textContent = 'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    $('ultimaAtualizacao').textContent += ` • FTD: ${COLS.ftd || '(não detectado)'}`;
-
-    // Log de verificação (útil para auditar as janelas)
-    if (aggAtual && aggAnterior && $('chkComparar').checked) {
-      const fmt = d => d.toLocaleDateString('pt-BR');
-      console.table([
-        {Periodo:'Atual',    Inicio: fmt(ini),      Fim: fmt(fim),      FTD: aggAtual.kpis.ftd},
-        {Periodo:'Anterior', Inicio: fmt(prevStart),Fim: fmt(prevEnd),  FTD: aggAnterior.kpis.ftd}
-      ]);
-    }
-  }
-  // ===========================================================================
-
   async function init() {
     const today = new Date();
     const y = new Date(today); y.setDate(today.getDate() - 1);
@@ -636,6 +634,17 @@
       populateClubSelects(allRows, prefs);
       updateAll();
     } catch (e) { console.warn('Falha na inicialização.'); }
+  }
+
+  function populateClubSelects(all, p) {
+    const clubs = [...new Set(all.map(r => (r[COLS.club] || '(Clube não informado)')))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const sA = $('filtroClubeA'), sB = $('filtroClubeB');
+    [sA, sB].forEach(sel => {
+      sel.innerHTML = '<option value="">(Todos)</option>';
+      clubs.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+    });
+    if (p?.a && [...sA.options].some(o => o.value === p.a)) sA.value = p.a;
+    if (p?.b && [...sB.options].some(o => o.value === p.b)) sB.value = p.b;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
