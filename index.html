@@ -337,9 +337,12 @@
     $('chipResumo').textContent = txt;
   }
 
+  // ------------- AQUI ESTÁ O DEBUG: mostra também o "Anterior: ..." em todos os KPIs -------------
   function setKPI(id, val, prev, metricKey) {
     const el = $(id);
-    el.querySelector('.value').textContent = metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val);
+    el.querySelector('.value').textContent =
+      metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val);
+
     const varEl = el.querySelector('.var');
 
     // Sem comparação
@@ -347,25 +350,34 @@
       varEl.textContent = '—'; varEl.className = 'var muted'; return;
     }
 
-    // Com comparação
     const delta = val - prev;
+
+    // helper de formatação do "Anterior"
+    const fmtPrev = (mk) => {
+      if (prev == null) return '—';
+      if (mk === 'margem') return `${prev.toFixed(2)}%`;
+      return money(prev);
+    };
+
     if (metricKey === 'margem') {
-      varEl.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}pp`;
+      varEl.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}pp • Anterior: ${fmtPrev('margem')}`;
       varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`;
       return;
     }
     if (metricKey === 'ticket') {
-      varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)}`;
+      varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} • Anterior: ${fmtPrev('ticket')}`;
       varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`;
       return;
     }
 
-    const pct = (prev === 0) ? 0 : (delta / Math.abs(prev)) * 100; // variação %
+    const pct = (prev === 0) ? 0 : (delta / Math.abs(prev)) * 100;
     const positiveIsGood = metricKey !== 'bonus';
     const good = (delta >= 0 && positiveIsGood) || (delta < 0 && !positiveIsGood);
-    varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+    varEl.textContent =
+      `${delta >= 0 ? '+' : ''}${money(delta)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) • Anterior: ${fmtPrev(metricKey)}`;
     varEl.className = `var ${good ? 'up' : 'down'}`;
   }
+  // ------------------------------------------------------------------------------------------------
 
   function renderKPIs() {
     setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd, 'ftd');
@@ -579,23 +591,20 @@
     } catch { return {}; }
   }
 
-  // ------------ FIX PRINCIPAL: agora filtra por INTERVALO usando parseDateStr ------------
+  // Filtra por INTERVALO usando parseDateStr
   function updateAll() {
     showLoaders(true);
 
     const { ini, fim } = getDateRange();
     if (!ini || !fim) { showLoaders(false); return; }
 
-    // define período anterior com MESMA duração
     const msPerDay = 24 * 60 * 60 * 1000;
     const days = Math.round((fim - ini) / msPerDay) + 1;
     const prevEnd = new Date(ini.getTime() - msPerDay);
     const prevStart = new Date(prevEnd.getTime() - (days - 1) * msPerDay);
 
-    // helper para comparar datas normalizadas
     const inRange = (d, a, b) => d && d >= a && d <= b;
 
-    // filtra por intervalo (não por igualdade de string)
     const cur = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), ini, fim));
     const prv = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd));
 
@@ -610,7 +619,6 @@
 
     $('ultimaAtualizacao').textContent = 'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
-  // --------------------------------------------------------------------------------------
 
   async function init() {
     const today = new Date();
