@@ -545,7 +545,7 @@
     function getDateRange(){
       let ini=new Date($('filtroInicio').value+'T00:00:00');
       let fim=new Date($('filtroFim').value+'T23:59:59');
-      if(ini>fim){ const t=ini; ini=fim; fim=t; $('filtroInicio').value=ini.toISOString().split('T')[0]; $('filtroFim').value=fim.toISOString().split('T')[0]; note('Datas invertidas — corrigi pra você'); }
+      if(ini>fim){ const t=ini; ini=fim; fim=t; $('filtroInicio').value=ini.toISOString().slice(0, 10); $('filtroFim').value=fim.toISOString().slice(0, 10); note('Datas invertidas — corrigi pra você'); }
       return {ini,fim};
     }
     function applyNameFilters(rows){
@@ -609,7 +609,7 @@
 
     async function init(){
       const today=new Date(); const y=new Date(today); y.setDate(today.getDate()-1);
-      $('filtroInicio').value=y.toISOString().split('T')[0]; $('filtroFim').value=y.toISOString().split('T')[0];
+      $('filtroInicio').value=y.toISOString().slice(0, 10); $('filtroFim').value=y.toISOString().slice(0, 10);
       const prefs=loadPrefs();
       try{
         note('Carregando dados...');
@@ -633,9 +633,9 @@
       on('eliminarToni','change', updateAll);
       on('chkComparar','change', ()=>{ updateAll(); renderRanking(); });
       on('selRanking','change', renderRanking);
-      on('btnOntem','click', ()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=d.toISOString().split('T')[0]; $('filtroInicio').value=s; $('filtroFim').value=s; updateAll(); });
-      on('btnUltimos7','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); $('filtroInicio').value=s.toISOString().slice(0,10); $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
-      on('btnUltimos30','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-30); $('filtroInicio').value=s.toISOString().split('T')[0]; $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
+      on('btnOntem','click', ()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=d.toISOString().slice(0, 10); $('filtroInicio').value=s; $('filtroFim').value=s; updateAll(); });
+      on('btnUltimos7','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); $('filtroInicio').value=s.toISOString().slice(0, 10); $('filtroFim').value=t.toISOString().slice(0, 10); updateAll(); });
+      on('btnUltimos30','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-30); $('filtroInicio').value=s.toISOString().slice(0, 10); $('filtroFim').value=t.toISOString().slice(0, 10); updateAll(); });
       on('btnDarkMode','click', ()=>{ document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode'); destroyCharts(); renderCharts(); });
       on('searchClub','input', function(){ const term=this.value.toLowerCase(); ['filtroClubeA','filtroClubeB'].forEach(id=>{ const sel=$(id); if(!sel) return; [...sel.options].forEach(o=>{ if(o.value===''){o.style.display='';return;} o.style.display=(o.value.toLowerCase().includes(term)||o.textContent.toLowerCase().includes(term))?'':'none'; }); }); });
       on('btnExportar','click', ()=>{
