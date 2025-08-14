@@ -192,31 +192,44 @@
     const d = new Date(str); return isNaN(d) ? null : d;
   }
 
-  // ===== detectColumns reforçado com preferência por "FTD-Montante" + EMAIL =====
+  // ===== detectColumns: trata "Usuário - Nome de usuário" como e-mail/identificador =====
   function detectColumns(headers) {
     const norm = s => (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
     const exact = name => headers.find(h => norm(h) === norm(name)) || null;
     const find  = fn   => headers.find(h => fn(norm(h))) || null;
 
+    const userNameExact =
+      exact('Usuário - Nome de usuário') ||
+      exact('Usuario - Nome de usuario') ||
+      exact('Usuário – Nome de usuário');
+
     const ftdPrefer = exact('FTD-Montante') || exact('FTD Montante') || exact('Montante FTD');
 
     const ggrCalcHeader = find(n =>
-      n.includes('ggr') && (n.includes('calculo') || n.includes('total')) && !n.includes('sportsbook') && !n.includes('cassino')
+      n.includes('ggr') && (n.includes('calculo') || n.includes('total')) &&
+      !n.includes('sportsbook') && !n.includes('cassino')
     );
 
     const m = {
       date: find(n => n.includes('data')),
-      club: find(n => n.includes('usuario - nome de usuario') || n.includes('nome de usuario') || n.includes('usuario - nome') || n.includes('clube') || n === 'user' || n.includes('usuario')),
-      email: exact('Usuário - E-mail') || exact('Usuario - Email') || find(n => n.includes('e-mail') || n.includes('email')),
+      club: userNameExact || find(n =>
+        n.includes('usuario - nome de usuario') ||
+        n.includes('nome de usuario') ||
+        n.includes('usuario - nome') ||
+        n.includes('clube') || n === 'user' || n.includes('usuario')
+      ),
+      // usamos a mesma coluna como "email" para filtrar
+      email: userNameExact || find(n => n.includes('e-mail') || n.includes('email')),
       ftd:  ftdPrefer || find(n => (n.includes('ftd') && n.includes('montante'))) || find(n => n.includes('ftd')),
-      dep: find(n => n.includes('usuario - depositos') || n.includes('depositos') || n.includes('deposito')),
+      dep:  find(n => n.includes('usuario - depositos') || n.includes('depositos') || n.includes('deposito')),
       ggrCalc: ggrCalcHeader,
-      sb: find(n => n.includes('sportsbook') && n.includes('ggr')),
-      cs: find(n => (n.includes('cassino') || n.includes('casino')) && n.includes('ggr')),
-      hab: find(n => n.includes('jogos de habilidade') || n.includes('habilidade') || n.includes('w/l') || n.includes('win/loss')),
-      bonus: find(n => (n.includes('bonus') || n.includes('bonu')) && n.includes('convert'))
+      sb:   find(n => n.includes('sportsbook') && n.includes('ggr')),
+      cs:   find(n => (n.includes('cassino') || n.includes('casino')) && n.includes('ggr')),
+      hab:  find(n => n.includes('jogos de habilidade') || n.includes('habilidade') || n.includes('w/l') || n.includes('win/loss')),
+      bonus:find(n => (n.includes('bonus') || n.includes('bonu')) && n.includes('convert'))
     };
     if (!m.date || !m.club || !m.ftd) throw new Error('Não encontrei colunas obrigatórias (DATA/CLUBE/FTD).');
+    if (!m.email) m.email = m.club; // fallback
     return m;
   }
   // =====================================================================
@@ -343,7 +356,10 @@
     $('chipResumo').textContent = txt;
   }
 
-  // ---------- KPIs (com debug "• Anterior: ...") ----------
+  // ---------- helpers p/ cálculo sem ruído de float ----------
+  const toCents  = v => Math.round((v ?? 0) * 100);
+  const fromCents= c => c / 100;
+  // ---------- KPIs ----------
   function setKPI(id, val, prev, metricKey) {
     const el = $(id);
     el.querySelector('.value').textContent = metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val);
@@ -351,21 +367,25 @@
 
     if (!$('chkComparar').checked || prev == null) { varEl.textContent = '—'; varEl.className = 'var muted'; return; }
 
-    const delta = val - prev;
-    const fmtPrev = (mk) => prev == null ? '—' : (mk === 'margem' ? `${prev.toFixed(2)}%` : money(prev));
+    // cálculos em centavos para evitar 0,01 de erro
+    const vC = toCents(val), pC = toCents(prev);
+    const deltaMoney = fromCents(vC - pC);
 
     if (metricKey === 'margem') {
-      varEl.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}pp • Anterior: ${fmtPrev('margem')}`;
+      const delta = val - prev;
+      varEl.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}pp • Anterior: ${prev.toFixed(2)}%`;
       varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
     }
     if (metricKey === 'ticket') {
-      varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} • Anterior: ${fmtPrev('ticket')}`;
+      const delta = val - prev;
+      varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} • Anterior: ${money(prev)}`;
       varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
     }
-    const pct = (prev === 0) ? 0 : (delta / Math.abs(prev)) * 100;
+
+    const pct = pC === 0 ? 0 : ((vC - pC) / Math.abs(pC)) * 100;
     const positiveIsGood = metricKey !== 'bonus';
-    const good = (delta >= 0 && positiveIsGood) || (delta < 0 && !positiveIsGood);
-    varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) • Anterior: ${fmtPrev(metricKey)}`;
+    const good = (deltaMoney >= 0 && positiveIsGood) || (deltaMoney < 0 && !positiveIsGood);
+    varEl.textContent = `${deltaMoney >= 0 ? '+' : ''}${money(deltaMoney)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) • Anterior: ${money(prev)}`;
     varEl.className = `var ${good ? 'up' : 'down'}`;
   }
 
@@ -482,87 +502,57 @@
     });
   }
 
-  function renderRanking() {
-    const metric = $('selRanking').value;
-    localStorage.setItem('dash_ranking_metric', metric);
-
-    const rowsAtual = (!($('filtroClubeA').value) && !($('filtroClubeB').value)) ? baseAtual
-      : baseAtual.filter(r => ($('filtroClubeA').value && r[COLS.club] === $('filtroClubeA').value) || ($('filtroClubeB').value && r[COLS.club] === $('filtroClubeB').value));
-
-    const rowsAnterior = (!($('filtroClubeA').value) && !($('filtroClubeB').value)) ? baseAnterior
-      : baseAnterior.filter(r => ($('filtroClubeA').value && r[COLS.club] === $('filtroClubeA').value) || ($('filtroClubeB').value && r[COLS.club] === $('filtroClubeB').value));
-
-    const curMap = sumByClub(rowsAtual, metric);
-    const compareOn = $('chkComparar').checked;
-    const prevMap = compareOn ? sumByClub(rowsAnterior, metric) : {};
-
-    const rows = Object.entries(curMap).map(([clube, valor]) => {
-      const prev = compareOn ? (prevMap[clube] ?? 0) : null;
-      let delta = null, pct = null, badge = '';
-      if (compareOn) {
-        delta = valor - prev;
-        pct = (prev > 0) ? ((valor - prev) / Math.abs(prev)) * 100 : null;
-        if (prev === 0) badge = ' (novo)';
-      }
-      return { clube, valor: num(valor), delta: delta == null ? null : num(delta), pct, badge };
-    }).sort((a, b) => b.valor - a.valor).slice(0, TOP_N);
-
-    $('rankingInfo').textContent = `Top ${TOP_N} — ${metric.charAt(0).toUpperCase() + metric.slice(1)}`;
-
-    const tb = $('rankingTable').querySelector('tbody');
-    tb.innerHTML = rows.length ? '' : '<tr><td colspan="4">Sem dados</td></tr>';
-    rows.forEach((r, i) => {
-      let cls = 'flat', deltaText = '—';
-      if (r.delta !== null) {
-        const isBonus = metric === 'bonus';
-        const good = (r.delta >= 0 && !isBonus) || (r.delta < 0 && isBonus);
-        cls = good ? 'up' : 'down';
-        const pctText = (r.pct == null) ? '—' : `${r.pct >= 0 ? '+' : ''}${r.pct.toFixed(2)}%`;
-        deltaText = `${r.delta >= 0 ? '+' : ''}${money(r.delta)} (${pctText})${r.badge || ''}`;
-      }
-      const tr = document.createElement('tr');
-      tr.dataset.clube = r.clube;
-      tr.innerHTML = `<td>${i + 1}</td><td>${r.clube}</td><td>${money(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
-      tr.addEventListener('click', () => { $('filtroClubeA').value = r.clube; updateAll(); note(`Clube A definido: ${r.clube}`, 'success'); });
-      tb.appendChild(tr);
-    });
+  // ==== helpers para extração de e-mails ====
+  const extractEmail = s => {
+    const raw = String(s ?? '').trim().toLowerCase();
+    const m = raw.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/);
+    return m ? m[0] : raw;
+  };
+  function getRowEmails(row) {
+    const emails = new Set();
+    const push = v => {
+      if (!v) return;
+      const s = String(v).toLowerCase();
+      const ms = s.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/g);
+      if (ms) ms.forEach(x => emails.add(x.trim()));
+    };
+    if (COLS?.email) push(row[COLS.email]);
+    if (COLS?.club)  push(row[COLS.club]);
+    Object.values(row).forEach(push);
+    return emails;
   }
 
-  function getDateRange() {
-    let ini = new Date($('filtroInicio').value + 'T00:00:00');
-    let fim = new Date($('filtroFim').value + 'T23:59:59');
-    if (isNaN(ini) || isNaN(fim)) return { ini: null, fim: null };
-    if (ini > fim) {
-      const t = ini; ini = fim; fim = t;
-      $('filtroInicio').value = ini.toISOString().slice(0, 10);
-      $('filtroFim').value = fim.toISOString().slice(0, 10);
-      note('Datas invertidas — corrigi pra você');
-    }
-    return { ini, fim };
-  }
-
-  // === FILTRO POR EMAIL (Suprema/Toni) com fallback para campo "clube" ===
+  // === FILTRO: usa "Usuário - Nome de usuário" como e-mail alvo; fallback varrendo toda a linha ===
   function applyNameFilters(rows) {
-    const sup = $('eliminarSuprema').checked, toni = $('eliminarToni').checked;
+    const supOn  = $('eliminarSuprema').checked;
+    const toniOn = $('eliminarToni').checked;
+    if (!supOn && !toniOn) return rows;
+
     const supList = CLUBES_SUPREMA.map(s => s.toLowerCase());
-    const toniName = CLUBE_TONI.toLowerCase();
+    const supSet  = new Set(supList);
+    const toni    = CLUBE_TONI.toLowerCase();
 
     return rows.filter(r => {
-      const valClub  = (r[COLS.club]  || '').toString().trim().toLowerCase();
-      const valEmail = COLS.email ? (r[COLS.email] || '').toString().trim().toLowerCase() : '';
+      // primário: coluna mapeada como email (é a própria "Usuário - Nome de usuário")
+      const primaryEmail = extractEmail(r[COLS.email]);
 
-      if (sup && valEmail && supList.includes(valEmail)) return false;
-      if (toni && valEmail && valEmail === toniName)     return false;
+      if (supOn && (supSet.has(primaryEmail) || supList.some(b => primaryEmail.includes(b)))) return false;
+      if (toniOn && (primaryEmail === toni || primaryEmail.includes(toni))) return false;
 
-      if (sup && supList.includes(valClub)) return false; // fallback
-      if (toni && valClub === toniName)     return false;
+      // fallback: varrer toda a linha por e-mails
+      if (supOn || toniOn) {
+        const all = getRowEmails(r);
+        const hasSup  = [...all].some(e => supSet.has(e) || supList.some(b => e.includes(b)));
+        const hasToni = [...all].some(e => e === toni || e.includes(toni));
+        if (hasSup || hasToni) return false;
+      }
 
       return true;
     });
   }
   // =====================================================================
 
-  // === CONCERTO DO PERÍODO ANTERIOR: usa Math.floor para janela correta ===
+  // === CONCERTO DO PERÍODO ANTERIOR: janela correta com Math.floor ===
   function updateAll() {
     showLoaders(true);
 
@@ -579,21 +569,23 @@
     const cur = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), ini, fim));
     const prv = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd));
 
+    const beforeCur = cur.length, beforePrv = prv.length;
+
     baseAtual = applyNameFilters(cur);
     baseAnterior = applyNameFilters(prv);
+
+    console.debug(`Excluídos por e-mail — Atual: ${beforeCur - baseAtual.length} • Anterior: ${beforePrv - baseAnterior.length}`);
 
     aggAtual = transform(baseAtual);
     aggAnterior = $('chkComparar').checked ? transform(baseAnterior) : null;
 
     renderKPIs(); destroyCharts(); renderCharts(); renderRanking(); gerarInsights();
-    showLoaders(false); 
+    showLoaders(false);
 
-    // Cabeçalho com colunas detectadas
     $('ultimaAtualizacao').textContent =
       'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
       ` • FTD: ${COLS.ftd || '(n/d)'} • Clube: ${COLS.club || '(n/d)'} • Email: ${COLS.email || '(n/d)'}`;
 
-    // Log de auditoria (útil p/ checar a janela)
     if (aggAtual && aggAnterior && $('chkComparar').checked) {
       const fmt = d => d.toLocaleDateString('pt-BR');
       console.table([
@@ -603,6 +595,19 @@
     }
   }
   // ===========================================================================
+
+  function getDateRange() {
+    let ini = new Date($('filtroInicio').value + 'T00:00:00');
+    let fim = new Date($('filtroFim').value + 'T23:59:59');
+    if (isNaN(ini) || isNaN(fim)) return { ini: null, fim: null };
+    if (ini > fim) {
+      const t = ini; ini = fim; fim = t;
+      $('filtroInicio').value = ini.toISOString().slice(0, 10);
+      $('filtroFim').value = fim.toISOString().slice(0, 10);
+      note('Datas invertidas — corrigi pra você');
+    }
+    return { ini, fim };
+  }
 
   function savePrefs() {
     const prefs = { ini: $('filtroInicio').value, fim: $('filtroFim').value, a: $('filtroClubeA').value, b: $('filtroClubeB').value, sup: $('eliminarSuprema').checked, toni: $('eliminarToni').checked, comp: $('chkComparar').checked, metric: $('selRanking').value };
@@ -649,7 +654,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
-    on('btnAplicar', 'click', updateAll);
+    on('btnAplicar', 'click', () => { updateAll(); savePrefs(); });
     on('btnAtualizar', 'click', init);
     on('filtroClubeA', 'change', updateAll);
     on('filtroClubeB', 'change', updateAll);
