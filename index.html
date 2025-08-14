@@ -209,20 +209,14 @@
         return m;
     }
 
-    /* ========= FETCH (MÉTODO DIRETO E SIMPLIFICADO) ========= */
+    /* ========= FETCH ========= */
     async function fetchAll() {
         try {
             const res = await fetch(SPREADSHEET_URL, { cache: 'no-store' });
             if (!res.ok) throw new Error('Falha ao acessar a planilha (HTTP ' + res.status + ')');
             const text = await res.text();
             const result = await new Promise((resolve, reject) => {
-                Papa.parse(text, {
-                    header: true,
-                    skipEmptyLines: true,
-                    dynamicTyping: false,
-                    complete: r => resolve(r),
-                    error: e => reject(e),
-                });
+                Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: false, complete: r => resolve(r), error: e => reject(e), });
             });
             if (result.errors.length) { throw new Error('Erro ao processar CSV: ' + result.errors.map(e => e.message).join(', '));}
             if (!result.data.length) throw new Error('CSV vazio.');
@@ -235,45 +229,72 @@
             throw err;
         }
     }
+    
+    // =================================================================
+    // =========== SCRIPT DE DIAGNÓSTICO ADICIONADO AQUI ===============
+    // =================================================================
+    async function runDiagnostics(rawData) {
+        console.log("%c[DIAGNÓSTICO] Iniciando verificação manual dos dados...", "color: yellow; font-weight: bold;");
 
-    // Fallback para importar CSV local
-    $('btnImportar').addEventListener('click', () => $('fileCsv').click());
-    $('fileCsv').addEventListener('change', (ev) => {
-        const f = ev.target.files?.[0]; if (!f) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            try {
-                Papa.parse(e.target.result, {
-                    header: true, skipEmptyLines: true,
-                    complete: r => {
-                        if (r.errors.length) { console.error(r.errors); note('Erro ao ler CSV', 'error'); return; }
-                        if (!r.data.length) { note('CSV vazio', 'error'); return; }
-                        COLS = detectColumns(Object.keys(r.data[0] || {}));
-                        allRows = r.data;
-                        populateClubSelects(allRows, loadPrefs());
-                        updateAll();
-                        note('CSV local carregado', 'success');
-                    }
-                });
-            } catch (ex) { console.error(ex); note('Falha no CSV', 'error'); }
-        };
-        reader.readAsText(f, 'utf-8');
-    });
+        if (!rawData || rawData.length === 0) {
+            console.error("[DIAGNÓSTICO] Nenhum dado bruto para analisar.");
+            return;
+        }
 
-    /* ========= CÁLCULOS E TRANSFORMAÇÕES (SEM ALTERAÇÕES) ========= */
+        // Colunas essenciais para o diagnóstico
+        const dateCol = COLS.date;
+        const ftdCol = COLS.ftd;
+
+        if (!dateCol || !ftdCol) {
+             console.error("[DIAGNÓSTICO] Não foi possível encontrar as colunas de Data ou FTD.");
+             return;
+        }
+        
+        console.log(`[DIAGNÓSTICO] Usando coluna de Data: "${dateCol}"`);
+        console.log(`[DIAGNÓSTICO] Usando coluna de FTD: "${ftdCol}"`);
+
+        // 1. Filtrar dados para os dias 12 e 13
+        const dataDia12 = rawData.filter(r => r[dateCol] === '2025-08-12');
+        const dataDia13 = rawData.filter(r => r[dateCol] === '2025-08-13');
+
+        console.log(`[DIAGNÓSTICO] Encontradas ${dataDia12.length} linhas para o dia 12/08.`);
+        console.log(`[DIAGNÓSTICO] Encontradas ${dataDia13.length} linhas para o dia 13/08.`);
+        
+        // 2. Somar o FTD para cada dia
+        let totalFtdDia12 = 0;
+        dataDia12.forEach(row => {
+            totalFtdDia12 += parseCurrency(row[ftdCol]);
+        });
+
+        let totalFtdDia13 = 0;
+        dataDia13.forEach(row => {
+            totalFtdDia13 += parseCurrency(row[ftdCol]);
+        });
+
+        console.log(`[DIAGNÓSTICO] SOMA FTD Dia 12: ${money(totalFtdDia12)}`);
+        console.log(`[DIAGNÓSTICO] SOMA FTD Dia 13: ${money(totalFtdDia13)}`);
+
+        // 3. Calcular a variação
+        if (totalFtdDia12 === 0) {
+            console.error("[DIAGNÓSTICO] Total do dia 12 é zero, não é possível calcular a variação percentual.");
+            return;
+        }
+        const variacao = ((totalFtdDia13 - totalFtdDia12) / Math.abs(totalFtdDia12)) * 100;
+        
+        console.log(`%c[DIAGNÓSTICO] Variação Percentual Calculada: ${variacao.toFixed(2)}%`, "color: lightgreen; font-weight: bold; font-size: 14px;");
+        console.log("%c==============================================", "color: yellow;");
+    }
+
+    /* ========= LÓGICA DO DASHBOARD (O RESTO DO CÓDIGO) ========= */
     function computeGGR(row, c) { const sb = parseCurrency(row[c.sb]); const cs = parseCurrency(row[c.cs]); const hab = parseCurrency(row[c.hab]); const sum = num(sb) + num(cs) + num(hab); if (c.ggrCalc) { const raw = parseCurrency(row[c.ggrCalc]); const close = (sum === 0) ? Math.abs(raw) < 1e-6 : Math.abs((raw - sum) / sum) <= 0.05; if (isFinite(raw) && close) return raw; } return sum; }
     function transform(rows) { if (!rows.length) return null; const c = { date: COLS.date, club: COLS.club, ftd: COLS.ftd, dep: COLS.dep, ggrCalc: COLS.ggrCalc, sb: COLS.sb, cs: COLS.cs, hab: COLS.hab, bonus: COLS.bonus }; const dates = [...new Set(rows.map(r => r[c.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b))); const totals = { ftd: 0, dep: 0, ggr: 0, sb: 0, cs: 0, bonus: 0 }; const series = { ggr: Array(dates.length).fill(0), dep: Array(dates.length).fill(0), ftd: Array(dates.length).fill(0), sb: Array(dates.length).fill(0), cs: Array(dates.length).fill(0) }; rows.forEach(r => { const di = dates.indexOf(r[c.date]); const vFTD = parseCurrency(r[c.ftd]); const vDep = parseCurrency(r[c.dep]); const vSB = parseCurrency(r[c.sb]); const vCS = parseCurrency(r[c.cs]); const vGGR = computeGGR(r, c); const vBN = parseCurrency(r[c.bonus]); totals.ftd += num(vFTD); totals.dep += num(vDep); totals.sb += num(vSB); totals.cs += num(vCS); totals.ggr += num(vGGR); totals.bonus += num(vBN); if (di > -1) { series.ggr[di] += num(vGGR); series.dep[di] += num(vDep); series.ftd[di] += num(vFTD); series.sb[di] += num(vSB); series.cs[di] += num(vCS); } }); return { kpis: { ftd: totals.ftd, depositos: totals.dep, ggr: totals.ggr, sportsbook: totals.sb, cassino: totals.cs, bonus: totals.bonus }, charts: { comparativo: { labels: ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'], dataA: [totals.ftd, totals.dep, totals.ggr, totals.sb, totals.cs, totals.bonus] }, ggr: { labels: dates, data: series.ggr }, depositos: { labels: dates, data: series.dep }, ftd: { labels: dates, data: series.ftd }, sportsbook: { labels: dates, data: series.sb }, cassino: { labels: dates, data: series.cs } } }; }
     function sumByClub(rows, metric) { const c = { club: COLS.club, ftd: COLS.ftd, depositos: COLS.dep, ggrCalc: COLS.ggrCalc, sb: COLS.sb, cs: COLS.cs, hab: COLS.hab, bonus: COLS.bonus }; const map = {}; rows.forEach(r => { const club = r[c.club] || '(Clube não informado)'; let v = 0; if (metric === 'depositos') v = parseCurrency(r[c.depositos]); else if (metric === 'ftd') v = parseCurrency(r[c.ftd]); else if (metric === 'sportsbook') v = parseCurrency(r[c.sb]); else if (metric === 'cassino') v = parseCurrency(r[c.cs]); else if (metric === 'bonus') v = parseCurrency(r[c.bonus]); else if (metric === 'ggr') v = computeGGR(r, c); map[club] = (map[club] || 0) + num(v); }); return map; }
     function seriesPorClube(rows, metric) { const c = { date: COLS.date, ftd: COLS.ftd, dep: COLS.dep, ggrCalc: COLS.ggrCalc, sb: COLS.sb, cs: COLS.cs, hab: COLS.hab }; const dates = [...new Set(rows.map(r => r[c.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b))); const serie = Array(dates.length).fill(0); rows.forEach(r => { const di = dates.indexOf(r[c.date]); if (di < 0) return; let v = 0; if (metric === 'depositos') v = parseCurrency(r[c.dep]); else if (metric === 'ftd') v = parseCurrency(r[c.ftd]); else if (metric === 'sportsbook') v = parseCurrency(r[c.sb]); else if (metric === 'cassino') v = parseCurrency(r[c.cs]); else if (metric === 'ggr') v = computeGGR(r, c); serie[di] += num(v); }); return { labels: dates, data: serie }; }
-
-    /* ========= RENDERIZAÇÃO E LÓGICA DO DASHBOARD (SEM ALTERAÇÕES) ========= */
     function gerarInsights() { if (!aggAtual) { $('chipResumo').textContent = 'Sem dados no período.'; return; } const compOn = $('chkComparar').checked && aggAnterior; const delta = (a, b) => !compOn ? null : a - (b ?? 0); const dDep = delta(aggAtual.kpis.depositos, aggAnterior?.kpis?.depositos); const dGgr = delta(aggAtual.kpis.ggr, aggAnterior?.kpis?.ggr); const dFtd = delta(aggAtual.kpis.ftd, aggAnterior?.kpis?.ftd); const metric = $('selRanking').value; const curMap = sumByClub(rowsAtual, metric); const prevMap = $('chkComparar').checked ? sumByClub(rowsAnterior, metric) : {}; const linhas = Object.entries(curMap).map(([clube, valor]) => { const prev = prevMap[clube] ?? 0; return { clube, delta: valor - prev }; }).sort((a, b) => b.delta - a.delta); const top = linhas[0], worst = linhas[linhas.length - 1]; const mk = v => money(Math.abs(v || 0)), dir = v => v >= 0 ? '↑' : '↓'; let txt = `Depósitos ${!compOn ? '—' : `${dir(dDep)} ${mk(dDep)}`} | GGR ${!compOn ? '—' : `${dir(dGgr)} ${mk(dGgr)}`} | FTD ${!compOn ? '—' : `${dir(dFtd)} ${mk(dFtd)}`}.`; if (top && worst) { txt += ` Destaques: ↑ ${top.clube} (maior crescimento em ${metric}); ↓ ${worst.clube} (maior queda).`; } $('chipResumo').textContent = txt; }
     function setKPI(id, val, prev, metricKey) { const el = $(id); el.querySelector('.value').textContent = metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val); const varEl = el.querySelector('.var'); if (metricKey === 'margem' || metricKey === 'ticket') { if (prev == null || !$('chkComparar').checked) { varEl.textContent = '—'; varEl.className = 'var muted'; return; } const delta = val - prev; varEl.textContent = `${delta >= 0 ? '+' : ''}${metricKey === 'margem' ? delta.toFixed(2) + 'pp' : money(delta)}`; varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return; } if (!$('chkComparar').checked || prev == null) { varEl.textContent = '—'; varEl.className = 'var muted'; return; } const delta = val - prev; const pct = (prev === 0) ? (val === 0 ? 0 : 100) : (delta / Math.abs(prev)) * 100; const positiveIsGood = metricKey !== 'bonus'; const good = (delta >= 0 && positiveIsGood) || (delta < 0 && !positiveIsGood); varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`; varEl.className = `var ${good ? 'up' : 'down'}`; }
     function renderKPIs() { setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd, 'ftd'); setKPI('kpi-dep', aggAtual.kpis.depositos, aggAnterior?.kpis.depositos, 'depositos'); setKPI('kpi-ggr', aggAtual.kpis.ggr, aggAnterior?.kpis.ggr, 'ggr'); setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook, 'sportsbook'); setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino, 'cassino'); setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus, 'bonus'); const margemAtual = aggAtual.kpis.ggr ? ((aggAtual.kpis.ggr - aggAtual.kpis.bonus) / aggAtual.kpis.ggr) * 100 : 0; const margemAnterior = aggAnterior?.kpis?.ggr ? ((aggAnterior.kpis.ggr - aggAnterior.kpis.bonus) / aggAnterior.kpis.ggr) * 100 : null; setKPI('kpi-margem', margemAtual, margemAnterior, 'margem'); const ticketAtual = aggAtual.kpis.ftd ? (aggAtual.kpis.depositos / aggAtual.kpis.ftd) : 0; const ticketAnterior = (aggAnterior && aggAnterior.kpis.ftd) ? (aggAnterior.kpis.depositos / aggAnterior.kpis.ftd) : null; setKPI('kpi-ticket', ticketAtual, ticketAnterior, 'ticket'); }
     function destroyCharts() { Object.values(charts).forEach(c => { try { c.destroy() } catch { } }); charts = {}; }
-    const sanitizeSeries = arr => (arr || []).map(v => num(v));
-    const sanitizeLabels = arr => (arr || []).map(v => String(v || '').trim());
-    function renderCharts() { const textColor = '#e9f3ff', gridColor = 'rgba(255,255,255,.1)'; const common = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor } } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') } }, x: { grid: { display: false }, ticks: { color: textColor } } } }; const ctxComp = $('chartComparativo').getContext('2d'); const ctxGGR = $('chartGGR').getContext('2d'); const ctxDep = $('chartDepositos').getContext('2d'); const ctxFTD = $('chartFTD').getContext('2d'); const ctxSB = $('chartSportsbook').getContext('2d'); const ctxCS = $('chartCassino').getContext('2d'); const ctxSc = $('chartScatter').getContext('2d'); const clubA = $('filtroClubeA').value, clubB = $('filtroClubeB').value; const compararClubes = !!(clubA || clubB); $('tComp').innerHTML = `<i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa${compararClubes ? ' — A vs B' : ''}`; $('tGgr').innerHTML = `<i class="fa-solid fa-chart-line"></i> Evolução do GGR${compararClubes ? ' — A vs B' : ''}`; $('tDep').innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos${compararClubes ? ' — A vs B' : ''}`; $('tFtd').innerHTML = `<i class="fa-solid fa-user-plus"></i> Evolução do FTD${compararClubes ? ' — A vs B' : ''}`; $('tSb').innerHTML = `<i class="fa-solid fa-futbol"></i> Evolução do Sportsbook${compararClubes ? ' — A vs B' : ''}`; $('tCs').innerHTML = `<i class="fa-solid fa-dice"></i> Evolução do Cassino${compararClubes ? ' — A vs B' : ''}`; if (charts.comp) charts.comp.destroy(); if (compararClubes) { const metrics = ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus']; const totalClub = rows => { const a = transform(rows); return a ? a.kpis : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 }; }; const kpiA = clubA ? totalClub(baseAtual.filter(r => r[COLS.club] === clubA)) : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 }; const kpiB = clubB ? totalClub(baseAtual.filter(r => r[COLS.club] === clubB)) : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 }; charts.comp = new Chart(ctxComp, { type: 'bar', data: { labels: metrics, datasets: [{ label: clubA || '—', data: sanitizeSeries([kpiA.ftd, kpiA.depositos, kpiA.ggr, kpiA.sportsbook, kpiA.cassino, kpiA.bonus]), backgroundColor: 'rgba(73,182,255,.7)', borderColor: 'rgba(73,182,255,1)', borderWidth: 1 }, { label: clubB || '—', data: sanitizeSeries([kpiB.ftd, kpiB.depositos, kpiB.ggr, kpiB.sportsbook, kpiB.cassino, kpiB.bonus]), backgroundColor: 'rgba(255,184,107,.7)', borderColor: 'rgba(255,184,107,1)', borderWidth: 1 }] }, options: common }); } else { const ds = [{ label: 'Período Atual', data: sanitizeSeries(aggAtual.charts.comparativo.dataA), backgroundColor: 'rgba(73,182,255,.72)', borderColor: 'rgba(73,182,255,1)', borderWidth: 1 }]; if ($('chkComparar').checked && aggAnterior) { ds.push({ label: 'Período Anterior', data: sanitizeSeries(aggAnterior.charts.comparativo.dataA), backgroundColor: 'rgba(159,179,194,.72)', borderColor: 'rgba(159,179,194,1)', borderWidth: 1 }); } charts.comp = new Chart(ctxComp, { type: 'bar', data: { labels: aggAtual.charts.comparativo.labels, datasets: ds }, options: common }); } const mkSerie = (metric) => ({ atual: { labels: sanitizeLabels(aggAtual.charts[metric].labels), data: sanitizeSeries(aggAtual.charts[metric].data) }, anterior: aggAnterior?.charts?.[metric] ? { labels: sanitizeLabels(aggAnterior.charts[metric].labels), data: sanitizeSeries(aggAnterior.charts[metric].data) } : null, A: seriesPorClube(baseAtual.filter(r => r[COLS.club] === $('filtroClubeA').value), metric === 'depositos' ? 'depositos' : metric), B: seriesPorClube(baseAtual.filter(r => r[COLS.club] === $('filtroClubeB').value), metric === 'depositos' ? 'depositos' : metric) }); const makeLine = (ctx, key, serie) => { if (charts[key]) charts[key].destroy(); if (compararClubes) { const ds = []; if ($('filtroClubeA').value) ds.push({ label: $('filtroClubeA').value, data: sanitizeSeries(serie.A.data), borderColor: '#49b6ff', backgroundColor: 'rgba(73,182,255,.12)', tension: .35, fill: true }); if ($('filtroClubeB').value) ds.push({ label: $('filtroClubeB').value, data: sanitizeSeries(serie.B.data), borderColor: '#ffb86b', backgroundColor: 'rgba(255,184,107,.15)', tension: .35, fill: true }); const labels = serie.A.labels.length ? serie.A.labels : serie.B.labels; charts[key] = new Chart(ctx, { type: 'line', data: { labels: sanitizeLabels(labels), datasets: ds }, options: common }); } else { const ds = [{ label: `${key} (Atual)`, data: sanitizeSeries(serie.atual.data), borderColor: '#49b6ff', backgroundColor: 'rgba(73,182,255,.12)', tension: .35, fill: true }]; if ($('chkComparar').checked && serie.anterior) { ds.push({ label: `${key} (Anterior)`, data: sanitizeSeries(serie.anterior.data), borderColor: '#9fb3c2', backgroundColor: 'rgba(159,179,194,.15)', tension: .35, fill: true }); } charts[key] = new Chart(ctx, { type: 'line', data: { labels: sanitizeLabels(serie.atual.labels), datasets: ds }, options: common }); } }; makeLine(ctxGGR, 'GGR', mkSerie('ggr')); makeLine(ctxDep, 'Depósitos', mkSerie('depositos')); makeLine(ctxFTD, 'FTD', mkSerie('ftd')); makeLine(ctxSB, 'Sportsbook', mkSerie('sportsbook')); makeLine(ctxCS, 'Cassino', mkSerie('cassino')); if (charts.scatter) charts.scatter.destroy(); const curMapG = sumByClub(baseAtual, 'ggr'); const curMapD = sumByClub(baseAtual, 'depositos'); const points = Object.keys(curMapG).map(clube => ({ clube, x: num(curMapD[clube] || 0), y: num(curMapG[clube] || 0) })).sort((a, b) => b.y - a.y).slice(0, 50); charts.scatter = new Chart(ctxSc, { type: 'scatter', data: { datasets: [{ label: 'Clubes (Top 50 por GGR)', data: points, parsing: false, pointRadius: 4, borderColor: '#49b6ff', backgroundColor: 'rgba(73,182,255,.4)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e9f3ff' } }, tooltip: { callbacks: { label: (c) => `${c.raw.clube}: Dep ${money(c.raw.x)} | GGR ${money(c.raw.y)}` } } }, scales: { x: { grid: { color: 'rgba(255,255,255,.1)' }, ticks: { color: '#e9f3ff', callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') }, title: { display: true, text: 'Depósitos', color: '#e9f3ff', font: { weight: 800 } } }, y: { grid: { color: 'rgba(255,255,255,.1)' }, ticks: { color: '#e9f3ff', callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') }, title: { display: true, text: 'GGR', color: '#e9f3ff', font: { weight: 800 } } } } } }); }
+    function renderCharts() { const textColor = '#e9f3ff', gridColor = 'rgba(255,255,255,.1)'; const common = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor } } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') } }, x: { grid: { display: false }, ticks: { color: textColor } } } }; const ctxComp = $('chartComparativo').getContext('2d'); const ctxGGR = $('chartGGR').getContext('2d'); const ctxDep = $('chartDepositos').getContext('2d'); const ctxFTD = $('chartFTD').getContext('2d'); const ctxSB = $('chartSportsbook').getContext('2d'); const ctxCS = $('chartCassino').getContext('2d'); const ctxSc = $('chartScatter').getContext('2d'); const clubA = $('filtroClubeA').value, clubB = $('filtroClubeB').value; const compararClubes = !!(clubA || clubB); $('tComp').innerHTML = `<i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa${compararClubes ? ' — A vs B' : ''}`; $('tGgr').innerHTML = `<i class="fa-solid fa-chart-line"></i> Evolução do GGR${compararClubes ? ' — A vs B' : ''}`; $('tDep').innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos${compararClubes ? ' — A vs B' : ''}`; $('tFtd').innerHTML = `<i class="fa-solid fa-user-plus"></i> Evolução do FTD${compararClubes ? ' — A vs B' : ''}`; $('tSb').innerHTML = `<i class="fa-solid fa-futbol"></i> Evolução do Sportsbook${compararClubes ? ' — A vs B' : ''}`; $('tCs').innerHTML = `<i class="fa-solid fa-dice"></i> Evolução do Cassino${compararClubes ? ' — A vs B' : ''}`; if (charts.comp) charts.comp.destroy(); if (compararClubes) { const metrics = ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus']; const totalClub = rows => { const a = transform(rows); return a ? a.kpis : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 }; }; const kpiA = clubA ? totalClub(baseAtual.filter(r => r[COLS.club] === clubA)) : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 }; const kpiB = clubB ? totalClub(baseAtual.filter(r => r[COLS.club] === clubB)) : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 }; charts.comp = new Chart(ctxComp, { type: 'bar', data: { labels: metrics, datasets: [{ label: clubA || '—', data: [kpiA.ftd, kpiA.depositos, kpiA.ggr, kpiA.sportsbook, kpiA.cassino, kpiA.bonus].map(num), backgroundColor: 'rgba(73,182,255,.7)', borderColor: 'rgba(73,182,255,1)', borderWidth: 1 }, { label: clubB || '—', data: [kpiB.ftd, kpiB.depositos, kpiB.ggr, kpiB.sportsbook, kpiB.cassino, kpiB.bonus].map(num), backgroundColor: 'rgba(255,184,107,.7)', borderColor: 'rgba(255,184,107,1)', borderWidth: 1 }] }, options: common }); } else { const ds = [{ label: 'Período Atual', data: (aggAtual.charts.comparativo.dataA || []).map(num), backgroundColor: 'rgba(73,182,255,.72)', borderColor: 'rgba(73,182,255,1)', borderWidth: 1 }]; if ($('chkComparar').checked && aggAnterior) { ds.push({ label: 'Período Anterior', data: (aggAnterior.charts.comparativo.dataA || []).map(num), backgroundColor: 'rgba(159,179,194,.72)', borderColor: 'rgba(159,179,194,1)', borderWidth: 1 }); } charts.comp = new Chart(ctxComp, { type: 'bar', data: { labels: aggAtual.charts.comparativo.labels, datasets: ds }, options: common }); } const mkSerie = (metric) => ({ atual: { labels: (aggAtual.charts[metric] || {labels:[]}).labels, data: (aggAtual.charts[metric] || {data:[]}).data }, anterior: aggAnterior?.charts?.[metric] ? { labels: aggAnterior.charts[metric].labels, data: aggAnterior.charts[metric].data } : null, A: seriesPorClube(baseAtual.filter(r => r[COLS.club] === $('filtroClubeA').value), metric === 'depositos' ? 'depositos' : metric), B: seriesPorClube(baseAtual.filter(r => r[COLS.club] === $('filtroClubeB').value), metric === 'depositos' ? 'depositos' : metric) }); const makeLine = (ctx, key, serie) => { if (charts[key]) charts[key].destroy(); if (compararClubes) { const ds = []; if ($('filtroClubeA').value) ds.push({ label: $('filtroClubeA').value, data: (serie.A.data || []).map(num), borderColor: '#49b6ff', backgroundColor: 'rgba(73,182,255,.12)', tension: .35, fill: true }); if ($('filtroClubeB').value) ds.push({ label: $('filtroClubeB').value, data: (serie.B.data || []).map(num), borderColor: '#ffb86b', backgroundColor: 'rgba(255,184,107,.15)', tension: .35, fill: true }); const labels = serie.A.labels.length ? serie.A.labels : serie.B.labels; charts[key] = new Chart(ctx, { type: 'line', data: { labels: labels.map(String), datasets: ds }, options: common }); } else { const ds = [{ label: `${key} (Atual)`, data: (serie.atual.data || []).map(num), borderColor: '#49b6ff', backgroundColor: 'rgba(73,182,255,.12)', tension: .35, fill: true }]; if ($('chkComparar').checked && serie.anterior) { ds.push({ label: `${key} (Anterior)`, data: (serie.anterior.data || []).map(num), borderColor: '#9fb3c2', backgroundColor: 'rgba(159,179,194,.15)', tension: .35, fill: true }); } charts[key] = new Chart(ctx, { type: 'line', data: { labels: (serie.atual.labels || []).map(String), datasets: ds }, options: common }); } }; makeLine(ctxGGR, 'GGR', mkSerie('ggr')); makeLine(ctxDep, 'Depósitos', mkSerie('depositos')); makeLine(ctxFTD, 'FTD', mkSerie('ftd')); makeLine(ctxSB, 'Sportsbook', mkSerie('sportsbook')); makeLine(ctxCS, 'Cassino', mkSerie('cassino')); if (charts.scatter) charts.scatter.destroy(); const curMapG = sumByClub(baseAtual, 'ggr'); const curMapD = sumByClub(baseAtual, 'depositos'); const points = Object.keys(curMapG).map(clube => ({ clube, x: num(curMapD[clube] || 0), y: num(curMapG[clube] || 0) })).sort((a, b) => b.y - a.y).slice(0, 50); charts.scatter = new Chart(ctxSc, { type: 'scatter', data: { datasets: [{ label: 'Clubes (Top 50 por GGR)', data: points, parsing: false, pointRadius: 4, borderColor: '#49b6ff', backgroundColor: 'rgba(73,182,255,.4)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e9f3ff' } }, tooltip: { callbacks: { label: (c) => `${c.raw.clube}: Dep ${money(c.raw.x)} | GGR ${money(c.raw.y)}` } } }, scales: { x: { grid: { color: 'rgba(255,255,255,.1)' }, ticks: { color: '#e9f3ff', callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') }, title: { display: true, text: 'Depósitos', color: '#e9f3ff', font: { weight: 800 } } }, y: { grid: { color: 'rgba(255,255,255,.1)' }, ticks: { color: '#e9f3ff', callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') }, title: { display: true, text: 'GGR', color: '#e9f3ff', font: { weight: 800 } } } } } }); }
     function renderRanking() { const metric = $('selRanking').value; localStorage.setItem('dash_ranking_metric', metric); const curMap = sumByClub(rowsAtual, metric); const compareOn = $('chkComparar').checked; const prevMap = compareOn ? sumByClub(rowsAnterior, metric) : {}; const rows = Object.entries(curMap).map(([clube, valor]) => { const prev = compareOn ? (prevMap[clube] ?? 0) : null; let delta = null, pct = null, badge = ''; if (compareOn) { delta = valor - prev; pct = (prev > 0) ? ((valor - prev) / Math.abs(prev)) * 100 : null; if (prev === 0) badge = ' (novo)'; } return { clube, valor: num(valor), delta: delta == null ? null : num(delta), pct, badge }; }).sort((a, b) => b.valor - a.valor).slice(0, TOP_N); $('rankingInfo').textContent = `Top ${TOP_N} — ${metric.charAt(0).toUpperCase() + metric.slice(1)}`; const tb = $('rankingTable').querySelector('tbody'); tb.innerHTML = rows.length ? '' : '<tr><td colspan="4">Sem dados</td></tr>'; rows.forEach((r, i) => { let cls = 'flat', deltaText = '—'; if (r.delta !== null) { const isBonus = metric === 'bonus'; const good = (r.delta >= 0 && !isBonus) || (r.delta < 0 && isBonus); cls = good ? 'up' : 'down'; const pctText = (r.pct == null) ? '—' : `${r.pct >= 0 ? '+' : ''}${r.pct.toFixed(2)}%`; deltaText = `${r.delta >= 0 ? '+' : ''}${money(r.delta)} (${pctText})${r.badge || ''}`; } const tr = document.createElement('tr'); tr.dataset.clube = r.clube; tr.innerHTML = `<td>${i + 1}</td><td>${r.clube}</td><td>${money(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`; tr.addEventListener('click', () => { $('filtroClubeA').value = r.clube; updateAll(); note(`Clube A definido: ${r.clube}`, 'success'); }); tb.appendChild(tr); }); }
     function getDateRange() { let ini = new Date($('filtroInicio').value + 'T00:00:00'); let fim = new Date($('filtroFim').value + 'T23:59:59'); if (ini > fim) { const t = ini; ini = fim; fim = t; $('filtroInicio').value = ini.toISOString().slice(0, 10); $('filtroFim').value = fim.toISOString().slice(0, 10); note('Datas invertidas — corrigi pra você'); } return { ini, fim }; }
     function applyNameFilters(rows) { const sup = $('eliminarSuprema').checked, toni = $('eliminarToni').checked; const supList = CLUBES_SUPREMA.map(s => s.toLowerCase()); const toniName = CLUBE_TONI.toLowerCase(); return rows.filter(r => { const name = (r[COLS.club] || '').toString().trim().toLowerCase(); if (sup && supList.includes(name)) return false; if (toni && name === toniName) return false; return true; }); }
@@ -285,15 +306,14 @@
 
     /* ========= INICIALIZAÇÃO E EVENTOS ========= */
     async function init() {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
-        $('filtroInicio').value = yesterday.toISOString().slice(0, 10);
-        $('filtroFim').value = yesterday.toISOString().slice(0, 10);
+        const today = new Date(); const y = new Date(today); y.setDate(today.getDate() - 1);
+        $('filtroInicio').value = y.toISOString().slice(0, 10); $('filtroFim').value = y.toISOString().slice(0, 10);
         const prefs = loadPrefs();
         try {
             note('Carregando dados...');
             allRows = await fetchAll();
+            // Roda o diagnóstico logo após carregar os dados brutos
+            await runDiagnostics(allRows);
             populateClubSelects(allRows, prefs);
             updateAll();
         } catch (e) {
@@ -304,7 +324,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
         on('btnAplicar', 'click', updateAll);
-        on('btnAtualizar', 'click', init); // Alterado para init para recarregar os dados
+        on('btnAtualizar', 'click', init);
         on('filtroClubeA', 'change', updateAll);
         on('filtroClubeB', 'change', updateAll);
         on('eliminarSuprema', 'change', updateAll);
