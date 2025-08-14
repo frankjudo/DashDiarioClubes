@@ -108,7 +108,7 @@
       <div class="kpi" id="kpi-sb"><div class="title"><i class="fa-solid fa-futbol"></i> Sportsbook GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-cs"><div class="title"><i class="fa-solid fa-dice"></i> Cassino GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-bn"><div class="title"><i class="fa-solid fa-gift"></i> Bônus Convertidos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
-      <div class="kpi" id="kpi-margem"><div class="title"><i class="fa-solid fa-percentage"></i> Margem</div><div class="value">0%</div><div class="var muted">—</div></div>
+      <!-- REMOVIDO: % Margem -->
       <div class="kpi" id="kpi-ticket"><div class="title"><i class="fa-solid fa-ticket"></i> Ticket Médio de Depósito</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
     </div>
 
@@ -184,6 +184,16 @@
     let n = parseFloat(s); if (isNaN(n)) n = 0; if (par) n = -Math.abs(n); return n;
   }
 
+  function parseNumber(v){
+    if (typeof v === 'number') return v;
+    if (v == null) return 0;
+    let s = String(v).trim();
+    if (!s) return 0;
+    s = s.replace(/[^0-9,.\-]/g,'').replace(/\./g,'').replace(',', '.');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  }
+
   function parseDateStr(s) {
     if (!s) return null;
     const str = String(s).trim();
@@ -192,7 +202,7 @@
     const d = new Date(str); return isNaN(d) ? null : d;
   }
 
-  // ===== detectColumns: trata "Usuário - Nome de usuário" como e-mail/identificador =====
+  // ===== detectColumns (inclui "Usuário - Contagem de depósito" como depCount) =====
   function detectColumns(headers) {
     const norm = s => (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
     const exact = name => headers.find(h => norm(h) === norm(name)) || null;
@@ -204,6 +214,17 @@
       exact('Usuário – Nome de usuário');
 
     const ftdPrefer = exact('FTD-Montante') || exact('FTD Montante') || exact('Montante FTD');
+
+    const depCountPrefer =
+      exact('Usuário - Contagem de depósito') ||
+      exact('Usuario - Contagem de depósito') ||
+      exact('Usuário - Contagem de deposito') ||
+      exact('Usuario - Contagem de deposito');
+
+    const depCountHeuristic = find(n =>
+      (n.includes('deposit') || n.includes('deposito')) &&
+      (n.includes('qtd') || n.includes('quant') || n.includes('#') || n.includes('cont') || n.includes('num'))
+    );
 
     const ggrCalcHeader = find(n =>
       n.includes('ggr') && (n.includes('calculo') || n.includes('total')) &&
@@ -221,6 +242,7 @@
       email: userNameExact || find(n => n.includes('e-mail') || n.includes('email')),
       ftd:  ftdPrefer || find(n => (n.includes('ftd') && n.includes('montante'))) || find(n => n.includes('ftd')),
       dep:  find(n => n.includes('usuario - depositos') || n.includes('depositos') || n.includes('deposito')),
+      depCount: depCountPrefer || depCountHeuristic || null,
       ggrCalc: ggrCalcHeader,
       sb:   find(n => n.includes('sportsbook') && n.includes('ggr')),
       cs:   find(n => (n.includes('cassino') || n.includes('casino')) && n.includes('ggr')),
@@ -267,15 +289,22 @@
   function transform(rows) {
     if (!rows.length) return null;
     const c = COLS;
-    const totals = { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
+    const totals = { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0, depCount: 0, depUsers: 0 };
+    const depUsersSet = new Set();
+
     for (const r of rows) {
       totals.ftd += num(parseCurrency(r[c.ftd]));
-      totals.depositos += num(parseCurrency(r[c.dep]));
+      const depV = num(parseCurrency(r[c.dep]));
+      totals.depositos += depV;
       totals.sportsbook += num(parseCurrency(r[c.sb]));
       totals.cassino += num(parseCurrency(r[c.cs]));
       totals.ggr += num(computeGGR(r, c));
       totals.bonus += num(parseCurrency(r[c.bonus]));
+      if (c.depCount) totals.depCount += num(parseNumber(r[c.depCount]));
+      if (depV > 0) depUsersSet.add(r[c.club]);
     }
+    totals.depUsers = depUsersSet.size;
+
     const dates = [...new Set(rows.map(r => r[c.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b)));
     const series = { ggr: Array(dates.length).fill(0), depositos: Array(dates.length).fill(0), ftd: Array(dates.length).fill(0), sportsbook: Array(dates.length).fill(0), cassino: Array(dates.length).fill(0) };
     rows.forEach(r => {
@@ -359,50 +388,48 @@
   const toCents  = v => Math.round((v ?? 0) * 100);
   const fromCents= c => c / 100;
 
-  function setKPI(id, val, prev, metricKey) {
+  function setKPI(id, val, prev) {
     const el = $(id);
-    el.querySelector('.value').textContent = metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val);
+    el.querySelector('.value').textContent = money(val);
     const varEl = el.querySelector('.var');
 
     if (!$('chkComparar').checked || prev == null) { varEl.textContent = '—'; varEl.className = 'var muted'; return; }
 
     const vC = toCents(val), pC = toCents(prev);
     const deltaMoney = fromCents(vC - pC);
-
-    if (metricKey === 'margem') {
-      const delta = val - prev;
-      varEl.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}pp • Anterior: ${prev.toFixed(2)}%`;
-      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
-    }
-    if (metricKey === 'ticket') {
-      const delta = val - prev;
-      varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} • Anterior: ${money(prev)}`;
-      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
-    }
-
     const pct = pC === 0 ? 0 : ((vC - pC) / Math.abs(pC)) * 100;
-    const positiveIsGood = metricKey !== 'bonus';
-    const good = (deltaMoney >= 0 && positiveIsGood) || (deltaMoney < 0 && !positiveIsGood);
+
     varEl.textContent = `${deltaMoney >= 0 ? '+' : ''}${money(deltaMoney)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) • Anterior: ${money(prev)}`;
-    varEl.className = `var ${good ? 'up' : 'down'}`;
+    varEl.className = `var ${deltaMoney >= 0 ? 'up' : 'down'}`;
+  }
+
+  // --------- Ticket por transação (Depósitos ÷ #Depósitos) ----------
+  function contarDepositos(rows){
+    if (COLS.depCount) {
+      return rows.reduce((acc, r) => acc + Number(parseNumber(r[COLS.depCount])), 0);
+    }
+    // fallback: nº de usuários que depositaram (>0)
+    const s = new Set();
+    rows.forEach(r => { if (parseCurrency(r[COLS.dep]) > 0) s.add(r[COLS.club]); });
+    return s.size;
   }
 
   function renderKPIs() {
-    setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd, 'ftd');
-    setKPI('kpi-dep', aggAtual.kpis.depositos, aggAnterior?.kpis.depositos, 'depositos');
-    setKPI('kpi-ggr', aggAtual.kpis.ggr, aggAnterior?.kpis.ggr, 'ggr');
-    setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook, 'sportsbook');
-    setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino, 'cassino');
-    setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus, 'bonus');
+    setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd);
+    setKPI('kpi-dep', aggAtual.kpis.depositos, aggAnterior?.kpis.depositos);
+    setKPI('kpi-ggr', aggAtual.kpis.ggr, aggAnterior?.kpis.ggr);
+    setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook);
+    setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino);
+    setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus);
 
-    const margemAtual = aggAtual.kpis.ggr ? ((aggAtual.kpis.ggr - aggAtual.kpis.bonus) / aggAtual.kpis.ggr) * 100 : 0;
-    const margemAnterior = aggAnterior?.kpis?.ggr ? ((aggAnterior.kpis.ggr - aggAnterior.kpis.bonus) / aggAnterior.kpis.ggr) * 100 : null;
-    setKPI('kpi-margem', margemAtual, margemAnterior, 'margem');
+    const nDeposAtual = contarDepositos(baseAtual);
+    const nDeposAnterior = $('chkComparar').checked ? contarDepositos(baseAnterior) : null;
 
-    const ticketAtual = aggAtual.kpis.ftd ? (aggAtual.kpis.depositos / aggAtual.kpis.ftd) : 0;
-    const ticketAnterior = (aggAnterior && aggAnterior.kpis.ftd) ? (aggAnterior.kpis.depositos / aggAnterior.kpis.ftd) : null;
-    setKPI('kpi-ticket', ticketAtual, ticketAnterior, 'ticket');
+    const ticketAtual = nDeposAtual ? (aggAtual.kpis.depositos / nDeposAtual) : 0;
+    const ticketAnterior = (nDeposAnterior && aggAnterior) ? (aggAnterior.kpis.depositos / nDeposAnterior) : null;
+    setKPI('kpi-ticket', ticketAtual, ticketAnterior);
   }
+  // --------------------------------------------------------
 
   function destroyCharts() { Object.values(charts).forEach(c => { try { c.destroy() } catch {} }); charts = {}; }
 
@@ -519,7 +546,6 @@
     return emails;
   }
 
-  // === FILTRO: usa "Usuário - Nome de usuário" como e-mail alvo; fallback varrendo toda a linha ===
   function applyNameFilters(rows) {
     const supOn  = $('eliminarSuprema').checked;
     const toniOn = $('eliminarToni').checked;
@@ -531,7 +557,6 @@
 
     return rows.filter(r => {
       const primaryEmail = extractEmail(r[COLS.email]);
-
       if (supOn && (supSet.has(primaryEmail) || supList.some(b => primaryEmail.includes(b)))) return false;
       if (toniOn && (primaryEmail === toni || primaryEmail.includes(toni))) return false;
 
@@ -543,9 +568,7 @@
       return true;
     });
   }
-  // =====================================================================
 
-  // === CONCERTO DO PERÍODO ANTERIOR: janela correta com Math.floor ===
   function updateAll() {
     showLoaders(true);
 
@@ -577,7 +600,7 @@
 
     $('ultimaAtualizacao').textContent =
       'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
-      ` • FTD: ${COLS.ftd || '(n/d)'} • Clube: ${COLS.club || '(n/d)'} • Email: ${COLS.email || '(n/d)'}`;
+      ` • DepCount: ${COLS.depCount || '(não encontrado)'} • Email: ${COLS.email || '(n/d)'}`;
 
     if (aggAtual && aggAnterior && $('chkComparar').checked) {
       const fmt = d => d.toLocaleDateString('pt-BR');
@@ -587,7 +610,6 @@
       ]);
     }
   }
-  // ===========================================================================
 
   function getDateRange() {
     let ini = new Date($('filtroInicio').value + 'T00:00:00');
@@ -645,7 +667,6 @@
     if (p?.b && [...sB.options].some(o => o.value === p.b)) sB.value = p.b;
   }
 
-  // ===== RENDER RANKING (exposta globalmente) =====
   function renderRanking() {
     const metric = $('selRanking').value;
     localStorage.setItem('dash_ranking_metric', metric);
@@ -691,7 +712,6 @@
       tb.appendChild(tr);
     });
   }
-  // expõe globalmente (evita ReferenceError)
   window.renderRanking = renderRanking;
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -703,7 +723,6 @@
     on('eliminarSuprema', 'change', updateAll);
     on('eliminarToni', 'change', updateAll);
     on('chkComparar', 'change', updateAll);
-    // listener protegido
     on('selRanking', 'change', () => window.renderRanking && window.renderRanking());
 
     on('btnOntem', 'click', () => {
