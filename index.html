@@ -506,7 +506,7 @@
       charts.scatter=new Chart(ctxSc,{type:'scatter',data:{datasets:[{label:'Clubes (Top 50 por GGR)',data:points,parsing:false,pointRadius:4,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.4)'}]},
         options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#e9f3ff'}},tooltip:{callbacks:{label:(c)=>`${c.raw.clube}: Dep ${money(c.raw.x)} | GGR ${money(c.raw.y)}`}}},
           scales:{x:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')},title:{display:true,text:'Depósitos',color:'#e9f3ff',font:{weight:800}}},
-                  y:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')},title:{display:true,text:'GGR',color:'#e9f3ff',font:{weight:800)}}}});
+                  y:{grid:{color:'rgba(255,255,255,.1)'},ticks:{color:'#e9f3ff',callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')},title:{display:true,text:'GGR',color:'#e9f3ff',font:{weight:800)}}}}});
     }
 
     /* ========= RANKING ========= */
@@ -634,7 +634,7 @@
       on('chkComparar','change', ()=>{ updateAll(); renderRanking(); });
       on('selRanking','change', renderRanking);
       on('btnOntem','click', ()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=d.toISOString().split('T')[0]; $('filtroInicio').value=s; $('filtroFim').value=s; updateAll(); });
-      on('btnUltimos7','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); $('filtroInicio').value=s.toISOString().split(0,10); $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
+      on('btnUltimos7','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-7); $('filtroInicio').value=s.toISOString().split('T')[0]; $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
       on('btnUltimos30','click', ()=>{ const t=new Date(); const s=new Date(); s.setDate(t.getDate()-30); $('filtroInicio').value=s.toISOString().split('T')[0]; $('filtroFim').value=t.toISOString().split('T')[0]; updateAll(); });
       on('btnDarkMode','click', ()=>{ document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode'); destroyCharts(); renderCharts(); });
       on('searchClub','input', function(){ const term=this.value.toLowerCase(); ['filtroClubeA','filtroClubeB'].forEach(id=>{ const sel=$(id); if(!sel) return; [...sel.options].forEach(o=>{ if(o.value===''){o.style.display='';return;} o.style.display=(o.value.toLowerCase().includes(term)||o.textContent.toLowerCase().includes(term))?'':'none'; }); }); });
