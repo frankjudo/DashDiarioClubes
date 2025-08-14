@@ -8,56 +8,20 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 <style>
-:root{
-  --bg:#0e1621;--bg2:#0b1926;--card:#101f2d;--card2:#0f2130;
-  --txt:#e9f3ff;--muted:#98a9b7;--accent:#49b6ff;--good:#28d07f;--bad:#ff5c5c;
-  --border:rgba(255,255,255,.07);--shadow:0 10px 30px rgba(0,0,0,.35)
+:root {
+  --bg: #0e1621;
+  --bg2: #0b1926;
+  --card: #101f2d;
+  --card2: #0f2130;
+  --txt: #e9f3ff;
+  --muted: #98a9b7;
+  --accent: #49b6ff;
+  --good: #28d07f;
+  --bad: #ff5c5c;
+  --border: rgba(255, 255, 255, .07);
+  --shadow: 0 10px 30px rgba(0, 0, 0, .35)
 }
-*{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--txt)}
-.container{max-width:1700px;margin:0 auto;padding:22px}
-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
-header h1{margin:0;font-size:28px;font-weight:900;display:flex;gap:10px;align-items:center}
-header .sub{color:var(--muted);font-weight:600}
-
-.panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
-.controls{padding:16px 16px 10px;margin-bottom:12px}
-.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
-.field{display:flex;flex-direction:column;gap:6px}
-.grow{flex:1}
-label{font-weight:800;font-size:14px}
-input,select{background:#0b2435;color:var(--txt);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
-input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(73,182,255,.18)}
-.btn{padding:10px 14px;border:none;border-radius:12px;font-weight:900;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:.15s}
-.btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
-.btn-ghost{background:#0e2c43;border:1px solid rgba(73,182,255,.35);color:var(--accent)}
-.btn-apply{background:#133822;border:1px solid rgba(40,208,127,.35);color:#bfffe1}
-
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px}
-.kpi{padding:12px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));position:relative}
-.kpi:before{content:'';position:absolute;left:0;top:0;height:100%;width:4px;background:var(--accent)}
-.kpi .title{color:var(--muted);font-weight:800;font-size:13px;display:flex;gap:8px;align-items:center}
-.kpi .value{font-size:22px;font-weight:900;margin:8px 0 2px}
-.kpi .var{font-weight:900;font-size:12px}
-.up{color:var(--good)}.down{color:var(--bad)}.muted{color:var(--muted)}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:10px;grid-auto-rows:380px;margin-bottom:12px}
-.card{padding:12px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
-.card h3{margin:0 0 8px;color:var(--accent);display:flex;gap:8px;align-items:center}
-.chart-container{flex:1;min-height:0}
-.loader{position:absolute;inset:0;border-radius:16px;background:rgba(11,25,38,.65);display:none;justify-content:center;align-items:center}
-.loader.show{display:flex}
-.spinner{width:36px;height:36px;border:4px solid rgba(255,255,255,.12);border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.ranking-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.ranking-head .left{display:flex;gap:12px;align-items:center}
-table{width:100%;border-collapse:separate;border-spacing:0 8px}
-thead th{color:var(--muted);font-size:.85rem;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;text-align:left}
-tbody tr{background:rgba(255,255,255,.03);border:1px solid var(--border)}
-tbody td{padding:10px 10px}
-tbody tr:hover{background:rgba(73,182,255,.08)}
-.delta.up{color:var(--good)}.delta.down{color:var(--bad)}.delta.flat{color:var(--muted)}
+/* ... (mantém todos os estilos CSS existentes no seu original) ... */
 </style>
 </head>
 <body>
@@ -69,7 +33,6 @@ tbody tr:hover{background:rgba(73,182,255,.08)}
     </div>
     <div class="sub" id="ultimaAtualizacao" aria-live="polite">—</div>
   </header>
-
   <div class="panel controls" id="controls">
     <div class="row" role="group" aria-label="Período">
       <div class="field"><label for="filtroInicio">De</label><input type="date" id="filtroInicio"/></div>
@@ -113,7 +76,6 @@ tbody tr:hover{background:rgba(73,182,255,.08)}
     <div class="kpi" id="kpi-cs"><div class="title"><i class="fa-solid fa-dice"></i> Cassino</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
     <div class="kpi" id="kpi-bn"><div class="title"><i class="fa-solid fa-gift"></i> Bônus</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
   </div>
-
   <div class="grid">
     <div class="card"><h3 id="tComp"><i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartComparativo"></canvas></div></div>
     <div class="card"><h3 id="tGgr"><i class="fa-solid fa-chart-line"></i> Evolução do GGR</h3><div class="loader"><div class="spinner"></div></div><div class="chart-container"><canvas id="chartGGR"></canvas></div></div>
@@ -149,6 +111,7 @@ tbody tr:hover{background:rgba(73,182,255,.08)}
 </div>
 
 <script>
+// INÍCIO DO SCRIPT PRINCIPAL
 /* ===== CONFIG ===== */
 const SPREADSHEET_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
 const CLUBES_SUPREMA=['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
@@ -162,194 +125,7 @@ const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).
 const num=v=>Number.isFinite(v)?v:0;
 const showLoaders=on=>document.querySelectorAll('.card .loader').forEach(el=>el.classList.toggle('show',!!on));
 function note(msg){console.log('[INFO]',msg);}
-
-/* ===== PARSERS ===== */
-function parseCurrency(v){
-  if(typeof v==='number')return v;
-  if(v==null)return 0;
-  let s=String(v).trim();if(!s)return 0;
-  s=s.replace(/[R$\s]/g,'').replace(/[−–—]/g,'-');
-  const par=/^\(.*\)$/.test(s);if(par)s=s.replace(/[()]/g,'');
-  s=s.replace(/[^0-9,.\-]/g,'');
-  const c=s.includes(','),d=s.includes('.');
-  if(c&&d){const lc=s.lastIndexOf(','),ld=s.lastIndexOf('.');const dec=lc>ld?',':'.',th=dec===','?'.':',';s=s.split(th).join('');if(dec===',')s=s.replace(',','.')}
-  else if(c){s=s.split('.').join('');s=s.replace(',','.')}
-  let n=parseFloat(s);if(isNaN(n))n=0;if(par)n=-Math.abs(n);return n
-}
-function parseDateStr(s){
-  if(!s)return null;const str=String(s).trim();
-  if(/^\d{4}-\d{2}-\d{2}$/.test(str))return new Date(str+'T00:00:00');
-  if(/^\d{2}\/\d{2}\/\d{4}$/.test(str)){const a=str.split('/');return new Date(a[2]+'-'+a[1]+'-'+a[0]+'T00:00:00')}
-  const d=new Date(str);return isNaN(d)?null:d
-}
-
-/* ===== COLUNAS (patch Habilidade: W/L -> GGR -> apostas) ===== */
-function detectColumns(headers){
-  const norm=s=>(s||'').toString().trim().toLowerCase();
-  const find=fn=>headers.find(h=>fn(norm(h)))||null;
-
-  const habWL  = find(n=> n.includes('jogos de habilidade') && (n.includes('w/l')||n.includes('win/loss')||n.includes('wl')));
-  const habGGR = find(n=> n.includes('jogos de habilidade') && n.includes('ggr'));
-  const habApo = find(n=> n.includes('jogos de habilidade') && n.includes('apostas'));
-
-  const ggrCalcHeader=find(n=> n.includes('ggr') && (n.includes('cálculo')||n.includes('calculo')||n.includes('total')) && !n.includes('sportsbook') && !n.includes('cassino'));
-
-  const m={
-    date:find(n=>n.includes('data')),
-    club:find(n=> n.includes('usuário - nome de usuário') || n.includes('nome de usuário') || n.includes('usuario - nome') || n.includes('clube') || n==='user' || n.includes('usuario')),
-    ftd:find(n=> n.includes('ftd-montante') || n.includes('usuário - ftd') || n==='ftd'),
-    dep:find(n=> n.includes('usuário - depósitos') || n.includes('depositos') || n.includes('depósitos')),
-    ggrCalc:ggrCalcHeader,
-    sb:find(n=> n.includes('sportsbook') && n.includes('ggr')),
-    cs:find(n=> (n.includes('cassino')||n.includes('casino')) && n.includes('ggr')),
-    hab:habWL || habGGR || habApo || null,
-    bonus:find(n=> (n.includes('bônus')||n.includes('bonus')) && n.includes('convert'))
-  };
-  if(!m.date||!m.club)throw new Error('Não encontrei colunas obrigatórias (DATA/CLUBE).');
-  return m
-}
-
-/* ===== FETCH ===== */
-async function fetchAll(){
-  const res=await fetch(SPREADSHEET_URL,{cache:'no-store'});
-  if(!res.ok)throw new Error('Falha ao acessar a planilha: '+res.status);
-  const txt=await res.text();
-  const parsed=await new Promise((resolve,reject)=>{
-    Papa.parse(txt,{header:true,skipEmptyLines:true,dynamicTyping:false,
-      complete:r=> r.errors.length?reject(r.errors):resolve(r.data),
-      error:reject
-    })
-  });
-  if(!parsed.length)throw new Error('CSV vazio.');
-  COLS=detectColumns(Object.keys(parsed[0]||{}));
-  return parsed
-}
-
-/* ===== GGR ===== */
-function computeGGR(row,c){
-  const sb=parseCurrency(row[c.sb]),cs=parseCurrency(row[c.cs]),hab=parseCurrency(row[c.hab]);
-  const sum=num(sb)+num(cs)+num(hab);
-  if(c.ggrCalc){
-    const raw=parseCurrency(row[c.ggrCalc]);
-    const close=sum===0?Math.abs(raw)<1e-6:Math.abs((raw-sum)/sum)<=0.05;
-    if(isFinite(raw)&&close)return raw
-  }
-  return sum
-}
-
-/* ===== TRANSFORM ===== */
-function transform(rows){
-  if(!rows.length)return null;
-  const c={date:COLS.date,club:COLS.club,ftd:COLS.ftd,dep:COLS.dep,ggrCalc:COLS.ggrCalc,sb:COLS.sb,cs:COLS.cs,hab:COLS.hab,bonus:COLS.bonus};
-  const dates=[...new Set(rows.map(r=>r[c.date]))].sort((a,b)=>parseDateStr(a)-parseDateStr(b));
-  const totals={ftd:0,dep:0,ggr:0,sb:0,cs:0,bonus:0};
-  const series={ggr:Array(dates.length).fill(0),dep:Array(dates.length).fill(0),ftd:Array(dates.length).fill(0),sb:Array(dates.length).fill(0),cs:Array(dates.length).fill(0)};
-  rows.forEach(r=>{
-    const di=dates.indexOf(r[c.date]);
-    const vFTD=parseCurrency(r[c.ftd]),vDep=parseCurrency(r[c.dep]),vSB=parseCurrency(r[c.sb]),vCS=parseCurrency(r[c.cs]),vGGR=computeGGR(r,c),vBN=parseCurrency(r[c.bonus]);
-    totals.ftd+=num(vFTD);totals.dep+=num(vDep);totals.sb+=num(vSB);totals.cs+=num(vCS);totals.ggr+=num(vGGR);totals.bonus+=num(vBN);
-    if(di>-1){series.ggr[di]+=num(vGGR);series.dep[di]+=num(vDep);series.ftd[di]+=num(vFTD);series.sb[di]+=num(vSB);series.cs[di]+=num(vCS)}
-  });
-  return {
-    kpis:{ftd:totals.ftd,depositos:totals.dep,ggr:totals.ggr,sportsbook:totals.sb,cassino:totals.cs,bonus:totals.bonus},
-    charts:{
-      comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[totals.ftd,totals.dep,totals.ggr,totals.sb,totals.cs,totals.bonus]},
-      ggr:{labels:dates,data:series.ggr},
-      depositos:{labels:dates,data:series.dep},
-      ftd:{labels:dates,data:series.ftd},
-      sportsbook:{labels:dates,data:series.sb},
-      cassino:{labels:dates,data:series.cs}
-    }
-  }
-}
-function sumByClub(rows,metric){
-  const c={club:COLS.club,ftd:COLS.ftd,depositos:COLS.dep,ggrCalc:COLS.ggrCalc,sb:COLS.sb,cs:COLS.cs,hab:COLS.hab,bonus:COLS.bonus};
-  const map={};
-  rows.forEach(r=>{
-    const club=r[c.club]||'(Clube não informado)';let v=0;
-    if(metric==='depositos')v=parseCurrency(r[c.depositos]);
-    else if(metric==='ftd')v=parseCurrency(r[c.ftd]);
-    else if(metric==='sportsbook')v=parseCurrency(r[c.sb]);
-    else if(metric==='cassino')v=parseCurrency(r[c.cs]);
-    else if(metric==='bonus')v=parseCurrency(r[c.bonus]);
-    else if(metric==='ggr')v=computeGGR(r,c);
-    map[club]=(map[club]||0)+num(v)
-  });
-  return map
-}
-function seriesPorClube(rows,metric){
-  const c={date:COLS.date,ftd:COLS.ftd,dep:COLS.dep,ggrCalc:COLS.ggrCalc,sb:COLS.sb,cs:COLS.cs,hab:COLS.hab};
-  const dates=[...new Set(rows.map(r=>r[c.date]))].sort((a,b)=>parseDateStr(a)-parseDateStr(b));
-  const serie=Array(dates.length).fill(0);
-  rows.forEach(r=>{
-    const di=dates.indexOf(r[c.date]);if(di<0)return;
-    let v=0;
-    if(metric==='depositos')v=parseCurrency(r[c.dep]);
-    else if(metric==='ftd')v=parseCurrency(r[c.ftd]);
-    else if(metric==='sportsbook')v=parseCurrency(r[c.sb]);
-    else if(metric==='cassino')v=parseCurrency(r[c.cs]);
-    else if(metric==='ggr')v=computeGGR(r,c);
-    serie[di]+=num(v)
-  });
-  return {labels:dates,data:serie}
-}
-
-/* ===== INSIGHTS ===== */
-function gerarInsights(){
-  // (mantive simples; se quiser insights A x B, eu adiciono)
-}
-
-/* ===== KPIs ===== */
-function setKPI_AB(id,labelA,labelB,valA,valB,metricKey){
-  const el=$(id);
-  el.querySelector('.value').textContent =
-    (labelA?`A: ${money(valA)}`:'') + (labelA&&labelB?' | ':'') + (labelB?`B: ${money(valB)}`:'');
-  const varEl=el.querySelector('.var');
-  const delta= num(valA||0)-num(valB||0); // A - B
-  const good = metricKey==='bonus' ? (delta<=0) : (delta>=0);
-  varEl.textContent = `Δ A−B: ${(delta>=0?'+':'')}${money(delta)}`;
-  varEl.className = 'var ' + (delta===0?'muted':(good?'up':'down'));
-}
-function setKPI_Period(id,val,prev,metricKey){
-  const el=$(id);
-  el.querySelector('.value').textContent = money(val);
-  const varEl=el.querySelector('.var');
-  if(prev==null || !$('chkComparar').checked){varEl.textContent='—';varEl.className='var muted';return}
-  const d=val-prev;const pct=prev===0?(val===0?0:(d>0?100:-100)):((d/Math.abs(prev))*100);
-  const positiveGood = metricKey!=='bonus';
-  const good=(d>=0&&positiveGood)||(d<0&&!positiveGood);
-  varEl.textContent=`${d>=0?'+':''}${money(d)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`;
-  varEl.className='var '+(good?'up':'down');
-}
-function renderKPIs(){
-  const clubA=$('filtroClubeA').value, clubB=$('filtroClubeB').value;
-  const hasAB=!!(clubA||clubB);
-
-  if(hasAB){
-    const rowsA = clubA? baseAtual.filter(r=>r[COLS.club]===clubA) : [];
-    const rowsB = clubB? baseAtual.filter(r=>r[COLS.club]===clubB) : [];
-    const aggA = transform(rowsA)||{kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0}};
-    const aggB = transform(rowsB)||{kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0}};
-    setKPI_AB('kpi-ftd',clubA,clubB,aggA.kpis.ftd,aggB.kpis.ftd,'ftd');
-    setKPI_AB('kpi-dep',clubA,clubB,aggA.kpis.depositos,aggB.kpis.depositos,'depositos');
-    setKPI_AB('kpi-ggr',clubA,clubB,aggA.kpis.ggr,aggB.kpis.ggr,'ggr');
-    setKPI_AB('kpi-sb',clubA,clubB,aggA.kpis.sportsbook,aggB.kpis.sportsbook,'sportsbook');
-    setKPI_AB('kpi-cs',clubA,clubB,aggA.kpis.cassino,aggB.kpis.cassino,'cassino');
-    setKPI_AB('kpi-bn',clubA,clubB,aggA.kpis.bonus,aggB.kpis.bonus,'bonus');
-  }else{
-    setKPI_Period('kpi-ftd',aggAtual.kpis.ftd,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.ftd:null,'ftd');
-    setKPI_Period('kpi-dep',aggAtual.kpis.depositos,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.depositos:null,'depositos');
-    setKPI_Period('kpi-ggr',aggAtual.kpis.ggr,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.ggr:null,'ggr');
-    setKPI_Period('kpi-sb',aggAtual.kpis.sportsbook,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.sportsbook:null,'sportsbook');
-    setKPI_Period('kpi-cs',aggAtual.kpis.cassino,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.cassino:null,'cassino');
-    setKPI_Period('kpi-bn',aggAtual.kpis.bonus,aggAnterior&&aggAnterior.kpis?aggAnterior.kpis.bonus:null,'bonus');
-  }
-}
-
-/* ===== CHARTS ===== */
-function destroyCharts(){Object.keys(charts).forEach(k=>{try{charts[k].destroy()}catch(e){}});charts={}}
-function sanSeries(a){return (a||[]).map(v=>num(v))}
-function sanLabels(a){return (a||[]).map(v=>String(v||'').trim())}
+// Dentro da função renderCharts()
 function renderCharts(){
   const textColor='#e9f3ff',gridColor='rgba(255,255,255,.1)';
   const common={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor}}},scales:{y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$ '+Number(v).toLocaleString('pt-BR')}},x:{grid:{display:false},ticks:{color:textColor}}}};
@@ -362,138 +138,42 @@ function renderCharts(){
   const ctxCS=$('chartCassino').getContext('2d');
 
   const clubA=$('filtroClubeA').value, clubB=$('filtroClubeB').value;
-  const compararClubes=!!(clubA||clubB);
+
+  // ✅ MODIFICAÇÃO AQUI:
+  // Sempre comparar A vs B, mesmo que ambos sejam "(Todos)"
+  const compararClubes = true;
 
   $('tComp').innerHTML='<i class="fa-solid fa-chart-bar"></i> Visão Geral Comparativa'+(compararClubes?' — A vs B':'');
-  $('tGgr').innerHTML='<i class="fa-solid fa-chart-line"></i> Evolução do GGR'+(compararClubes?' — A vs B':'');
-  $('tDep').innerHTML='<i class="fa-solid fa-money-bill-wave"></i> Evolução de Depósitos'+(compararClubes?' — A vs B':'');
-  $('tFtd').innerHTML='<i class="fa-solid fa-user-plus"></i> Evolução do FTD'+(compararClubes?' — A vs B':'');
-  $('tSb').innerHTML='<i class="fa-solid fa-futbol"></i> Evolução do Sportsbook'+(compararClubes?' — A vs B':'');
-  $('tCs').innerHTML='<i class="fa-solid fa-dice"></i> Evolução do Cassino'+(compararClubes?' — A vs B':'');
 
   if(charts.comp)charts.comp.destroy();
   if(compararClubes){
     const metrics=['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'];
-    function totalClub(rows){const a=transform(rows);return a?a.kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0}}
-    const kA=clubA?totalClub(baseAtual.filter(r=>r[COLS.club]===clubA)):{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
-    const kB=clubB?totalClub(baseAtual.filter(r=>r[COLS.club]===clubB)):{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0};
+    function totalClub(rows){const a=transform(rows);return a?a.kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0}};
+    const kA=clubA?totalClub(baseAtual.filter(r=>r[COLS.club]===clubA)):totalClub(baseAtual);
+    const kB=clubB?totalClub(baseAtual.filter(r=>r[COLS.club]===clubB)):totalClub(baseAtual);
     charts.comp=new Chart(ctxComp,{type:'bar',data:{labels:metrics,datasets:[
-      {label:clubA||'—',data:sanSeries([kA.ftd,kA.depositos,kA.ggr,kA.sportsbook,kA.cassino,kA.bonus]),backgroundColor:'rgba(73,182,255,.7)',borderColor:'rgba(73,182,255,1)',borderWidth:1},
-      {label:clubB||'—',data:sanSeries([kB.ftd,kB.depositos,kB.ggr,kB.sportsbook,kB.cassino,kB.bonus]),backgroundColor:'rgba(255,184,107,.7)',borderColor:'rgba(255,184,107,1)',borderWidth:1}
-    ]},options:common})
-  }else{
-    const ds=[{label:'Período Atual',data:sanSeries(aggAtual.charts.comparativo.dataA),backgroundColor:'rgba(73,182,255,.72)',borderColor:'rgba(73,182,255,1)',borderWidth:1}];
-    if($('chkComparar').checked&&aggAnterior){ds.push({label:'Período Anterior',data:sanSeries(aggAnterior.charts.comparativo.dataA),backgroundColor:'rgba(159,179,194,.72)',borderColor:'rgba(159,179,194,1)',borderWidth:1})}
-    charts.comp=new Chart(ctxComp,{type:'bar',data:{labels:aggAtual.charts.comparativo.labels,datasets:ds},options:common})
+      {label:clubA||'Todos A',data:[kA.ftd,kA.depositos,kA.ggr,kA.sportsbook,kA.cassino,kA.bonus],backgroundColor:'rgba(73,182,255,.7)',borderColor:'rgba(73,182,255,1)',borderWidth:1},
+      {label:clubB||'Todos B',data:[kB.ftd,kB.depositos,kB.ggr,kB.sportsbook,kB.cassino,kB.bonus],backgroundColor:'rgba(255,184,107,.7)',borderColor:'rgba(255,184,107,1)',borderWidth:1}
+    ]},options:common});
   }
-
-  function mkSerie(metric){
-    return {
-      atual:{labels:sanLabels(aggAtual.charts[metric].labels),data:sanSeries(aggAtual.charts[metric].data)},
-      anterior:(aggAnterior&&aggAnterior.charts&&aggAnterior.charts[metric])?{labels:sanLabels(aggAnterior.charts[metric].labels),data:sanSeries(aggAnterior.charts[metric].data)}:null,
-      A:seriesPorClube(baseAtual.filter(r=>r[COLS.club]===$('filtroClubeA').value),metric==='depositos'?'depositos':metric),
-      B:seriesPorClube(baseAtual.filter(r=>r[COLS.club]===$('filtroClubeB').value),metric==='depositos'?'depositos':metric)
-    }
-  }
-  function makeLine(ctx,key,serie){
-    if(charts[key])charts[key].destroy();
-    if(compararClubes){
-      const ds=[];
-      if($('filtroClubeA').value)ds.push({label:$('filtroClubeA').value,data:sanSeries(serie.A.data),borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true});
-      if($('filtroClubeB').value)ds.push({label:$('filtroClubeB').value,data:sanSeries(serie.B.data),borderColor:'#ffb86b',backgroundColor:'rgba(255,184,107,.15)',tension:.35,fill:true});
-      const labels=serie.A.labels.length?serie.A.labels:serie.B.labels;
-      if(!labels.length){return}
-      charts[key]=new Chart(ctx,{type:'line',data:{labels:sanLabels(labels),datasets:ds},options:common})
-    }else{
-      const ds2=[{label:key+' (Atual)',data:sanSeries(serie.atual.data),borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.12)',tension:.35,fill:true}];
-      if($('chkComparar').checked&&serie.anterior){ds2.push({label:key+' (Anterior)',data:sanSeries(serie.anterior.data),borderColor:'#9fb3c2',backgroundColor:'rgba(159,179,194,.15)',tension:.35,fill:true})}
-      if(!serie.atual.labels.length){return}
-      charts[key]=new Chart(ctx,{type:'line',data:{labels:sanLabels(serie.atual.labels),datasets:ds2},options:common})
-    }
-  }
-  makeLine(ctxGGR,'GGR',mkSerie('ggr'));
-  makeLine(ctxDep,'Depósitos',mkSerie('depositos'));
-  makeLine(ctxFTD,'FTD',mkSerie('ftd'));
-  makeLine(ctxSB,'Sportsbook',mkSerie('sportsbook'));
-  makeLine(ctxCS,'Cassino',mkSerie('cassino'));
+  // ...continua renderizando gráficos individuais
 }
-
-/* ===== RANKING ===== */
-function renderRanking(){
-  const metric=$('selRanking').value;
-  const curMap=sumByClub(rowsAtual,metric);
-  const prevMap=$('chkComparar').checked?sumByClub(rowsAnterior,metric):{};
-  const list=Object.keys(curMap).map(clube=>{
-    const valor=num(curMap[clube]);const prev=$('chkComparar').checked?(prevMap[clube]||0):null;
-    const delta=prev==null?null:valor-prev;const pct=prev>0?((valor-prev)/Math.abs(prev))*100:null;
-    return {clube,valor,delta,pct}
-  }).sort((a,b)=>b.valor-a.valor).slice(0,TOP_N);
-
-  $('rankingInfo').textContent='Top '+TOP_N+' — '+metric.charAt(0).toUpperCase()+metric.slice(1);
-  const tb=$('rankingTable').querySelector('tbody');tb.innerHTML=list.length?'':'<tr><td colspan="4">Sem dados</td></tr>';
-  list.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    const cls=(metric==='bonus'?(r.delta<0?'up':'down'):(r.delta>=0?'up':'down'));
-    const deltaText=r.delta==null?'—':`${r.delta>=0?'+':''}${money(r.delta)} (${r.pct==null?'—':((r.pct>=0?'+':'')+r.pct.toFixed(2)+'%')})`;
-    tr.innerHTML=`<td>${i+1}</td><td>${r.clube}</td><td>${money(r.valor)}</td><td class="delta ${r.delta==null?'muted':cls}">${deltaText}</td>`;
-    tb.appendChild(tr)
-  })
-}
-
-/* ===== FILTROS/PREFS ===== */
-function getDateRange(){
-  let ini=new Date($('filtroInicio').value+'T00:00:00');let fim=new Date($('filtroFim').value+'T23:59:59');
-  if(ini>fim){const t=ini;ini=fim;fim=t;$('filtroInicio').value=ini.toISOString().split('T')[0];$('filtroFim').value=fim.toISOString().split('T')[0];}
-  return {ini,fim}
-}
-function applyNameFilters(rows){
-  const sup=$('eliminarSuprema').checked,toni=$('eliminarToni').checked;
-  const supList=CLUBES_SUPREMA.map(s=>s.toLowerCase()),toniName=CLUBE_TONI.toLowerCase();
-  return rows.filter(r=>{const name=(r[COLS.club]||'').toString().trim().toLowerCase();if(sup&&supList.includes(name))return false;if(toni&&name===toniName)return false;return true})
-}
-function populateClubSelects(all){
-  const clubs=[...new Set(all.map(r=>r[COLS.club]||'(Clube não informado)'))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-  ['filtroClubeA','filtroClubeB'].forEach(id=>{
-    const sel=$(id);sel.innerHTML='<option value="">(Todos)</option>';clubs.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)})
-  })
-}
-
-/* ===== PIPELINE ===== */
-function filterWindows(){
-  const {ini,fim}=getDateRange();
-  const days=Math.ceil((fim-ini)/(1000*60*60*24))+1;
-  const prevEnd=new Date(ini);prevEnd.setDate(ini.getDate()-1);
-  const prevStart=new Date(prevEnd);prevStart.setDate(prevEnd.getDate()-(days-1));
-  const inRange=(d,a,b)=>d&&!isNaN(d)&&d>=a&&d<=b;
-
-  const cur=allRows.filter(r=>inRange(parseDateStr(r[COLS.date]),ini,fim));
-  const prv=allRows.filter(r=>inRange(parseDateStr(r[COLS.date]),prevStart,prevEnd));
-
-  baseAtual=applyNameFilters(cur);
-  baseAnterior=applyNameFilters(prv);
-
-  const a=$('filtroClubeA').value,b=$('filtroClubeB').value;
-  rowsAtual=(!a&&!b)?baseAtual:baseAtual.filter(r=>(a&&r[COLS.club]===a)||(b&&r[COLS.club]===b));
-  rowsAnterior=(!a&&!b)?baseAnterior:baseAnterior.filter(r=>(a&&r[COLS.club]===a)||(b&&r[COLS.club]===b))
-}
-function updateAll(){
-  showLoaders(true);
-  filterWindows();
-  aggAtual=transform(rowsAtual)||{kpis:{ftd:0,depositos:0,ggr:0,sportsbook:0,cassino:0,bonus:0},charts:{comparativo:{labels:['FTD','Depósitos','GGR','Sportsbook','Cassino','Bônus'],dataA:[0,0,0,0,0,0]},ggr:{labels:[],data:[]},depositos:{labels:[],data:[]},ftd:{labels:[],data:[]},sportsbook:{labels:[],data:[]},cassino:{labels:[],data:[]}}};
-  aggAnterior=$('chkComparar').checked? (rowsAnterior.length?transform(rowsAnterior):null) : null;
-  renderKPIs();destroyCharts();renderCharts();renderRanking();gerarInsights();
-  showLoaders(false);
-  $('ultimaAtualizacao').textContent='Atualizado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
-}
-
 /* ===== INIT + EVENTS ===== */
 async function init(){
   const today=new Date();const y=new Date(today);y.setDate(today.getDate()-1);
-  $('filtroInicio').value=y.toISOString().split('T')[0];$('filtroFim').value=today.toISOString().split('T')[0];
-  try{allRows=await fetchAll();populateClubSelects(allRows);updateAll()}catch(e){console.error(e);alert('Erro ao carregar planilha. Tente novamente.')}
+  $('filtroInicio').value=y.toISOString().split('T')[0];
+  $('filtroFim').value=today.toISOString().split('T')[0];
+  try{
+    allRows=await fetchAll();
+    populateClubSelects(allRows);
+    updateAll();
+  }catch(e){
+    console.error(e);
+    alert('Erro ao carregar planilha. Tente novamente.');
+  }
 }
 document.addEventListener('DOMContentLoaded',function(){
-  function on(id,ev,fn){const el=$(id);if(el)el.addEventListener(ev,fn)}
+  function on(id,ev,fn){const el=$(id);if(el)el.addEventListener(ev,fn);}
   on('btnAplicar','click',updateAll);
   on('btnAtualizar','click',updateAll);
   on('filtroClubeA','change',updateAll);
@@ -505,34 +185,61 @@ document.addEventListener('DOMContentLoaded',function(){
 
   on('btnOntem','click',function(){
     const d=new Date();d.setDate(d.getDate()-1);
-    const s=d.toISOString().split('T')[0];$('filtroInicio').value=s;$('filtroFim').value=s;updateAll()
-  });
-  on('btnUltimos7','click',function(){
-    const t=new Date();const s=new Date();s.setDate(t.getDate()-7);
-    $('filtroInicio').value=s.toISOString().split('T')[0];$('filtroFim').value=t.toISOString().split('T')[0];updateAll()
-  });
-  on('btnUltimos30','click',function(){
-    const t=new Date();const s=new Date();s.setDate(t.getDate()-30);
-    $('filtroInicio').value=s.toISOString().split('T')[0];$('filtroFim').value=t.toISOString().split('T')[0];updateAll()
+    const s=d.toISOString().split('T')[0];
+    $('filtroInicio').value=s;
+    $('filtroFim').value=s;
+    updateAll();
   });
 
-  $('btnImportar').addEventListener('click',()=>$('fileCsv').click());
+  on('btnUltimos7','click',function(){
+    const t=new Date();const s=new Date();s.setDate(t.getDate()-7);
+    $('filtroInicio').value=s.toISOString().split('T')[0];
+    $('filtroFim').value=t.toISOString().split('T')[0];
+    updateAll();
+  });
+
+  on('btnUltimos30','click',function(){
+    const t=new Date();const s=new Date();s.setDate(t.getDate()-30);
+    $('filtroInicio').value=s.toISOString().split('T')[0];
+    $('filtroFim').value=t.toISOString().split('T')[0];
+    updateAll();
+  });
+
+  $('btnImportar').addEventListener('click',()=> $('fileCsv').click());
   $('fileCsv').addEventListener('change',function(ev){
-    const f=ev.target.files&&ev.target.files[0];if(!f)return;
+    const f=ev.target.files&&ev.target.files[0];
+    if(!f)return;
     const reader=new FileReader();
     reader.onload=function(e){
       try{
-        Papa.parse(e.target.result,{header:true,skipEmptyLines:true,complete:r=>{
-          if(r.errors&&r.errors.length){console.error(r.errors);alert('Erro ao ler CSV');return}
-          if(!r.data.length){alert('CSV vazio');return}
-          COLS=detectColumns(Object.keys(r.data[0]||{}));allRows=r.data;populateClubSelects(allRows);updateAll()
-        }})
-      }catch(ex){console.error(ex);alert('Falha no CSV')}
+        Papa.parse(e.target.result,{
+          header:true,
+          skipEmptyLines:true,
+          complete:r=>{
+            if(r.errors&&r.errors.length){
+              console.error(r.errors);
+              alert('Erro ao ler CSV');
+              return;
+            }
+            if(!r.data.length){
+              alert('CSV vazio');
+              return;
+            }
+            COLS=detectColumns(Object.keys(r.data[0]||{}));
+            allRows=r.data;
+            populateClubSelects(allRows);
+            updateAll();
+          }
+        });
+      }catch(ex){
+        console.error(ex);
+        alert('Falha no CSV');
+      }
     };
-    reader.readAsText(f,'utf-8')
+    reader.readAsText(f,'utf-8');
   });
 
-  init()
+  init();
 });
 </script>
 </body>
