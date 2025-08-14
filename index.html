@@ -81,9 +81,7 @@
         <button class="btn btn-apply" id="btnAplicar" type="button"><i class="fa-solid fa-filter"></i> Aplicar</button>
       </div>
 
-      <div class="row">
-        <div class="field grow"><label for="searchClub">Pesquisar clube</label><input type="text" id="searchClub" placeholder="Digite para filtrar opções..."></div>
-      </div>
+      <div class="row"><div class="field grow"><label for="searchClub">Pesquisar clube</label><input type="text" id="searchClub" placeholder="Digite para filtrar opções..."></div></div>
 
       <div class="row" style="gap:16px">
         <div class="field grow"><label for="filtroClubeA">Clube A</label><select id="filtroClubeA"></select></div>
@@ -174,10 +172,15 @@
   function parseCurrency(v) {
     if (typeof v === 'number') return v; if (v == null) return 0;
     let s = String(v).trim(); if (!s) return 0;
-    s = s.replace(/[R$\s]/g, '').replace(/[−–—]/g, '-'); const par = /^\(.*\)$/.test(s); if (par) s = s.replace(/[()]/g, '');
-    s = s.replace(/[^0-9,.\-]/g, ''); const c = s.includes(','), d = s.includes('.');
-    if (c && d) { const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.'); const dec = lc > ld ? ',' : '.'; const th = dec === ',' ? '.' : ','; s = s.split(th).join(''); if (dec === ',') s = s.replace(',', '.'); }
-    else if (c) { s = s.split('.').join(''); s = s.replace(',', '.'); }
+    s = s.replace(/[R$\s]/g, '').replace(/[−–—]/g, '-');
+    const par = /^\(.*\)$/.test(s); if (par) s = s.replace(/[()]/g, '');
+    s = s.replace(/[^0-9,.\-]/g, '');
+    const c = s.includes(','), d = s.includes('.');
+    if (c && d) {
+      const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.');
+      const dec = lc > ld ? ',' : '.'; const th = dec === ',' ? '.' : ',';
+      s = s.split(th).join(''); if (dec === ',') s = s.replace(',', '.');
+    } else if (c) { s = s.split('.').join(''); s = s.replace(',', '.'); }
     let n = parseFloat(s); if (isNaN(n)) n = 0; if (par) n = -Math.abs(n); return n;
   }
 
@@ -189,24 +192,35 @@
     const d = new Date(str); return isNaN(d) ? null : d;
   }
 
+  // ===== detectColumns reforçado com preferência por "FTD-Montante" =====
   function detectColumns(headers) {
-    const norm = s => (s || '').toString().trim().toLowerCase();
-    const find = (fn) => headers.find(h => fn(norm(h))) || null;
-    const ggrCalcHeader = find(n => n.includes('ggr') && (n.includes('cálculo') || n.includes('calculo') || n.includes('total')) && !n.includes('sportsbook') && !n.includes('cassino'));
+    const norm = s => (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
+    const exact = name => headers.find(h => norm(h) === norm(name)) || null;
+    const find  = fn   => headers.find(h => fn(norm(h))) || null;
+
+    const ftdPrefer = exact('FTD-Montante') || exact('FTD Montante') || exact('Montante FTD');
+
+    const ggrCalcHeader = find(n =>
+      n.includes('ggr') && (n.includes('calculo') || n.includes('total')) && !n.includes('sportsbook') && !n.includes('cassino')
+    );
+
     const m = {
       date: find(n => n.includes('data')),
-      club: find(n => n.includes('usuário - nome de usuário') || n.includes('nome de usuário') || n.includes('usuario - nome') || n.includes('clube') || n === 'user' || n.includes('usuario')),
-      ftd: find(n => n.includes('ftd-montante') || n.includes('usuário - ftd') || n === 'ftd'),
-      dep: find(n => n.includes('usuário - depósitos') || n.includes('depositos') || n.includes('depósitos')),
+      club: find(n => n.includes('usuario - nome de usuario') || n.includes('nome de usuario') || n.includes('usuario - nome') || n.includes('clube') || n === 'user' || n.includes('usuario')),
+      ftd:  ftdPrefer
+            || find(n => (n.includes('ftd') && n.includes('montante')))
+            || find(n => n.includes('ftd')),
+      dep: find(n => n.includes('usuario - depositos') || n.includes('usuario - depositos') || n.includes('depositos') || n.includes('deposito')),
       ggrCalc: ggrCalcHeader,
       sb: find(n => n.includes('sportsbook') && n.includes('ggr')),
       cs: find(n => (n.includes('cassino') || n.includes('casino')) && n.includes('ggr')),
       hab: find(n => n.includes('jogos de habilidade') || n.includes('habilidade') || n.includes('w/l') || n.includes('win/loss')),
-      bonus: find(n => (n.includes('bônus') || n.includes('bonus')) && n.includes('convert'))
+      bonus: find(n => (n.includes('bonus') || n.includes('bonu')) && n.includes('convert'))
     };
-    if (!m.date || !m.club) throw new Error('Não encontrei colunas obrigatórias (DATA/CLUBE).');
+    if (!m.date || !m.club || !m.ftd) throw new Error('Não encontrei colunas obrigatórias (DATA/CLUBE/FTD).');
     return m;
   }
+  // =====================================================================
 
   async function fetchAll() {
     try {
@@ -229,9 +243,7 @@
   }
 
   function computeGGR(row, c) {
-    const sb = parseCurrency(row[c.sb]);
-    const cs = parseCurrency(row[c.cs]);
-    const hab = parseCurrency(row[c.hab]);
+    const sb = parseCurrency(row[c.sb]); const cs = parseCurrency(row[c.cs]); const hab = parseCurrency(row[c.hab]);
     const sum = num(sb) + num(cs) + num(hab);
     if (c.ggrCalc) {
       const raw = parseCurrency(row[c.ggrCalc]);
@@ -253,10 +265,8 @@
       totals.ggr += num(computeGGR(r, c));
       totals.bonus += num(parseCurrency(r[c.bonus]));
     }
-
     const dates = [...new Set(rows.map(r => r[c.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b)));
     const series = { ggr: Array(dates.length).fill(0), depositos: Array(dates.length).fill(0), ftd: Array(dates.length).fill(0), sportsbook: Array(dates.length).fill(0), cassino: Array(dates.length).fill(0) };
-
     rows.forEach(r => {
       const di = dates.indexOf(r[c.date]); if (di < 0) return;
       series.ggr[di] += num(computeGGR(r, c));
@@ -265,7 +275,6 @@
       series.sportsbook[di] += num(parseCurrency(r[c.sb]));
       series.cassino[di] += num(parseCurrency(r[c.cs]));
     });
-
     return {
       kpis: totals,
       charts: {
@@ -282,8 +291,7 @@
   function sumByClub(rows, metric) {
     const c = COLS; const map = {};
     rows.forEach(r => {
-      const club = r[c.club] || '(Clube não informado)';
-      let v = 0;
+      const club = r[c.club] || '(Clube não informado)'; let v = 0;
       if (metric === 'depositos') v = parseCurrency(r[c.dep]);
       else if (metric === 'ftd') v = parseCurrency(r[c.ftd]);
       else if (metric === 'sportsbook') v = parseCurrency(r[c.sb]);
@@ -325,8 +333,7 @@
     const prevMap = $('chkComparar').checked ? sumByClub(baseAnterior, metric) : {};
 
     const linhas = Object.entries(curMap).map(([clube, valor]) => {
-      const prev = prevMap[clube] ?? 0;
-      return { clube, delta: valor - prev };
+      const prev = prevMap[clube] ?? 0; return { clube, delta: valor - prev };
     }).sort((a, b) => b.delta - a.delta);
 
     const top = linhas[0], worst = linhas[linhas.length - 1];
@@ -337,47 +344,31 @@
     $('chipResumo').textContent = txt;
   }
 
-  // ------------- AQUI ESTÁ O DEBUG: mostra também o "Anterior: ..." em todos os KPIs -------------
+  // ---------- KPIs (com debug "• Anterior: ...") ----------
   function setKPI(id, val, prev, metricKey) {
     const el = $(id);
-    el.querySelector('.value').textContent =
-      metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val);
-
+    el.querySelector('.value').textContent = metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val);
     const varEl = el.querySelector('.var');
 
-    // Sem comparação
-    if (!$('chkComparar').checked || prev == null) {
-      varEl.textContent = '—'; varEl.className = 'var muted'; return;
-    }
+    if (!$('chkComparar').checked || prev == null) { varEl.textContent = '—'; varEl.className = 'var muted'; return; }
 
     const delta = val - prev;
-
-    // helper de formatação do "Anterior"
-    const fmtPrev = (mk) => {
-      if (prev == null) return '—';
-      if (mk === 'margem') return `${prev.toFixed(2)}%`;
-      return money(prev);
-    };
+    const fmtPrev = (mk) => prev == null ? '—' : (mk === 'margem' ? `${prev.toFixed(2)}%` : money(prev));
 
     if (metricKey === 'margem') {
       varEl.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}pp • Anterior: ${fmtPrev('margem')}`;
-      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`;
-      return;
+      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
     }
     if (metricKey === 'ticket') {
       varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} • Anterior: ${fmtPrev('ticket')}`;
-      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`;
-      return;
+      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
     }
-
     const pct = (prev === 0) ? 0 : (delta / Math.abs(prev)) * 100;
     const positiveIsGood = metricKey !== 'bonus';
     const good = (delta >= 0 && positiveIsGood) || (delta < 0 && !positiveIsGood);
-    varEl.textContent =
-      `${delta >= 0 ? '+' : ''}${money(delta)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) • Anterior: ${fmtPrev(metricKey)}`;
+    varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) • Anterior: ${fmtPrev(metricKey)}`;
     varEl.className = `var ${good ? 'up' : 'down'}`;
   }
-  // ------------------------------------------------------------------------------------------------
 
   function renderKPIs() {
     setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd, 'ftd');
@@ -395,13 +386,13 @@
     const ticketAnterior = (aggAnterior && aggAnterior.kpis.ftd) ? (aggAnterior.kpis.depositos / aggAnterior.kpis.ftd) : null;
     setKPI('kpi-ticket', ticketAtual, ticketAnterior, 'ticket');
   }
+  // --------------------------------------------------------
 
   function destroyCharts() { Object.values(charts).forEach(c => { try { c.destroy() } catch {} }); charts = {}; }
 
   function renderCharts() {
     const textColor = '#e9f3ff', gridColor = 'rgba(255,255,255,.1)';
     const common = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor } } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') } }, x: { grid: { display: false }, ticks: { color: textColor } } } };
-
     const ctxComp = $('chartComparativo').getContext('2d');
     const ctxGGR = $('chartGGR').getContext('2d');
     const ctxDep = $('chartDepositos').getContext('2d');
@@ -570,12 +561,7 @@
   }
 
   function savePrefs() {
-    const prefs = {
-      ini: $('filtroInicio').value, fim: $('filtroFim').value,
-      a: $('filtroClubeA').value, b: $('filtroClubeB').value,
-      sup: $('eliminarSuprema').checked, toni: $('eliminarToni').checked,
-      comp: $('chkComparar').checked, metric: $('selRanking').value
-    };
+    const prefs = { ini: $('filtroInicio').value, fim: $('filtroFim').value, a: $('filtroClubeA').value, b: $('filtroClubeB').value, sup: $('eliminarSuprema').checked, toni: $('eliminarToni').checked, comp: $('chkComparar').checked, metric: $('selRanking').value };
     localStorage.setItem('rel_clubes_prefs', JSON.stringify(prefs));
   }
   function loadPrefs() {
@@ -591,7 +577,7 @@
     } catch { return {}; }
   }
 
-  // Filtra por INTERVALO usando parseDateStr
+  // Filtra por INTERVALO usando parseDateStr e gera logs de verificação
   function updateAll() {
     showLoaders(true);
 
@@ -618,6 +604,15 @@
     showLoaders(false); savePrefs();
 
     $('ultimaAtualizacao').textContent = 'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    $('ultimaAtualizacao').textContent += ` • FTD: ${COLS.ftd || '(não detectado)'}`;
+
+    // Log de verificação no console
+    if (aggAtual && aggAnterior && $('chkComparar').checked) {
+      console.table([
+        {Periodo:'Atual',    Inicio: ini.toISOString().slice(0,10),      Fim: fim.toISOString().slice(0,10),      FTD: aggAtual.kpis.ftd},
+        {Periodo:'Anterior', Inicio: prevStart.toISOString().slice(0,10),Fim: prevEnd.toISOString().slice(0,10), FTD: aggAnterior.kpis.ftd}
+      ]);
+    }
   }
 
   async function init() {
