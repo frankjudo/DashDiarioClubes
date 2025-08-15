@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" translate="no" class="notranslate">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="google" content="notranslate"/>
   <title>Relatório dos clubes</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -58,7 +59,7 @@
     .notification.error{border-left-color:var(--bad)}
   </style>
 </head>
-<body>
+<body class="notranslate" translate="no">
   <div class="container" role="application">
     <header>
       <div>
@@ -553,7 +554,7 @@
     });
   }
 
-  // === RANKING (faltava!) ===
+  // === RANKING (corrigido: sem backslash nas backticks)
   function renderRanking() {
     const metric = $('selRanking').value;
     localStorage.setItem('dash_ranking_metric', metric);
@@ -569,6 +570,9 @@
     const curMap = sumByClub(rowsAtual, metric);
     const compareOn = $('chkComparar').checked && rowsAnterior.length > 0;
     const prevMap = compareOn ? sumByClub(rowsAnterior, metric) : {};
+
+    const toCents  = v => Math.round((v ?? 0) * 100);
+    const fromCents= c => c / 100;
 
     const rows = Object.entries(curMap).map(([clube, valor]) => {
       const prev = compareOn ? (prevMap[clube] ?? 0) : null;
@@ -599,7 +603,11 @@
       const tr = document.createElement('tr');
       tr.dataset.clube = r.clube;
       tr.innerHTML = `<td>${i + 1}</td><td>${r.clube}</td><td>${money(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
-      tr.addEventListener('click', () => { $('filtroClubeA').value = r.clube; updateAll(); note(\`Clube A definido: ${r.clube}\`, 'success'); });
+      tr.addEventListener('click', () => {
+        $('filtroClubeA').value = r.clube;
+        updateAll();
+        note(`Clube A definido: ${r.clube}`, 'success');   <!-- <<< aqui estava o erro -->
+      });
       tb.appendChild(tr);
     });
   }
@@ -727,7 +735,7 @@
       const term = this.value.toLowerCase();
       ['filtroClubeA', 'filtroClubeB'].forEach(id => {
         const sel = $(id); if (!sel) return;
-        [...sel.options].forEach(o => {
+        [...sel.options].forEach o => {
           if (o.value === '') { o.style.display = ''; return; }
           o.style.display = (o.value.toLowerCase().includes(term) || o.textContent.toLowerCase().includes(term)) ? '' : 'none';
         });
