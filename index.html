@@ -154,7 +154,7 @@
 <script>
   const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
 
-  // Listas distintas
+  // Listas distintas para os filtros
   const EMAILS_SUPREMA = [
     'romulo@xpgames.bet',
     'lucasfarinha@maximabet.net',
@@ -203,7 +203,6 @@
     const d = new Date(str); return isNaN(d) ? null : d;
   }
 
-  // mapeamento de colunas
   function detectColumns(headers) {
     const norm = s => (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
     const exact = name => headers.find(h => norm(h) === norm(name)) || null;
@@ -286,7 +285,7 @@
       totals.ggr += num(computeGGR(r, c));
       totals.bonus += num(parseCurrency(r[c.bonus]));
     }
-    const dates = [...new Set(rows.map(r => r[c.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b)));
+    const dates = [...new Set(rows.map(r => r[COLS.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b)));
     const series = { ggr: Array(dates.length).fill(0), depositos: Array(dates.length).fill(0), ftd: Array(dates.length).fill(0), sportsbook: Array(dates.length).fill(0), cassino: Array(dates.length).fill(0) };
     rows.forEach(r => {
       const di = dates.indexOf(r[c.date]); if (di < 0) return;
@@ -326,7 +325,7 @@
 
   function seriesPorClube(rows, metric) {
     const c = COLS;
-    const dates = [...new Set(rows.map(r => r[c.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b)));
+    const dates = [...new Set(rows.map(r => r[COLS.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b)));
     const serie = Array(dates.length).fill(0);
     rows.forEach(r => {
       const di = dates.indexOf(r[c.date]); if (di < 0) return;
@@ -365,7 +364,6 @@
     $('chipResumo').textContent = txt;
   }
 
-  // helpers de centavos
   const toCents  = v => Math.round((v ?? 0) * 100);
   const fromCents= c => c / 100;
 
@@ -554,7 +552,6 @@
     });
   }
 
-  // === RANKING (corrigido: sem backslash nas backticks)
   function renderRanking() {
     const metric = $('selRanking').value;
     localStorage.setItem('dash_ranking_metric', metric);
@@ -606,13 +603,12 @@
       tr.addEventListener('click', () => {
         $('filtroClubeA').value = r.clube;
         updateAll();
-        note(`Clube A definido: ${r.clube}`, 'success');   <!-- <<< aqui estava o erro -->
+        note(`Clube A definido: ${r.clube}`, 'success');
       });
       tb.appendChild(tr);
     });
   }
 
-  // === período anterior, update e init ===
   function updateAll() {
     showLoaders(true);
 
@@ -735,7 +731,7 @@
       const term = this.value.toLowerCase();
       ['filtroClubeA', 'filtroClubeB'].forEach(id => {
         const sel = $(id); if (!sel) return;
-        [...sel.options].forEach o => {
+        [...sel.options].forEach((o) => {          /* << corrigido: parênteses! */
           if (o.value === '') { o.style.display = ''; return; }
           o.style.display = (o.value.toLowerCase().includes(term) || o.textContent.toLowerCase().includes(term)) ? '' : 'none';
         });
