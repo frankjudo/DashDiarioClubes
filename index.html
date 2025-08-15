@@ -153,7 +153,7 @@
 <script>
   const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
 
-  // >>> LISTAS SEPARADAS <<<
+  // Listas distintas
   const EMAILS_SUPREMA = [
     'romulo@xpgames.bet',
     'lucasfarinha@maximabet.net',
@@ -162,9 +162,7 @@
     'tropadogg@gmail.com',
     'galeradoinsta@gmail.com'
   ];
-  const EMAILS_TONI = [
-    'crisslots123@gmail.com'
-  ];
+  const EMAILS_TONI = ['crisslots123@gmail.com'];
 
   const TOP_N = 15;
 
@@ -204,7 +202,7 @@
     const d = new Date(str); return isNaN(d) ? null : d;
   }
 
-  // ===== detectColumns: trata "Usuário - Nome de usuário" como email/identificador =====
+  // mapeamento de colunas
   function detectColumns(headers) {
     const norm = s => (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
     const exact = name => headers.find(h => norm(h) === norm(name)) || null;
@@ -230,7 +228,6 @@
         n.includes('usuario - nome') ||
         n.includes('clube') || n === 'user' || n.includes('usuario')
       ),
-      // usamos a mesma coluna como "email" para filtrar
       email: userNameExact || find(n => n.includes('e-mail') || n.includes('email')),
       ftd:  ftdPrefer || find(n => (n.includes('ftd') && n.includes('montante'))) || find(n => n.includes('ftd')),
       dep:  find(n => n.includes('usuario - depositos') || n.includes('depositos') || n.includes('deposito')),
@@ -241,10 +238,9 @@
       bonus:find(n => (n.includes('bonus') || n.includes('bonu')) && n.includes('convert'))
     };
     if (!m.date || !m.club || !m.ftd) throw new Error('Não encontrei colunas obrigatórias (DATA/CLUBE/FTD).');
-    if (!m.email) m.email = m.club; // fallback
+    if (!m.email) m.email = m.club;
     return m;
   }
-  // =====================================================================
 
   async function fetchAll() {
     try {
@@ -368,10 +364,10 @@
     $('chipResumo').textContent = txt;
   }
 
-  // ---------- helpers p/ cálculo sem ruído de float ----------
+  // helpers de centavos
   const toCents  = v => Math.round((v ?? 0) * 100);
   const fromCents= c => c / 100;
-  // ---------- KPIs ----------
+
   function setKPI(id, val, prev, metricKey) {
     const el = $(id);
     el.querySelector('.value').textContent = metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val);
@@ -379,7 +375,6 @@
 
     if (!$('chkComparar').checked || prev == null) { varEl.textContent = '—'; varEl.className = 'var muted'; return; }
 
-    // cálculos em centavos para evitar 0,01 de erro
     const vC = toCents(val), pC = toCents(prev);
     const deltaMoney = fromCents(vC - pC);
 
@@ -417,7 +412,6 @@
     const ticketAnterior = (aggAnterior && aggAnterior.kpis.ftd) ? (aggAnterior.kpis.depositos / aggAnterior.kpis.ftd) : null;
     setKPI('kpi-ticket', ticketAtual, ticketAnterior, 'ticket');
   }
-  // --------------------------------------------------------
 
   function destroyCharts() { Object.values(charts).forEach(c => { try { c.destroy() } catch {} }); charts = {}; }
 
@@ -514,7 +508,7 @@
     });
   }
 
-  // ==== helpers para extração de e-mails ====
+  // ==== e-mails ====
   const extractEmail = s => {
     const raw = String(s ?? '').trim().toLowerCase();
     const m = raw.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/);
@@ -534,7 +528,6 @@
     return emails;
   }
 
-  // === FILTRO: cada checkbox aplica sua lista específica ===
   function applyNameFilters(rows) {
     const supOn  = $('eliminarSuprema').checked;
     const toniOn = $('eliminarToni').checked;
@@ -559,9 +552,59 @@
       return true;
     });
   }
-  // =====================================================================
 
-  // === PERÍODO ANTERIOR correto ===
+  // === RANKING (faltava!) ===
+  function renderRanking() {
+    const metric = $('selRanking').value;
+    localStorage.setItem('dash_ranking_metric', metric);
+
+    const filterAB = r =>
+      (!($('filtroClubeA').value) && !($('filtroClubeB').value)) ||
+      ($('filtroClubeA').value && r[COLS.club] === $('filtroClubeA').value) ||
+      ($('filtroClubeB').value && r[COLS.club] === $('filtroClubeB').value);
+
+    const rowsAtual = baseAtual.filter(filterAB);
+    const rowsAnterior = baseAnterior.filter(filterAB);
+
+    const curMap = sumByClub(rowsAtual, metric);
+    const compareOn = $('chkComparar').checked && rowsAnterior.length > 0;
+    const prevMap = compareOn ? sumByClub(rowsAnterior, metric) : {};
+
+    const rows = Object.entries(curMap).map(([clube, valor]) => {
+      const prev = compareOn ? (prevMap[clube] ?? 0) : null;
+
+      let deltaMoney = null, pct = null;
+      if (prev != null) {
+        const dC = toCents(valor) - toCents(prev);
+        deltaMoney = fromCents(dC);
+        pct = toCents(prev) === 0 ? null : (dC / Math.abs(toCents(prev))) * 100;
+      }
+
+      return { clube, valor: num(valor), deltaMoney, pct };
+    }).sort((a, b) => b.valor - a.valor).slice(0, TOP_N);
+
+    $('rankingInfo').textContent = `Top ${TOP_N} — ${metric.charAt(0).toUpperCase() + metric.slice(1)}`;
+    const tb = $('rankingTable').querySelector('tbody');
+    tb.innerHTML = rows.length ? '' : '<tr><td colspan="4">Sem dados</td></tr>';
+
+    rows.forEach((r, i) => {
+      let cls = 'flat', deltaText = '—';
+      if (r.deltaMoney !== null) {
+        const isBonus = metric === 'bonus';
+        const good = (r.deltaMoney >= 0 && !isBonus) || (r.deltaMoney < 0 && isBonus);
+        cls = good ? 'up' : 'down';
+        const pctText = (r.pct == null) ? '—' : `${r.pct >= 0 ? '+' : ''}${r.pct.toFixed(2)}%`;
+        deltaText = `${r.deltaMoney >= 0 ? '+' : ''}${money(r.deltaMoney)} (${pctText})`;
+      }
+      const tr = document.createElement('tr');
+      tr.dataset.clube = r.clube;
+      tr.innerHTML = `<td>${i + 1}</td><td>${r.clube}</td><td>${money(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
+      tr.addEventListener('click', () => { $('filtroClubeA').value = r.clube; updateAll(); note(\`Clube A definido: ${r.clube}\`, 'success'); });
+      tb.appendChild(tr);
+    });
+  }
+
+  // === período anterior, update e init ===
   function updateAll() {
     showLoaders(true);
 
@@ -594,14 +637,6 @@
     $('ultimaAtualizacao').textContent =
       'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
       ` • FTD: ${COLS.ftd || '(n/d)'} • Clube: ${COLS.club || '(n/d)'} • Email: ${COLS.email || '(n/d)'}`;
-
-    if (aggAtual && aggAnterior && $('chkComparar').checked) {
-      const fmt = d => d.toLocaleDateString('pt-BR');
-      console.table([
-        {Periodo:'Atual',    Inicio: fmt(ini),      Fim: fmt(fim),      FTD: aggAtual.kpis.ftd},
-        {Periodo:'Anterior', Inicio: fmt(prevStart),Fim: fmt(prevEnd),  FTD: aggAnterior.kpis.ftd}
-      ]);
-    }
   }
 
   function getDateRange() {
