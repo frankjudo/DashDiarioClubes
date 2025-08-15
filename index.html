@@ -108,7 +108,7 @@
       <div class="kpi" id="kpi-sb"><div class="title"><i class="fa-solid fa-futbol"></i> Sportsbook GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-cs"><div class="title"><i class="fa-solid fa-dice"></i> Cassino GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-bn"><div class="title"><i class="fa-solid fa-gift"></i> Bônus Convertidos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
-      <!-- REMOVIDO: % Margem -->
+      <div class="kpi" id="kpi-margem"><div class="title"><i class="fa-solid fa-percentage"></i> Margem</div><div class="value">0%</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-ticket"><div class="title"><i class="fa-solid fa-ticket"></i> Ticket Médio de Depósito</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
     </div>
 
@@ -152,8 +152,20 @@
 
 <script>
   const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
-  const CLUBES_SUPREMA = ['romulo@xpgames.bet','lucasfarinha@maximabet.net','superodds@gmail.com','clubedokw@gmail.com','tropadogg@gmail.com','galeradoinsta@gmail.com'];
-  const CLUBE_TONI = 'crisslots123@gmail.com';
+
+  // >>> LISTAS SEPARADAS <<<
+  const EMAILS_SUPREMA = [
+    'romulo@xpgames.bet',
+    'lucasfarinha@maximabet.net',
+    'superodds@gmail.com',
+    'clubedokw@gmail.com',
+    'tropadogg@gmail.com',
+    'galeradoinsta@gmail.com'
+  ];
+  const EMAILS_TONI = [
+    'crisslots123@gmail.com'
+  ];
+
   const TOP_N = 15;
 
   let charts = {}, allRows = [], baseAtual = [], baseAnterior = [], aggAtual = null, aggAnterior = null, COLS = null;
@@ -184,16 +196,6 @@
     let n = parseFloat(s); if (isNaN(n)) n = 0; if (par) n = -Math.abs(n); return n;
   }
 
-  function parseNumber(v){
-    if (typeof v === 'number') return v;
-    if (v == null) return 0;
-    let s = String(v).trim();
-    if (!s) return 0;
-    s = s.replace(/[^0-9,.\-]/g,'').replace(/\./g,'').replace(',', '.');
-    const n = parseFloat(s);
-    return isNaN(n) ? 0 : n;
-  }
-
   function parseDateStr(s) {
     if (!s) return null;
     const str = String(s).trim();
@@ -202,7 +204,7 @@
     const d = new Date(str); return isNaN(d) ? null : d;
   }
 
-  // ===== detectColumns (inclui "Usuário - Contagem de depósito" como depCount) =====
+  // ===== detectColumns: trata "Usuário - Nome de usuário" como email/identificador =====
   function detectColumns(headers) {
     const norm = s => (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
     const exact = name => headers.find(h => norm(h) === norm(name)) || null;
@@ -214,17 +216,6 @@
       exact('Usuário – Nome de usuário');
 
     const ftdPrefer = exact('FTD-Montante') || exact('FTD Montante') || exact('Montante FTD');
-
-    const depCountPrefer =
-      exact('Usuário - Contagem de depósito') ||
-      exact('Usuario - Contagem de depósito') ||
-      exact('Usuário - Contagem de deposito') ||
-      exact('Usuario - Contagem de deposito');
-
-    const depCountHeuristic = find(n =>
-      (n.includes('deposit') || n.includes('deposito')) &&
-      (n.includes('qtd') || n.includes('quant') || n.includes('#') || n.includes('cont') || n.includes('num'))
-    );
 
     const ggrCalcHeader = find(n =>
       n.includes('ggr') && (n.includes('calculo') || n.includes('total')) &&
@@ -239,10 +230,10 @@
         n.includes('usuario - nome') ||
         n.includes('clube') || n === 'user' || n.includes('usuario')
       ),
+      // usamos a mesma coluna como "email" para filtrar
       email: userNameExact || find(n => n.includes('e-mail') || n.includes('email')),
       ftd:  ftdPrefer || find(n => (n.includes('ftd') && n.includes('montante'))) || find(n => n.includes('ftd')),
       dep:  find(n => n.includes('usuario - depositos') || n.includes('depositos') || n.includes('deposito')),
-      depCount: depCountPrefer || depCountHeuristic || null,
       ggrCalc: ggrCalcHeader,
       sb:   find(n => n.includes('sportsbook') && n.includes('ggr')),
       cs:   find(n => (n.includes('cassino') || n.includes('casino')) && n.includes('ggr')),
@@ -289,22 +280,15 @@
   function transform(rows) {
     if (!rows.length) return null;
     const c = COLS;
-    const totals = { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0, depCount: 0, depUsers: 0 };
-    const depUsersSet = new Set();
-
+    const totals = { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
     for (const r of rows) {
       totals.ftd += num(parseCurrency(r[c.ftd]));
-      const depV = num(parseCurrency(r[c.dep]));
-      totals.depositos += depV;
+      totals.depositos += num(parseCurrency(r[c.dep]));
       totals.sportsbook += num(parseCurrency(r[c.sb]));
       totals.cassino += num(parseCurrency(r[c.cs]));
       totals.ggr += num(computeGGR(r, c));
       totals.bonus += num(parseCurrency(r[c.bonus]));
-      if (c.depCount) totals.depCount += num(parseNumber(r[c.depCount]));
-      if (depV > 0) depUsersSet.add(r[c.club]);
     }
-    totals.depUsers = depUsersSet.size;
-
     const dates = [...new Set(rows.map(r => r[c.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b)));
     const series = { ggr: Array(dates.length).fill(0), depositos: Array(dates.length).fill(0), ftd: Array(dates.length).fill(0), sportsbook: Array(dates.length).fill(0), cassino: Array(dates.length).fill(0) };
     rows.forEach(r => {
@@ -387,47 +371,51 @@
   // ---------- helpers p/ cálculo sem ruído de float ----------
   const toCents  = v => Math.round((v ?? 0) * 100);
   const fromCents= c => c / 100;
-
-  function setKPI(id, val, prev) {
+  // ---------- KPIs ----------
+  function setKPI(id, val, prev, metricKey) {
     const el = $(id);
-    el.querySelector('.value').textContent = money(val);
+    el.querySelector('.value').textContent = metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val);
     const varEl = el.querySelector('.var');
 
     if (!$('chkComparar').checked || prev == null) { varEl.textContent = '—'; varEl.className = 'var muted'; return; }
 
+    // cálculos em centavos para evitar 0,01 de erro
     const vC = toCents(val), pC = toCents(prev);
     const deltaMoney = fromCents(vC - pC);
-    const pct = pC === 0 ? 0 : ((vC - pC) / Math.abs(pC)) * 100;
 
-    varEl.textContent = `${deltaMoney >= 0 ? '+' : ''}${money(deltaMoney)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) • Anterior: ${money(prev)}`;
-    varEl.className = `var ${deltaMoney >= 0 ? 'up' : 'down'}`;
-  }
-
-  // --------- Ticket por transação (Depósitos ÷ #Depósitos) ----------
-  function contarDepositos(rows){
-    if (COLS.depCount) {
-      return rows.reduce((acc, r) => acc + Number(parseNumber(r[COLS.depCount])), 0);
+    if (metricKey === 'margem') {
+      const delta = val - prev;
+      varEl.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}pp • Anterior: ${prev.toFixed(2)}%`;
+      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
     }
-    // fallback: nº de usuários que depositaram (>0)
-    const s = new Set();
-    rows.forEach(r => { if (parseCurrency(r[COLS.dep]) > 0) s.add(r[COLS.club]); });
-    return s.size;
+    if (metricKey === 'ticket') {
+      const delta = val - prev;
+      varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} • Anterior: ${money(prev)}`;
+      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
+    }
+
+    const pct = pC === 0 ? 0 : ((vC - pC) / Math.abs(pC)) * 100;
+    const positiveIsGood = metricKey !== 'bonus';
+    const good = (deltaMoney >= 0 && positiveIsGood) || (deltaMoney < 0 && !positiveIsGood);
+    varEl.textContent = `${deltaMoney >= 0 ? '+' : ''}${money(deltaMoney)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) • Anterior: ${money(prev)}`;
+    varEl.className = `var ${good ? 'up' : 'down'}`;
   }
 
   function renderKPIs() {
-    setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd);
-    setKPI('kpi-dep', aggAtual.kpis.depositos, aggAnterior?.kpis.depositos);
-    setKPI('kpi-ggr', aggAtual.kpis.ggr, aggAnterior?.kpis.ggr);
-    setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook);
-    setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino);
-    setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus);
+    setKPI('kpi-ftd', aggAtual.kpis.ftd, aggAnterior?.kpis.ftd, 'ftd');
+    setKPI('kpi-dep', aggAtual.kpis.depositos, aggAnterior?.kpis.depositos, 'depositos');
+    setKPI('kpi-ggr', aggAtual.kpis.ggr, aggAnterior?.kpis.ggr, 'ggr');
+    setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook, 'sportsbook');
+    setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino, 'cassino');
+    setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus, 'bonus');
 
-    const nDeposAtual = contarDepositos(baseAtual);
-    const nDeposAnterior = $('chkComparar').checked ? contarDepositos(baseAnterior) : null;
+    const margemAtual = aggAtual.kpis.ggr ? ((aggAtual.kpis.ggr - aggAtual.kpis.bonus) / aggAtual.kpis.ggr) * 100 : 0;
+    const margemAnterior = aggAnterior?.kpis?.ggr ? ((aggAnterior.kpis.ggr - aggAnterior.kpis.bonus) / aggAnterior.kpis.ggr) * 100 : null;
+    setKPI('kpi-margem', margemAtual, margemAnterior, 'margem');
 
-    const ticketAtual = nDeposAtual ? (aggAtual.kpis.depositos / nDeposAtual) : 0;
-    const ticketAnterior = (nDeposAnterior && aggAnterior) ? (aggAnterior.kpis.depositos / nDeposAnterior) : null;
-    setKPI('kpi-ticket', ticketAtual, ticketAnterior);
+    const ticketAtual = aggAtual.kpis.ftd ? (aggAtual.kpis.depositos / aggAtual.kpis.ftd) : 0;
+    const ticketAnterior = (aggAnterior && aggAnterior.kpis.ftd) ? (aggAnterior.kpis.depositos / aggAnterior.kpis.ftd) : null;
+    setKPI('kpi-ticket', ticketAtual, ticketAnterior, 'ticket');
   }
   // --------------------------------------------------------
 
@@ -546,29 +534,34 @@
     return emails;
   }
 
+  // === FILTRO: cada checkbox aplica sua lista específica ===
   function applyNameFilters(rows) {
     const supOn  = $('eliminarSuprema').checked;
     const toniOn = $('eliminarToni').checked;
     if (!supOn && !toniOn) return rows;
 
-    const supList = CLUBES_SUPREMA.map(s => s.toLowerCase());
-    const supSet  = new Set(supList);
-    const toni    = CLUBE_TONI.toLowerCase();
+    const supSet  = new Set(EMAILS_SUPREMA.map(e => e.toLowerCase()));
+    const toniSet = new Set(EMAILS_TONI.map(e => e.toLowerCase()));
 
     return rows.filter(r => {
-      const primaryEmail = extractEmail(r[COLS.email]);
-      if (supOn && (supSet.has(primaryEmail) || supList.some(b => primaryEmail.includes(b)))) return false;
-      if (toniOn && (primaryEmail === toni || primaryEmail.includes(toni))) return false;
+      const primary = extractEmail(r[COLS.email]);
 
-      const all = getRowEmails(r);
-      const hasSup  = [...all].some(e => supSet.has(e) || supList.some(b => e.includes(b)));
-      const hasToni = [...all].some(e => e === toni || e.includes(toni));
-      if (hasSup || hasToni) return false;
+      const isSupPrimary  = supOn  && (supSet.has(primary)  || [...supSet].some(b => primary.includes(b)));
+      const isToniPrimary = toniOn && (toniSet.has(primary) || [...toniSet].some(b => primary.includes(b)));
+      if (isSupPrimary || isToniPrimary) return false;
 
+      if (supOn || toniOn) {
+        const all = getRowEmails(r);
+        const hasSup  = supOn  && [...all].some(e => supSet.has(e)  || [...supSet].some(b => e.includes(b)));
+        const hasToni = toniOn && [...all].some(e => toniSet.has(e) || [...toniSet].some(b => e.includes(b)));
+        if (hasSup || hasToni) return false;
+      }
       return true;
     });
   }
+  // =====================================================================
 
+  // === PERÍODO ANTERIOR correto ===
   function updateAll() {
     showLoaders(true);
 
@@ -600,7 +593,7 @@
 
     $('ultimaAtualizacao').textContent =
       'Atualizado em ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
-      ` • DepCount: ${COLS.depCount || '(não encontrado)'} • Email: ${COLS.email || '(n/d)'}`;
+      ` • FTD: ${COLS.ftd || '(n/d)'} • Clube: ${COLS.club || '(n/d)'} • Email: ${COLS.email || '(n/d)'}`;
 
     if (aggAtual && aggAnterior && $('chkComparar').checked) {
       const fmt = d => d.toLocaleDateString('pt-BR');
@@ -667,53 +660,6 @@
     if (p?.b && [...sB.options].some(o => o.value === p.b)) sB.value = p.b;
   }
 
-  function renderRanking() {
-    const metric = $('selRanking').value;
-    localStorage.setItem('dash_ranking_metric', metric);
-
-    const rowsAtual = (!($('filtroClubeA').value) && !($('filtroClubeB').value)) ? baseAtual
-      : baseAtual.filter(r => ($('filtroClubeA').value && r[COLS.club] === $('filtroClubeA').value) || ($('filtroClubeB').value && r[COLS.club] === $('filtroClubeB').value));
-
-    const rowsAnterior = (!($('filtroClubeA').value) && !($('filtroClubeB').value)) ? baseAnterior
-      : baseAnterior.filter(r => ($('filtroClubeA').value && r[COLS.club] === $('filtroClubeA').value) || ($('filtroClubeB').value && r[COLS.club] === $('filtroClubeB').value));
-
-    const curMap = sumByClub(rowsAtual, metric);
-    const compareOn = $('chkComparar').checked;
-    const prevMap = compareOn ? sumByClub(rowsAnterior, metric) : {};
-
-    const rows = Object.entries(curMap).map(([clube, valor]) => {
-      const prev = compareOn ? (prevMap[clube] ?? 0) : null;
-      let delta = null, pct = null, badge = '';
-      if (compareOn) {
-        delta = valor - prev;
-        pct = (prev > 0) ? ((valor - prev) / Math.abs(prev)) * 100 : null;
-        if (prev === 0) badge = ' (novo)';
-      }
-      return { clube, valor: num(valor), delta: delta == null ? null : num(delta), pct, badge };
-    }).sort((a, b) => b.valor - a.valor).slice(0, TOP_N);
-
-    $('rankingInfo').textContent = `Top ${TOP_N} — ${metric.charAt(0).toUpperCase() + metric.slice(1)}`;
-
-    const tb = $('rankingTable').querySelector('tbody');
-    tb.innerHTML = rows.length ? '' : '<tr><td colspan="4">Sem dados</td></tr>';
-    rows.forEach((r, i) => {
-      let cls = 'flat', deltaText = '—';
-      if (r.delta !== null) {
-        const isBonus = metric === 'bonus';
-        const good = (r.delta >= 0 && !isBonus) || (r.delta < 0 && isBonus);
-        cls = good ? 'up' : 'down';
-        const pctText = (r.pct == null) ? '—' : `${r.pct >= 0 ? '+' : ''}${r.pct.toFixed(2)}%`;
-        deltaText = `${r.delta >= 0 ? '+' : ''}${money(r.delta)} (${pctText})${r.badge || ''}`;
-      }
-      const tr = document.createElement('tr');
-      tr.dataset.clube = r.clube;
-      tr.innerHTML = `<td>${i + 1}</td><td>${r.clube}</td><td>${money(r.valor)}</td><td class="delta ${cls}">${deltaText}</td>`;
-      tr.addEventListener('click', () => { $('filtroClubeA').value = r.clube; updateAll(); note(`Clube A definido: ${r.clube}`, 'success'); });
-      tb.appendChild(tr);
-    });
-  }
-  window.renderRanking = renderRanking;
-
   document.addEventListener('DOMContentLoaded', () => {
     const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
     on('btnAplicar', 'click', () => { updateAll(); savePrefs(); });
@@ -723,7 +669,7 @@
     on('eliminarSuprema', 'change', updateAll);
     on('eliminarToni', 'change', updateAll);
     on('chkComparar', 'change', updateAll);
-    on('selRanking', 'change', () => window.renderRanking && window.renderRanking());
+    on('selRanking', 'change', renderRanking);
 
     on('btnOntem', 'click', () => {
       const d = new Date(); d.setDate(d.getDate() - 1);
