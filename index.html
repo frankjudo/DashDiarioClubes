@@ -102,6 +102,7 @@
 
     <div class="panel insights" id="insights" aria-live="polite"><div class="chip" id="chipResumo">Gerando insights…</div></div>
 
+    <!-- KPIs: removidos Margem e Ticket Médio -->
     <div class="kpis" role="region" aria-label="Indicadores">
       <div class="kpi" id="kpi-ftd"><div class="title"><i class="fa-solid fa-user-plus"></i> FTD</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-dep"><div class="title"><i class="fa-solid fa-coins"></i> Depósitos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
@@ -109,8 +110,6 @@
       <div class="kpi" id="kpi-sb"><div class="title"><i class="fa-solid fa-futbol"></i> Sportsbook GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-cs"><div class="title"><i class="fa-solid fa-dice"></i> Cassino GGR</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
       <div class="kpi" id="kpi-bn"><div class="title"><i class="fa-solid fa-gift"></i> Bônus Convertidos</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
-      <div class="kpi" id="kpi-margem"><div class="title"><i class="fa-solid fa-percentage"></i> Margem</div><div class="value">0%</div><div class="var muted">—</div></div>
-      <div class="kpi" id="kpi-ticket"><div class="title"><i class="fa-solid fa-ticket"></i> Ticket Médio de Depósito</div><div class="value">R$ 0</div><div class="var muted">—</div></div>
     </div>
 
     <div class="grid">
@@ -154,7 +153,7 @@
 <script>
   const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv';
 
-  // Listas distintas para os filtros
+  // Listas distintas para filtros
   const EMAILS_SUPREMA = [
     'romulo@xpgames.bet',
     'lucasfarinha@maximabet.net',
@@ -369,26 +368,15 @@
 
   function setKPI(id, val, prev, metricKey) {
     const el = $(id);
-    el.querySelector('.value').textContent = metricKey === 'margem' ? (isFinite(val) ? `${val.toFixed(2)}%` : '—') : money(val);
+    el.querySelector('.value').textContent = money(val);
     const varEl = el.querySelector('.var');
 
     if (!$('chkComparar').checked || prev == null) { varEl.textContent = '—'; varEl.className = 'var muted'; return; }
 
     const vC = toCents(val), pC = toCents(prev);
     const deltaMoney = fromCents(vC - pC);
-
-    if (metricKey === 'margem') {
-      const delta = val - prev;
-      varEl.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}pp • Anterior: ${prev.toFixed(2)}%`;
-      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
-    }
-    if (metricKey === 'ticket') {
-      const delta = val - prev;
-      varEl.textContent = `${delta >= 0 ? '+' : ''}${money(delta)} • Anterior: ${money(prev)}`;
-      varEl.className = `var ${delta >= 0 ? 'up' : 'down'}`; return;
-    }
-
     const pct = pC === 0 ? 0 : ((vC - pC) / Math.abs(pC)) * 100;
+
     const positiveIsGood = metricKey !== 'bonus';
     const good = (deltaMoney >= 0 && positiveIsGood) || (deltaMoney < 0 && !positiveIsGood);
     varEl.textContent = `${deltaMoney >= 0 ? '+' : ''}${money(deltaMoney)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) • Anterior: ${money(prev)}`;
@@ -402,14 +390,6 @@
     setKPI('kpi-sb', aggAtual.kpis.sportsbook, aggAnterior?.kpis.sportsbook, 'sportsbook');
     setKPI('kpi-cs', aggAtual.kpis.cassino, aggAnterior?.kpis.cassino, 'cassino');
     setKPI('kpi-bn', aggAtual.kpis.bonus, aggAnterior?.kpis.bonus, 'bonus');
-
-    const margemAtual = aggAtual.kpis.ggr ? ((aggAtual.kpis.ggr - aggAtual.kpis.bonus) / aggAtual.kpis.ggr) * 100 : 0;
-    const margemAnterior = aggAnterior?.kpis?.ggr ? ((aggAnterior.kpis.ggr - aggAnterior.kpis.bonus) / aggAnterior.kpis.ggr) * 100 : null;
-    setKPI('kpi-margem', margemAtual, margemAnterior, 'margem');
-
-    const ticketAtual = aggAtual.kpis.ftd ? (aggAtual.kpis.depositos / aggAtual.kpis.ftd) : 0;
-    const ticketAnterior = (aggAnterior && aggAnterior.kpis.ftd) ? (aggAnterior.kpis.depositos / aggAnterior.kpis.ftd) : null;
-    setKPI('kpi-ticket', ticketAtual, ticketAnterior, 'ticket');
   }
 
   function destroyCharts() { Object.values(charts).forEach(c => { try { c.destroy() } catch {} }); charts = {}; }
@@ -507,7 +487,7 @@
     });
   }
 
-  // ==== e-mails ====
+  // ==== filtros por e-mail ====
   const extractEmail = s => {
     const raw = String(s ?? '').trim().toLowerCase();
     const m = raw.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/);
@@ -731,7 +711,7 @@
       const term = this.value.toLowerCase();
       ['filtroClubeA', 'filtroClubeB'].forEach(id => {
         const sel = $(id); if (!sel) return;
-        [...sel.options].forEach((o) => {          /* << corrigido: parênteses! */
+        [...sel.options].forEach((o) => {
           if (o.value === '') { o.style.display = ''; return; }
           o.style.display = (o.value.toLowerCase().includes(term) || o.textContent.toLowerCase().includes(term)) ? '' : 'none';
         });
