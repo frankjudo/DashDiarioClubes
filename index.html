@@ -233,7 +233,7 @@
       ),
       email: userNameExact || find(n => n.includes('e-mail') || n.includes('email')),
       ftd:  ftdPrefer || find(n => (n.includes('ftd') && n.includes('montante'))) || find(n => n.includes('ftd')),
-      dep: find(n => n.toLowerCase().includes('depositos') && n.toLowerCase().includes('usuario')),
+      dep: exact('Usuário - Depósitos') || find(n => n.toLowerCase().includes('depósitos')).includes('depositos') && n.toLowerCase().includes('usuario')),
       ggrCalc: ggrCalcHeader,
       sb:   find(n => n.includes('sportsbook') && n.includes('ggr')),
       cs:   find(n => (n.includes('cassino') || n.includes('casino')) && n.includes('ggr')),
