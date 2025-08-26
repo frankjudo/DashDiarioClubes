@@ -1,8 +1,24 @@
-/* === CÓDIGO JAVASCRIPT OTIMIZADO PARA FORMATO DE MOEDA === */
+/* === CÓDIGO JAVASCRIPT OTIMIZADO PARA TODOS OS FORMATOS DE NÚMERO === */
 
 const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 let dados = [], charts = {};
 let valoresAnteriores = {};
+
+// Função para limpar e converter valores
+function limparValor(val) {
+    if (typeof val === 'string') {
+        let valorLimpo = val.replace(/[^0-9,.]/g, '');
+        // Se a string tem uma vírgula e um ponto, a vírgula é o separador de milhar.
+        // Neste caso, removemos o ponto.
+        if (valorLimpo.indexOf(',') > -1 && valorLimpo.indexOf('.') > -1) {
+            valorLimpo = valorLimpo.replace(/\./g, '');
+        }
+        // Substitui a vírgula pelo ponto decimal
+        valorLimpo = valorLimpo.replace(',', '.');
+        return parseFloat(valorLimpo) || 0;
+    }
+    return parseFloat(val) || 0;
+}
 
 function getUsernameField(dataRow) {
     if (dataRow && dataRow["Usuário - Nome de usuário"]) return "Usuário - Nome de usuário";
@@ -240,11 +256,6 @@ function atualizarDados(){
     carregar();
 }
 
-function limparValor(val) {
-    // Remove R$, %, espaços em branco e substitui vírgula por ponto
-    return String(val || '').replace(/[^0-9,.]/g, '').replace(',', '.');
-}
-
 function atualizar(){
     console.log("DEBUG: Executando função 'atualizar'.");
     if (dados.length === 0) {
@@ -288,8 +299,7 @@ function obterDadosDoClube(dadosBase, nomeClube, usernameField) {
 }
     
 function atualizarKPIs(dadosA, dadosB) {
-    // AQUI ESTÁ A MUDANÇA PRINCIPAL
-    let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(limparValor(d[field])) || 0), 0);
+    let somador = (arr, field) => arr.reduce((s, d) => s + limparValor(d[field]), 0);
     
     let totalFTD = somador(dadosA, "Usuário - FTD-Montante") + somador(dadosB, "Usuário - FTD-Montante");
     let totalDepositos = somador(dadosA, "Usuário - Depósitos") + somador(dadosB, "Usuário - Depósitos");
@@ -315,12 +325,12 @@ function atualizarGraficos(dadosA, dadosB, nomeA, nomeB) {
             const data = d.DATA;
             if (!data) return;
             out[data] = out[data] || { ggr: 0, dep: 0, ftd: 0, sb: 0, cs: 0, bo: 0 };
-            out[data].ggr += parseFloat(limparValor(d["Cálculo - GGR"])) || 0;
-            out[data].dep += parseFloat(limparValor(d["Usuário - Depósitos"])) || 0;
-            out[data].ftd += parseFloat(limparValor(d["Usuário - FTD-Montante"])) || 0;
-            out[data].sb += parseFloat(limparValor(d["Sportsbook - GGR"])) || 0;
-            out[data].cs += parseFloat(limparValor(d["Cassino - GGR"])) || 0;
-            out[data].bo += parseFloat(limparValor(d["Cálculo - bônus convertidos"])) || 0;
+            out[data].ggr += limparValor(d["Cálculo - GGR"]);
+            out[data].dep += limparValor(d["Usuário - Depósitos"]);
+            out[data].ftd += limparValor(d["Usuário - FTD-Montante"]);
+            out[data].sb += limparValor(d["Sportsbook - GGR"]);
+            out[data].cs += limparValor(d["Cassino - GGR"]);
+            out[data].bo += limparValor(d["Cálculo - bônus convertidos"]);
         });
         return out;
     };
@@ -361,7 +371,7 @@ function atualizarGraficos(dadosA, dadosB, nomeA, nomeB) {
     upd("chartSportsbook", "sb", `${nomeA} Sportsbook`, `${nomeB} Sportsbook`);
     upd("chartCassino", "cs", `${nomeA} Cassino`, `${nomeB} Cassino`);
     
-    let somador = (arr, field) => arr.reduce((s, d) => s + (parseFloat(limparValor(d[field])) || 0), 0);
+    let somador = (arr, field) => arr.reduce((s, d) => s + limparValor(d[field]), 0);
     
     charts.chartComparativo.data.labels = ["FTD", "Depósitos", "GGR", "Sportsbook GGR", "Cassino GGR", "Bônus Convertidos"];
     
@@ -399,7 +409,7 @@ function atualizarTabelas(dadosBase, usernameField) {
     function preenche(id, field) {
         let mapaValores = dadosBase.reduce((acc, d) => {
             const clube = d[usernameField];
-            const valor = parseFloat(limparValor(d[field])) || 0;
+            const valor = limparValor(d[field]);
             if (clube && !isNaN(valor)) {
                 acc[clube] = (acc[clube] || 0) + valor;
             }
