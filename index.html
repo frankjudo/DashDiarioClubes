@@ -1,13 +1,13 @@
-/* === CÓDIGO JAVASCRIPT OTIMIZADO (sem dados de demonstração) === */
+/* === CÓDIGO JAVASCRIPT COM DEBUG ATIVO === */
 
 const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
 let dados = [], charts = {};
 let valoresAnteriores = {};
 
-// O nome da coluna de username pode variar entre o real e o de demo.
 function getUsernameField(dataRow) {
-    if (dataRow["Usuário - Nome de usuário"]) return "Usuário - Nome de usuário";
-    if (dataRow["Usuário - Nome de username"]) return "Usuário - Nome de username";
+    if (dataRow && dataRow["Usuário - Nome de usuário"]) return "Usuário - Nome de usuário";
+    if (dataRow && dataRow["Usuário - Nome de username"]) return "Usuário - Nome de username";
+    console.log("DEBUG: Campo de nome de usuário não encontrado. Retornando null.");
     return null;
 }
 
@@ -132,25 +132,40 @@ function animarKPI(sel, novo, anterior){
 }
 
 function carregar(){
+    console.log("DEBUG: Iniciando carregamento de dados...");
     showLoading(true, "Conectando à fonte de dados...");
     
     Papa.parse(URL_CSV, {
         download: true,
         header: true,
         complete: function(r) {
-            if (r.data && r.data.length > 0 && r.data[0][Object.keys(r.data[0])[0]] !== "") {
-                dados = r.data.filter(x => x.DATA);
-                $("#demoWarning").hide();
-                init();
+            console.log("DEBUG: PapaParse concluído. Resultado:", r);
+            if (r.data && r.data.length > 0) {
+                // Filtra linhas vazias
+                const dadosCarregados = r.data.filter(row => Object.values(row).some(val => val !== null && val !== ''));
+                
+                console.log(`DEBUG: Total de linhas carregadas: ${r.data.length}. Linhas válidas: ${dadosCarregados.length}`);
+
+                if (dadosCarregados.length > 0) {
+                    dados = dadosCarregados;
+                    $("#demoWarning").hide();
+                    console.log("DEBUG: Dados carregados com sucesso. Inicializando dashboard.");
+                    init();
+                } else {
+                    console.error("DEBUG: Os dados carregados estão vazios ou contêm apenas linhas vazias.");
+                    showLoading(false);
+                    alert("Erro: Não foi possível carregar os dados. A planilha pode estar vazia ou inacessível.");
+                    $("#demoWarning").show().html('<i class="fas fa-exclamation-circle"></i> Erro ao carregar os dados. A planilha está vazia.');
+                }
             } else {
-                // Se os dados estiverem vazios ou inválidos, mostre uma mensagem de erro.
+                console.error("DEBUG: Os dados carregados estão vazios ou o download falhou.");
                 showLoading(false);
                 alert("Erro: Não foi possível carregar os dados. A planilha pode estar vazia ou inacessível.");
                 $("#demoWarning").show().html('<i class="fas fa-exclamation-circle"></i> Erro ao carregar os dados. Verifique a fonte de dados.');
             }
         },
         error: function(err) {
-            console.error("Erro ao carregar CSV.", err);
+            console.error("DEBUG: Erro na requisição PapaParse.", err);
             showLoading(false);
             alert("Erro: Não foi possível carregar os dados. Verifique a conexão ou o link da planilha.");
             $("#demoWarning").show().html('<i class="fas fa-exclamation-circle"></i> Erro ao carregar os dados. Verifique a conexão ou o link.');
@@ -159,16 +174,21 @@ function carregar(){
 }
 
 function init(){
+    if (dados.length === 0) {
+        console.error("DEBUG: A função init foi chamada, mas não há dados para processar.");
+        return;
+    }
     const usernameField = getUsernameField(dados[0]);
     if (!usernameField) {
-        console.error("Campo de username não encontrado nos dados.");
+        console.error("DEBUG: Campo de username não encontrado nos dados. Verifique a formatação da planilha.");
         showLoading(false);
         alert("Erro: A coluna de nome de usuário não foi encontrada na planilha. Verifique a formatação.");
         $("#demoWarning").show().html('<i class="fas fa-exclamation-circle"></i> Erro de formatação: A coluna de nome de usuário não foi encontrada.');
         return;
     }
     
-    let clubes = [...new Set(dados.map(d => d[usernameField]))].filter(Boolean); // Remove valores nulos/vazios
+    let clubes = [...new Set(dados.map(d => d[usernameField]))].filter(Boolean);
+    console.log("DEBUG: Clubes encontrados:", clubes);
     
     let opts = '<option value="Todos">Todos os Clubes</option>' +
                 clubes.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -178,14 +198,12 @@ function init(){
     $("#filtroClubeA").html(opts);
     $("#filtroClubeB").html(optsClubeB);
     
-    // Inicia com últimos 7 dias
     let hoje = new Date();
     let ini = new Date();
     ini.setDate(hoje.getDate() - 7);
     $("#filtroInicio").val(hoje.toISOString().slice(0,10));
     $("#filtroFim").val(hoje.toISOString().slice(0,10));
     
-    // Inicializa gráficos
     charts.chartComparativo = criarGrafico($("#chartComparativo")[0], "Clube A", "Clube B", "#3498db", "#e74c3c", 'bar');
     charts.chartGGR = criarGrafico($("#chartGGR")[0], "Clube A GGR", "Clube B GGR", "#3498db", "#e74c3c");
     charts.chartDepositos = criarGrafico($("#chartDepositos")[0], "Clube A Depósitos", "Clube B Depósitos", "#3498db", "#e74c3c");
@@ -193,20 +211,22 @@ function init(){
     charts.chartSportsbook = criarGrafico($("#chartSportsbook")[0], "Clube A Sportsbook", "Clube B Sportsbook", "#3498db", "#e74c3c");
     charts.chartCassino = criarGrafico($("#chartCassino")[0], "Clube A Cassino", "Clube B Cassino", "#3498db", "#e74c3c");
     
-    // Inicializa valores anteriores para KPIs
     const kpis = ['#kpi-ftd', '#kpi-depositos', '#kpi-ggr', '#kpi-sportsbook', '#kpi-cassino', '#kpi-bonus'];
     kpis.forEach(kpi => valoresAnteriores[kpi] = 0);
     
     atualizar();
     showLoading(false);
     
-    // Atualiza automaticamente a cada 5 minutos
     setInterval(atualizarDados, 300000);
 }
 
-function aplicarFiltros(){ atualizar(); }
+function aplicarFiltros(){
+    console.log("DEBUG: Aplicando filtros...");
+    atualizar();
+}
     
 function setPeriodo(d){
+    console.log(`DEBUG: Definindo período para os últimos ${d} dias.`);
     let hoje = new Date();
     let ini = new Date();
     ini.setDate(hoje.getDate() - d);
@@ -216,13 +236,16 @@ function setPeriodo(d){
 }
     
 function atualizarDados(){
+    console.log("DEBUG: Atualizando dados (chamada manual ou automática).");
     showLoading(true, "Atualizando dados...");
     carregar();
 }
 
 function atualizar(){
+    console.log("DEBUG: Executando função 'atualizar'.");
     if (dados.length === 0) {
-        return; // Não executa se não houver dados
+        console.warn("DEBUG: Nenhum dado disponível para atualização. Abortando.");
+        return;
     }
 
     let ini = $("#filtroInicio").val();
@@ -230,20 +253,27 @@ function atualizar(){
     let clubeA = $("#filtroClubeA").val();
     let clubeB = $("#filtroClubeB").val();
     
+    console.log(`DEBUG: Filtros selecionados - Clube A: ${clubeA}, Clube B: ${clubeB}, Início: ${ini}, Fim: ${fim}`);
+    
     const usernameField = getUsernameField(dados[0]);
     let dadosFiltrados = dados.filter(d => {
         const dataValida = d.DATA && (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim);
         return dataValida;
     });
     
+    console.log(`DEBUG: ${dadosFiltrados.length} linhas de dados após a filtragem de data.`);
+    
     let dadosClubeA = obterDadosDoClube(dadosFiltrados, clubeA, usernameField);
     let dadosClubeB = clubeB !== "Nenhum" && clubeA !== clubeB ? obterDadosDoClube(dadosFiltrados, clubeB, usernameField) : [];
 
+    console.log(`DEBUG: Dados do Clube A (${clubeA}): ${dadosClubeA.length} linhas. Dados do Clube B (${clubeB}): ${dadosClubeB.length} linhas.`);
+    
     atualizarKPIs(dadosClubeA, dadosClubeB);
     atualizarGraficos(dadosClubeA, dadosClubeB, clubeA, clubeB);
     atualizarTabelas(dadosFiltrados, usernameField);
     
     $("#ultimaAtualizacao").text(new Date().toLocaleString('pt-BR'));
+    console.log("DEBUG: Atualização completa.");
 }
 
 function obterDadosDoClube(dadosBase, nomeClube, usernameField) {
@@ -262,6 +292,8 @@ function atualizarKPIs(dadosA, dadosB) {
     let totalSportsbook = somador(dadosA, "Sportsbook - GGR") + somador(dadosB, "Sportsbook - GGR");
     let totalCassino = somador(dadosA, "Cassino - GGR") + somador(dadosB, "Cassino - GGR");
     let totalBonus = somador(dadosA, "Cálculo - bônus convertidos") + somador(dadosB, "Cálculo - bônus convertidos");
+
+    console.log(`DEBUG: KPIs totais - FTD: ${totalFTD}, Depósitos: ${totalDepositos}, GGR: ${totalGGR}`);
 
     animarKPI("#kpi-ftd", totalFTD, valoresAnteriores["#kpi-ftd"]);
     animarKPI("#kpi-depositos", totalDepositos, valoresAnteriores["#kpi-depositos"]);
@@ -291,6 +323,8 @@ function atualizarGraficos(dadosA, dadosB, nomeA, nomeB) {
     let dadosAgrupadosA = agrupaPorData(dadosA);
     let dadosAgrupadosB = agrupaPorData(dadosB);
     let datas = [...new Set([...Object.keys(dadosAgrupadosA), ...Object.keys(dadosAgrupadosB)])].sort();
+
+    console.log("DEBUG: Datas para gráficos:", datas);
 
     const isClubeBSelecionado = nomeB !== "Nenhum" && dadosB.length > 0;
 
@@ -370,7 +404,7 @@ function atualizarTabelas(dadosBase, usernameField) {
         let top10 = Object.entries(mapaValores).sort((a, b) => b[1] - a[1]).slice(0, 10);
         
         let html = top10.map(item => {
-            let variacao = (Math.random() * 20 - 5).toFixed(1); // Simulação
+            let variacao = (Math.random() * 20 - 5).toFixed(1);
             let corVariacao = variacao >= 0 ? '#2ecc70' : '#e74c3c';
             return `<tr>
                 <td>${item[0]}</td>
@@ -401,6 +435,7 @@ function toggleDarkMode(){
 }
 
 $(document).ready(function(){
+    console.log("DEBUG: Documento pronto. Iniciando a aplicação.");
     carregar();
     
     $('.kpi, .btn-period, .btn-apply, .btn-export, .btn-mode').hover(function(){
