@@ -11,12 +11,12 @@
   <style>
     :root{--bg:#0e1621; --bg2:#0b1926;--card:#101f2d; --card2:#0f2130;--txt:#e9f3ff; --muted:#98a9b7; --accent:#49b6ff;--good:#28d07f; --bad:#ff5c5c; --amber:#ffb86b;--border:rgba(255,255,255,.07); --shadow:0 10px 30px rgba(0,0,0,.35);}
     *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2);color:var(--txt)}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--txt)}
     .container{max-width:1700px;margin:0 auto;padding:22px}
     header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
     header h1{margin:0;font-size:28px;font-weight:900;display:flex;gap:10px;align-items:center}
     header .sub{color:var(--muted);font-weight:600}
-    .panel{background:linear-gradient(180deg,var(--card),var(--card2);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+    .panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
     .controls{padding:16px 16px 10px;margin-bottom:12px}
     .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
     .row>.field{display:flex;flex-direction:column;gap:6px}
@@ -30,15 +30,15 @@
     .btn-apply{background:#133822;border:1px solid rgba(40,208,127,.35);color:#bfffe1}
     .insights{padding:10px 14px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start}
     .chip{background:#0b2435;border:1px solid var(--border);padding:8px 10px;border-radius:12px;color:var(--muted);font-weight:700}
-    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr);gap:10px;margin-bottom:12px}
-    .kpi{padding:12px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2);position:relative}
+    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px}
+    .kpi{padding:12px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));position:relative}
     .kpi:before{content:'';position:absolute;left:0;top:0;height:100%;width:4px;background:var(--accent)}
     .kpi .title{color:var(--muted);font-weight:800;font-size:13px;display:flex;gap:8px;align-items:center}
     .kpi .value{font-size:22px;font-weight:900;margin:8px 0 2px}
     .kpi .var{font-weight:900;font-size:12px}
     .up{color:var(--good)} .down{color:var(--bad)} .muted{color:var(--muted)}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr);gap:10px;grid-auto-rows:380px;margin-bottom:12px}
-    .card{padding:12px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),var(--card2);box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:10px;grid-auto-rows:380px;margin-bottom:12px}
+    .card{padding:12px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
     .card h3{margin:0 0 8px;color:var(--accent);display:flex;gap:8px;align-items:center}
     .chart-container{flex:1;min-height:0}
     .loader{position:absolute;inset:0;border-radius:16px;background:rgba(11,25,38,.65);display:none;justify-content:center;align-items:center}
@@ -53,7 +53,7 @@
     tbody td{padding:10px 10px}
     tbody tr:hover{background:rgba(73,182,255,.08)}
     .delta.up{color:var(--good)} .delta.down{color:var(--bad)} .delta.flat{color:var(--muted)}
-    .notification{position:fixed;right:16px;bottom:16px;background:linear-gradient(180deg,var(--card),var(--card2);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;opacity:0;transform:translateY(12px);transition:all .2s}
+    .notification{position:fixed;right:16px;bottom:16px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;opacity:0;transform:translateY(12px);transition:all .2s}
     .notification.show{opacity:1;transform:translateY(0)}
     .notification.success{border-left-color:var(--good)}
     .notification.error{border-left-color:var(--bad)}
@@ -165,15 +165,15 @@
   const EMAILS_TONI = ['crisslots123@gmail.com'];
 
   // Sets (micro-otimização)
-  const SUP_SET  = new Set(EMAILS_SUPREMA.map(e => e.toLowerCase());
-  const TONI_SET = new Set(EMAILS_TONI.map(e => e.toLowerCase());
+  const SUP_SET  = new Set(EMAILS_SUPREMA.map(e => e.toLowerCase()));
+  const TONI_SET = new Set(EMAILS_TONI.map(e => e.toLowerCase()));
 
   const TOP_N = 15;
 
   let charts = {}, allRows = [], baseAtual = [], baseAnterior = [], aggAtual = null, aggAnterior = null, COLS = null;
 
   const $ = id => document.getElementById(id);
-  const showLoaders = (on = true) => document.querySelectorAll('.card .loader').forEach(el => el.classList.toggle('show', on);
+  const showLoaders = (on = true) => document.querySelectorAll('.card .loader').forEach(el => el.classList.toggle('show', on));
   function note(msg, type = 'info') {
     const n = $('notification'), t = $('notificationText'), i = n.querySelector('i');
     n.className = 'notification'; n.classList.add('show', type);
@@ -195,21 +195,21 @@
       const dec = lc > ld ? ',' : '.'; const th = dec === ',' ? '.' : ',';
       s = s.split(th).join(''); if (dec === ',') s = s.replace(',', '.');
     } else if (c) { s = s.split('.').join(''); s = s.replace(',', '.'); }
-    let n = parseFloat(s); if (isNaN(n) n = 0; if (par) n = -Math.abs(n); return n;
+    let n = parseFloat(s); if (isNaN(n)) n = 0; if (par) n = -Math.abs(n); return n;
   }
 
   function parseDateStr(s) {
     if (!s) return null;
     const str = String(s).trim();
-    if (/^\d{4}-\d{2}-\d{2}$/.test(str) return new Date(str + 'T00:00:00');
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(str) { const [d, m, y] = str.split('/'); return new Date(`${y}-${m}-${d}T00:00:00`); }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str + 'T00:00:00');
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) { const [d, m, y] = str.split('/'); return new Date(`${y}-${m}-${d}T00:00:00`); }
     const d = new Date(str); return isNaN(d) ? null : d;
   }
 
   function detectColumns(headers) {
     const norm = s => (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
-    const exact = name => headers.find(h => norm(h) === norm(name) || null;
-    const find  = fn   => headers.find(h => fn(norm(h)) || null;
+    const exact = name => headers.find(h => norm(h) === norm(name)) || null;
+    const find  = fn   => headers.find(h => fn(norm(h))) || null;
 
     const userNameExact =
       exact('Usuário - Nome de usuário') ||
@@ -219,26 +219,26 @@
     const ftdPrefer = exact('FTD-Montante') || exact('FTD Montante') || exact('Montante FTD');
 
     const ggrCalcHeader = find(n =>
-      n.includes('ggr') && (n.includes('calculo') || n.includes('total') &&
+      n.includes('ggr') && (n.includes('calculo') || n.includes('total')) &&
       !n.includes('sportsbook') && !n.includes('cassino')
     );
 
     const m = {
-      date: find(n => n.includes('data'),
+      date: find(n => n.includes('data')),
       club: userNameExact || find(n =>
         n.includes('usuario - nome de usuario') ||
         n.includes('nome de usuario') ||
         n.includes('usuario - nome') ||
         n.includes('clube') || n === 'user' || n.includes('usuario')
       ),
-      email: userNameExact || find(n => n.includes('e-mail') || n.includes('email'),
-      ftd:  ftdPrefer || find(n => (n.includes('ftd') && n.includes('montante')) || find(n => n.includes('ftd'),
-      dep: find(n => n.toLowerCase().includes('depositos') && n.toLowerCase().includes('usuario'),
+      email: userNameExact || find(n => n.includes('e-mail') || n.includes('email')),
+      ftd:  ftdPrefer || find(n => (n.includes('ftd') && n.includes('montante'))) || find(n => n.includes('ftd')),
+      dep: find(n => n.toLowerCase().includes('depositos') && n.toLowerCase().includes('usuario')),
       ggrCalc: ggrCalcHeader,
-      sb:   find(n => n.includes('sportsbook') && n.includes('ggr'),
-      cs:   find(n => (n.includes('cassino') || n.includes('casino') && n.includes('ggr'),
-      hab:  find(n => n.includes('jogos de habilidade') || n.includes('habilidade') || n.includes('w/l') || n.includes('win/loss'),
-      bonus:find(n => (n.includes('bonus') || n.includes('bonu') && n.includes('convert')
+      sb:   find(n => n.includes('sportsbook') && n.includes('ggr')),
+      cs:   find(n => (n.includes('cassino') || n.includes('casino')) && n.includes('ggr')),
+      hab:  find(n => n.includes('jogos de habilidade') || n.includes('habilidade') || n.includes('w/l') || n.includes('win/loss')),
+      bonus:find(n => (n.includes('bonus') || n.includes('bonu')) && n.includes('convert'))
     };
     if (!m.date || !m.club || !m.ftd) throw new Error('Não encontrei colunas obrigatórias (DATA/CLUBE/FTD).');
     if (!m.email) m.email = m.club;
@@ -253,9 +253,9 @@
       const result = await new Promise((resolve, reject) => {
         Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: false, complete: r => resolve(r), error: e => reject(e) });
       });
-      if (result.errors.length) throw new Error('Erro ao processar CSV: ' + result.errors.map(e => e.message).join(', ');
+      if (result.errors.length) throw new Error('Erro ao processar CSV: ' + result.errors.map(e => e.message).join(', '));
       if (!result.data.length) throw new Error('CSV vazio.');
-      COLS = detectColumns(Object.keys(result.data[0] || {});
+      COLS = detectColumns(Object.keys(result.data[0] || {}));
       note('Dados carregados com sucesso!', 'success');
       return result.data;
     } catch (err) {
@@ -281,22 +281,22 @@
     const c = COLS;
     const totals = { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
     for (const r of rows) {
-      totals.ftd += num(parseCurrency(r[c.ftd]);
-      totals.depositos += num(parseCurrency(r[c.dep]);
-      totals.sportsbook += num(parseCurrency(r[c.sb]);
-      totals.cassino += num(parseCurrency(r[c.cs]);
-      totals.ggr += num(computeGGR(r, c);
-      totals.bonus += num(parseCurrency(r[c.bonus]);
+      totals.ftd += num(parseCurrency(r[c.ftd]));
+      totals.depositos += num(parseCurrency(r[c.dep]));
+      totals.sportsbook += num(parseCurrency(r[c.sb]));
+      totals.cassino += num(parseCurrency(r[c.cs]));
+      totals.ggr += num(computeGGR(r, c));
+      totals.bonus += num(parseCurrency(r[c.bonus]));
     }
-    const dates = [...new Set(rows.map(r => r[COLS.date])].sort((a, b) => (parseDateStr(a) - parseDateStr(b));
+    const dates = [...new Set(rows.map(r => r[COLS.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b)));
     const series = { ggr: Array(dates.length).fill(0), depositos: Array(dates.length).fill(0), ftd: Array(dates.length).fill(0), sportsbook: Array(dates.length).fill(0), cassino: Array(dates.length).fill(0) };
     rows.forEach(r => {
       const di = dates.indexOf(r[c.date]); if (di < 0) return;
-      series.ggr[di] += num(computeGGR(r, c);
-      series.depositos[di] += num(parseCurrency(r[c.dep]);
-      series.ftd[di] += num(parseCurrency(r[c.ftd]);
-      series.sportsbook[di] += num(parseCurrency(r[c.sb]);
-      series.cassino[di] += num(parseCurrency(r[c.cs]);
+      series.ggr[di] += num(computeGGR(r, c));
+      series.depositos[di] += num(parseCurrency(r[c.dep]));
+      series.ftd[di] += num(parseCurrency(r[c.ftd]));
+      series.sportsbook[di] += num(parseCurrency(r[c.sb]));
+      series.cassino[di] += num(parseCurrency(r[c.cs]));
     });
     return {
       kpis: totals,
@@ -328,7 +328,7 @@
 
   function seriesPorClube(rows, metric) {
     const c = COLS;
-    const dates = [...new Set(rows.map(r => r[COLS.date])].sort((a, b) => (parseDateStr(a) - parseDateStr(b));
+    const dates = [...new Set(rows.map(r => r[COLS.date]))].sort((a, b) => (parseDateStr(a) - parseDateStr(b)));
     const serie = Array(dates.length).fill(0);
     rows.forEach(r => {
       const di = dates.indexOf(r[c.date]); if (di < 0) return;
@@ -360,7 +360,7 @@
     }).sort((a, b) => b.delta - a.delta);
 
     const top = linhas[0], worst = linhas[linhas.length - 1];
-    const mk = v => money(Math.abs(v || 0), dir = v => v >= 0 ? '↑' : '↓';
+    const mk = v => money(Math.abs(v || 0)), dir = v => v >= 0 ? '↑' : '↓';
 
     let txt = `Depósitos ${!compOn ? '—' : `${dir(dDep)} ${mk(dDep)}`} | GGR ${!compOn ? '—' : `${dir(dGgr)} ${mk(dGgr)}`} | FTD ${!compOn ? '—' : `${dir(dFtd)} ${mk(dFtd)}`}.`;
     if (top && worst) { txt += ` Destaques: ↑ ${top.clube} (maior crescimento em ${metric}); ↓ ${worst.clube} (maior queda).`; }
@@ -379,7 +379,7 @@
 
     const vC = toCents(val), pC = toCents(prev);
     const deltaMoney = fromCents(vC - pC);
-    const pct = pC === 0 ? 0 : ((vC - pC) / Math.abs(pC) * 100;
+    const pct = pC === 0 ? 0 : ((vC - pC) / Math.abs(pC)) * 100;
 
     const positiveIsGood = metricKey !== 'bonus';
     const good = (deltaMoney >= 0 && positiveIsGood) || (deltaMoney < 0 && !positiveIsGood);
@@ -423,8 +423,8 @@
     if (compararClubes) {
       const metrics = ['FTD', 'Depósitos', 'GGR', 'Sportsbook', 'Cassino', 'Bônus'];
       const totalClub = rows => { const a = transform(rows); return a ? a.kpis : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 }; };
-      const kpiA = clubA ? totalClub(baseAtual.filter(r => r[COLS.club] === clubA) : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
-      const kpiB = clubB ? totalClub(baseAtual.filter(r => r[COLS.club] === clubB) : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
+      const kpiA = clubA ? totalClub(baseAtual.filter(r => r[COLS.club] === clubA)) : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
+      const kpiB = clubB ? totalClub(baseAtual.filter(r => r[COLS.club] === clubB)) : { ftd: 0, depositos: 0, ggr: 0, sportsbook: 0, cassino: 0, bonus: 0 };
       charts.comp = new Chart(ctxComp, {
         type: 'bar',
         data: { labels: metrics,
@@ -467,16 +467,16 @@
       }
     };
 
-    makeLine(ctxGGR, 'GGR', mkSerie('ggr');
-    makeLine(ctxDep, 'Depósitos', mkSerie('depositos');
-    makeLine(ctxFTD, 'FTD', mkSerie('ftd');
-    makeLine(ctxSB, 'Sportsbook', mkSerie('sportsbook');
-    makeLine(ctxCS, 'Cassino', mkSerie('cassino');
+    makeLine(ctxGGR, 'GGR', mkSerie('ggr'));
+    makeLine(ctxDep, 'Depósitos', mkSerie('depositos'));
+    makeLine(ctxFTD, 'FTD', mkSerie('ftd'));
+    makeLine(ctxSB, 'Sportsbook', mkSerie('sportsbook'));
+    makeLine(ctxCS, 'Cassino', mkSerie('cassino'));
 
     if (charts.scatter) charts.scatter.destroy();
     const curMapG = sumByClub(baseAtual, 'ggr');
     const curMapD = sumByClub(baseAtual, 'depositos');
-    const points = Object.keys(curMapG).map(clube => ({ clube, x: num(curMapD[clube] || 0), y: num(curMapG[clube] || 0) }).sort((a, b) => b.y - a.y).slice(0, 50);
+    const points = Object.keys(curMapG).map(clube => ({ clube, x: num(curMapD[clube] || 0), y: num(curMapG[clube] || 0) })).sort((a, b) => b.y - a.y).slice(0, 50);
     charts.scatter = new Chart(ctxSc, {
       type: 'scatter',
       data: { datasets: [{ label: 'Clubes (Top 50 por GGR)', data: points, parsing: false, pointRadius: 4, borderColor: '#49b6ff', backgroundColor: 'rgba(73,182,255,.4)' }] },
@@ -504,7 +504,7 @@
         if (!v) return;
         const s = String(v).toLowerCase();
         const ms = s.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/g);
-        if (ms) ms.forEach(x => bag.add(x.trim());
+        if (ms) ms.forEach(x => bag.add(x.trim()));
       };
       if (COLS?.email) push(row[COLS.email]);
       if (COLS?.club)  push(row[COLS.club]);
@@ -513,7 +513,7 @@
     };
 
     const hasFromList = (emailSet, listSet) =>
-      [...emailSet].some(e => listSet.has(e) || [...listSet].some(b => e.includes(b));
+      [...emailSet].some(e => listSet.has(e) || [...listSet].some(b => e.includes(b)));
 
     return rows.filter(r => {
       const emails = getRowEmails(r);
@@ -529,7 +529,7 @@
     localStorage.setItem('dash_ranking_metric', metric);
 
     const filterAB = r =>
-      (!($('filtroClubeA').value) && !($('filtroClubeB').value) ||
+      (!($('filtroClubeA').value) && !($('filtroClubeB').value)) ||
       ($('filtroClubeA').value && r[COLS.club] === $('filtroClubeA').value) ||
       ($('filtroClubeB').value && r[COLS.club] === $('filtroClubeB').value);
 
@@ -549,7 +549,7 @@
       if (prev != null) {
         const dC = toCents(valor) - toCents(prev);
         deltaMoney = fromCents(dC);
-        pct = toCents(prev) === 0 ? null : (dC / Math.abs(toCents(prev)) * 100;
+        pct = toCents(prev) === 0 ? null : (dC / Math.abs(toCents(prev))) * 100;
       }
       return { clube, valor: num(valor), deltaMoney, pct };
     }).sort((a, b) => b.valor - a.valor).slice(0, TOP_N);
@@ -592,8 +592,8 @@
 
     const inRange = (d, a, b) => d && d >= a && d <= b;
 
-    const cur = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), ini, fim);
-    const prv = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd);
+    const cur = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), ini, fim));
+    const prv = allRows.filter(r => inRange(parseDateStr(r[COLS.date]), prevStart, prevEnd));
 
     baseAtual = applyNameFilters(cur);
     baseAnterior = applyNameFilters(prv);
@@ -612,7 +612,7 @@
   function getDateRange() {
     let ini = new Date($('filtroInicio').value + 'T00:00:00');
     let fim = new Date($('filtroFim').value + 'T23:59:59');
-    if (isNaN(ini) || isNaN(fim) return { ini: null, fim: null };
+    if (isNaN(ini) || isNaN(fim)) return { ini: null, fim: null };
     if (ini > fim) {
       const t = ini; ini = fim; fim = t;
       $('filtroInicio').value = ini.toISOString().slice(0, 10);
@@ -624,7 +624,7 @@
 
   function savePrefs() {
     const prefs = { ini: $('filtroInicio').value, fim: $('filtroFim').value, a: $('filtroClubeA').value, b: $('filtroClubeB').value, sup: $('eliminarSuprema').checked, toni: $('eliminarToni').checked, comp: $('chkComparar').checked, metric: $('selRanking').value };
-    localStorage.setItem('rel_clubes_prefs', JSON.stringify(prefs);
+    localStorage.setItem('rel_clubes_prefs', JSON.stringify(prefs));
   }
   function loadPrefs() {
     try {
@@ -655,14 +655,14 @@
   }
 
   function populateClubSelects(all, p) {
-    const clubs = [...new Set(all.map(r => (r[COLS.club] || '(Clube não informado)'))].sort((a, b) => a.localeCompare(b, 'pt-BR');
+    const clubs = [...new Set(all.map(r => (r[COLS.club] || '(Clube não informado)')))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
     const sA = $('filtroClubeA'), sB = $('filtroClubeB');
     [sA, sB].forEach(sel => {
       sel.innerHTML = '<option value="">(Todos)</option>';
       clubs.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
     });
-    if (p?.a && [...sA.options].some(o => o.value === p.a) sA.value = p.a;
-    if (p?.b && [...sB.options].some(o => o.value === p.b) sB.value = p.b;
+    if (p?.a && [...sA.options].some(o => o.value === p.a)) sA.value = p.a;
+    if (p?.b && [...sB.options].some(o => o.value === p.b)) sB.value = p.b;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -699,17 +699,17 @@
         const sel = $(id); if (!sel) return;
         [...sel.options].forEach((o) => {
           if (o.value === '') { o.style.display = ''; return; }
-          o.style.display = (o.value.toLowerCase().includes(term) || o.textContent.toLowerCase().includes(term) ? '' : 'none';
+          o.style.display = (o.value.toLowerCase().includes(term) || o.textContent.toLowerCase().includes(term)) ? '' : 'none';
         });
       });
     });
 
     on('btnExportar', 'click', () => {
-      const rowsToExport = (!($('filtroClubeA').value) && !($('filtroClubeB').value) ? baseAtual
-        : baseAtual.filter(r => ($('filtroClubeA').value && r[COLS.club] === $('filtroClubeA').value) || ($('filtroClubeB').value && r[COLS.club] === $('filtroClubeB').value);
+      const rowsToExport = (!($('filtroClubeA').value) && !($('filtroClubeB').value)) ? baseAtual
+        : baseAtual.filter(r => ($('filtroClubeA').value && r[COLS.club] === $('filtroClubeA').value) || ($('filtroClubeB').value && r[COLS.club] === $('filtroClubeB').value));
       const metric = $('selRanking').value;
       const curMap = sumByClub(rowsToExport, metric);
-      const rows = Object.entries(curMap).map(([clube, valor]) => ({ clube, valor: num(valor) }).sort((a, b) => b.valor - a.valor);
+      const rows = Object.entries(curMap).map(([clube, valor]) => ({ clube, valor: num(valor) })).sort((a, b) => b.valor - a.valor);
       let csv = "data:text/csv;charset=utf-8,Clube,Valor\n";
       rows.forEach(r => csv += `"${r.clube}",${r.valor}\n`);
       const a = document.createElement('a'); a.href = encodeURI(csv);
@@ -720,7 +720,7 @@
 if (COLS && COLS.dep) {
   console.log('[DEBUG] Coluna usada para depósitos:', COLS.dep);
   allRows.forEach((r, i) => {
-    if (r[COLS.club] && r[COLS.club].toLowerCase() === 'romulo@xpgames.bet' && r[COLS.date]?.includes('15/08/2025') {
+    if (r[COLS.club] && r[COLS.club].toLowerCase() === 'romulo@xpgames.bet' && r[COLS.date]?.includes('15/08/2025')) {
       console.log('[DEBUG] Linha ' + i + ': Depósito bruto:', r[COLS.dep], '| Linha completa:', r);
     }
   });
