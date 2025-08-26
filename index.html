@@ -205,7 +205,8 @@ function init(){
     let clubes = [...new Set(dados.map(d => d[usernameField]))].filter(Boolean);
     console.log("DEBUG: Clubes encontrados:", clubes);
     
-    let opts = '<option value="Todos">Todos os Clubes</option>' +
+    // CORREÇÃO AQUI
+    let opts = '<option value="Todos">Todos os Clubes</option>' + 
                 clubes.map(c => `<option value="${c}">${c}</option>`).join('');
     
     let optsClubeB = '<option value="Nenhum">Nenhum</option>' + opts;
