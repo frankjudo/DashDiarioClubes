@@ -411,33 +411,7 @@
           font-size: 1.8rem;
         }
       }
-    
-body.light-mode {
-  background: linear-gradient(135deg, #ffffff, #f1f1f1);
-  color: #1a252f;
-}
-body.light-mode .controls,
-body.light-mode .kpi,
-body.light-mode .chart-container,
-body.light-mode .table-container,
-body.light-mode .footer {
-  background: rgba(255, 255, 255, 0.9);
-  color: #1a252f;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-body.light-mode .kpi h3,
-body.light-mode .chart-container h3,
-body.light-mode .table-container h3,
-body.light-mode .footer p,
-body.light-mode .control-section h3 {
-  color: #2c3e50 !important;
-}
-body.light-mode input,
-body.light-mode select {
-  background: rgba(255, 255, 255, 0.7);
-  color: #1a252f;
-}
-</style>
+    </style>
 </head>
 <body>
 <div class="container">
@@ -456,9 +430,9 @@ body.light-mode select {
 <input id="filtroInicio" type="date"/>
 <label>até</label>
 <input id="filtroFim" type="date"/>
-<button aria-label="Ontem" class="btn-period" onclick="setPeriodo(1)"><i class="fas fa-calendar-day"></i> Ontem</button>
-<button aria-label="Últimos 7 dias" class="btn-period" onclick="setPeriodo(7)"><i class="fas fa-calendar-week"></i> Últimos 7 dias</button>
-<button aria-label="Últimos 30 dias" class="btn-period" onclick="setPeriodo(30)"><i class="fas fa-calendar-alt"></i> Últimos 30 dias</button>
+<button class="btn-period" onclick="setPeriodo(1)"><i class="fas fa-calendar-day"></i> Ontem</button>
+<button class="btn-period" onclick="setPeriodo(7)"><i class="fas fa-calendar-week"></i> Últimos 7 dias</button>
+<button class="btn-period" onclick="setPeriodo(30)"><i class="fas fa-calendar-alt"></i> Últimos 30 dias</button>
 </div>
 </div>
 <div class="control-section">
@@ -468,7 +442,7 @@ body.light-mode select {
 <select id="filtroClubeA"></select>
 <label>Clube B:</label>
 <select id="filtroClubeB"></select>
-<button aria-label="Aplicar Filtros" class="btn-apply" onclick="aplicarFiltros()">
+<button class="btn-apply" onclick="aplicarFiltros()">
 <i class="fas fa-filter"></i> Aplicar Filtros
                     </button>
 </div>
@@ -476,13 +450,13 @@ body.light-mode select {
 <div class="control-section">
 <h3><i class="fas fa-cog"></i> Ações</h3>
 <div class="button-controls">
-<button aria-label="Exportar CSV" class="btn-export" onclick="exportarCSV()">
+<button class="btn-export" onclick="exportarCSV()">
 <i class="fas fa-file-csv"></i> Exportar CSV
                     </button>
-<button aria-label="Modo Escuro" class="btn-mode" onclick="toggleDarkMode()">
+<button class="btn-mode" onclick="toggleDarkMode()">
 <i class="fas fa-moon"></i> Modo Escuro
                     </button>
-<button aria-label="Atualizar Dados" class="btn-mode" onclick="atualizarDados()">
+<button class="btn-mode" onclick="atualizarDados()">
 <i class="fas fa-sync"></i> Atualizar Dados
                     </button>
 </div>
@@ -609,6 +583,65 @@ body.light-mode select {
 <div id="loadingMessage">Carregando dados...</div>
 </div>
 <script>
+function criarGrafico(ctx, labelA, labelB, colorA, colorB, type='line') {
+    if (ctx.chart) {
+        console.log("Destruindo gráfico antigo para evitar conflito.");
+        ctx.chart.destroy();
+    }
+
+    let newChart = new Chart(ctx, {
+        type: type,
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: labelA,
+                    data: [],
+                    borderColor: colorA,
+                    backgroundColor: colorA,
+                    fill: false,
+                    tension: 0.1
+                },
+                {
+                    label: labelB,
+                    data: [],
+                    borderColor: colorB,
+                    backgroundColor: colorB,
+                    fill: false,
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    ctx.chart = newChart;
+    return newChart;
+}
+
+
+
         const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
         let dados = [], charts = {}, usandoDemo = false;
         let valoresAnteriores = {};
@@ -999,13 +1032,9 @@ body.light-mode select {
             a.click();
         }
         
-        
-function toggleDarkMode() {
-  document.body.classList.toggle("light-mode");
-  const modoAtual = document.body.classList.contains("light-mode") ? "claro" : "escuro";
-  alert("Modo " + modoAtual + " ativado!");
-}
-
+        function toggleDarkMode(){
+            alert("Modo escuro já está ativado! Esta função demonstra a capacidade de alternância.");
+        }
 
         $(document).ready(function(){
             carregar();
@@ -1018,7 +1047,5 @@ function toggleDarkMode() {
             });
         });
     </script>
-<script>
-console.log("jQuery version:", $.fn.jquery);
-</script></body>
+</body>
 </html>
