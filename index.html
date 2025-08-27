@@ -49,11 +49,11 @@
       .kpi .variacao { font-size: 0.9rem; margin-top: 8px; font-weight: 600; }
       .positive { border-left: 5px solid var(--success); }
       .negative { border-left: 5px solid var(--accent); }
-      .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(600px, 1fr)); gap: 25px; margin-bottom: 30px; }
+      .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(600px, 1fr)); gap: 25px; padding-top: 25px; }
       .chart-container { background: rgba(26, 37, 47, 0.7); border-radius: 15px; padding: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
       .chart-container h3 { margin-bottom: 20px; font-size: 1.4rem; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
       .chart-container canvas { width: 100% !important; height: 300px !important; }
-      .tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; margin-bottom: 30px; }
+      .tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; padding-top: 25px; }
       .table-container { background: rgba(26, 37, 47, 0.7); border-radius: 15px; padding: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; }
       .table-container h3 { margin-bottom: 20px; font-size: 1.4rem; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
       table { width: 100%; border-collapse: collapse; }
@@ -61,7 +61,7 @@
       td { padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
       tr:last-child td { border-bottom: none; }
       tr:hover { background: rgba(255, 255, 255, 0.05); }
-      .footer { text-align: center; padding: 25px; background: rgba(26, 37, 47, 0.7); border-radius: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+      .footer { text-align: center; padding: 25px; background: rgba(26, 37, 47, 0.7); border-radius: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 30px; }
       .footer p { margin-bottom: 10px; color: var(--gray); }
       #ultimaAtualizacao { font-weight: 600; color: var(--secondary); }
       #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 9999; }
@@ -184,19 +184,37 @@
         </div>
     </div>
 
-    <div class="charts">
-        <div class="chart-container"><h3><i class="fas fa-chart-bar"></i> Visão Geral Comparativa</h3><canvas id="chartComparativo"></canvas></div>
-        <div class="chart-container"><h3><i class="fas fa-chart-line"></i> Evolução do GGR</h3><canvas id="chartGGR"></canvas></div>
-        <div class="chart-container"><h3><i class="fas fa-money-bill-wave"></i> Evolução de Depósitos</h3><canvas id="chartDepositos"></canvas></div>
-        <div class="chart-container"><h3><i class="fas fa-user-plus"></i> Evolução do FTD</h3><canvas id="chartFTD"></canvas></div>
-        <div class="chart-container"><h3><i class="fas fa-futbol"></i> Evolução do Sportsbook</h3><canvas id="chartSportsbook"></canvas></div>
-        <div class="chart-container"><h3><i class="fas fa-dice"></i> Evolução do Cassino</h3><canvas id="chartCassino"></canvas></div>
+    <div class="collapsible-container">
+        <div class="collapsible-header">
+            <h3><i class="fas fa-chart-area"></i> Gráficos de Evolução</h3>
+            <i class="fas fa-chevron-down icon-toggle"></i>
+        </div>
+        <div class="collapsible-content">
+            <div class="charts">
+                <div class="chart-container"><h3><i class="fas fa-chart-bar"></i> Visão Geral Comparativa</h3><canvas id="chartComparativo"></canvas></div>
+                <div class="chart-container"><h3><i class="fas fa-chart-line"></i> Evolução do GGR</h3><canvas id="chartGGR"></canvas></div>
+                <div class="chart-container"><h3><i class="fas fa-money-bill-wave"></i> Evolução de Depósitos</h3><canvas id="chartDepositos"></canvas></div>
+                <div class="chart-container"><h3><i class="fas fa-user-plus"></i> Evolução do FTD</h3><canvas id="chartFTD"></canvas></div>
+                <div class="chart-container"><h3><i class="fas fa-futbol"></i> Evolução do Sportsbook</h3><canvas id="chartSportsbook"></canvas></div>
+                <div class="chart-container"><h3><i class="fas fa-dice"></i> Evolução do Cassino</h3><canvas id="chartCassino"></canvas></div>
+            </div>
+        </div>
     </div>
-    <div class="tables">
-        <div class="table-container"><h3><i class="fas fa-trophy"></i> Top 10 Depósitos</h3><table id="topDepositos"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3">Carregando...</td></tr></tbody></table></div>
-        <div class="table-container"><h3><i class="fas fa-trophy"></i> Top 10 FTD</h3><table id="topFTD"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3">Carregando...</td></tr></tbody></table></div>
-        <div class="table-container"><h3><i class="fas fa-trophy"></i> Top 10 GGR</h3><table id="topGGR"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3">Carregando...</td></tr></tbody></table></div>
+    
+    <div class="collapsible-container">
+        <div class="collapsible-header">
+            <h3><i class="fas fa-trophy"></i> Rankings Top 10</h3>
+            <i class="fas fa-chevron-down icon-toggle"></i>
+        </div>
+        <div class="collapsible-content">
+            <div class="tables">
+                <div class="table-container"><h3><i class="fas fa-trophy"></i> Top 10 Depósitos</h3><table id="topDepositos"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3">Carregando...</td></tr></tbody></table></div>
+                <div class="table-container"><h3><i class="fas fa-trophy"></i> Top 10 FTD</h3><table id="topFTD"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3">Carregando...</td></tr></tbody></table></div>
+                <div class="table-container"><h3><i class="fas fa-trophy"></i> Top 10 GGR</h3><table id="topGGR"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3">Carregando...</td></tr></tbody></table></div>
+            </div>
+        </div>
     </div>
+
     <div class="footer">
         <p>Última atualização: <span id="ultimaAtualizacao"></span></p>
         <p>Dashboard desenvolvido para análise comparativa de clubes | Dados atualizados automaticamente</p>
@@ -208,9 +226,7 @@
 </div>
 
 <script>
-    // --- URL CORRIGIDA ---
     const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ21mvugq-_T80mCuddCnebiH30MWwJvQ58QiS9OqzHJuTXEVPsOFa9_Apzt4e9rlrLEeQtc8p60t80/pub?gid=0&single=true&output=csv";
-    
     let dados = [], charts = {}, usandoDemo = false;
     let valoresAnteriores = {};
     const dadosDemo = [ /* Seus dados de demonstração aqui */ ];
