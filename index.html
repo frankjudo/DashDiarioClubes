@@ -27,9 +27,11 @@
       header { text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(26, 37, 47, 0.7); border-radius: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
       header h1 { font-size: 2.8rem; margin-bottom: 10px; background: linear-gradient(to right, var(--secondary), var(--success)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
       header p { font-size: 1.2rem; color: var(--gray); max-width: 800px; margin: 0 auto; }
-      .date-controls, .club-controls, .button-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+      .date-controls, .club-controls, .button-controls, .exclusion-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+      .exclusion-controls div { display: flex; align-items: center; gap: 8px; }
       label { font-weight: 600; color: var(--light); min-width: 80px; }
       input, select { padding: 12px 15px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(0, 0, 0, 0.2); color: var(--light); border-radius: 8px; font-size: 1rem; transition: all 0.3s ease; }
+      input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
       input:focus, select:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3); }
       .btn-period, .btn-apply, .btn-export, .btn-mode { padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s ease; font-size: 1rem; }
       .btn-period { background: rgba(52, 152, 219, 0.2); color: var(--secondary); }
@@ -157,6 +159,19 @@
                     </div>
                 </div>
                 <div class="control-section">
+                    <h3><i class="fas fa-user-slash"></i> Excluir Grupos</h3>
+                    <div class="exclusion-controls">
+                        <div>
+                            <input type="checkbox" id="excluir-suprema">
+                            <label for="excluir-suprema" style="min-width: unset;">Excluir CLUBES SUPREMA</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="excluir-toni">
+                            <label for="excluir-toni" style="min-width: unset;">Excluir TONI</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-section">
                     <h3><i class="fas fa-cog"></i> Ações</h3>
                     <div class="button-controls">
                         <button class="btn-export" onclick="exportarCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
@@ -243,6 +258,17 @@
     let valoresAnteriores = {};
     const dadosDemo = [ /* Seus dados de demonstração aqui */ ];
 
+    // --- NOVAS LISTAS DE EXCLUSÃO ---
+    const CLUBES_SUPREMA = [
+        'romulo@xpgames.bet',
+        'lucasfarinha@maximabet.net',
+        'superodds@gmail.com',
+        'clubedokw@gmail.com',
+        'tropadogg@gmail.com',
+        'galeradoinsta@gmail.com'
+    ];
+    const CLUBES_TONI = ['crisslots123@gmail.com'];
+
     function parseCurrency(valor) {
         if (!valor) return 0;
         let s = String(valor).trim();
@@ -294,10 +320,21 @@
     function setPeriodo(d){ let hoje = new Date(); let ini = new Date(); ini.setDate(hoje.getDate() - d); $("#filtroInicio").val(ini.toISOString().slice(0,10)); if (d===1) { $("#filtroFim").val(ini.toISOString().slice(0,10)); } else { $("#filtroFim").val(hoje.toISOString().slice(0,10)); } atualizar(); }
     function atualizarDados(){ showLoading(true, "Atualizando dados..."); carregar(); }
     
-    function atualizar(){ 
+    function atualizar(){
+        let dadosBase = [...dados]; // Cria uma cópia para não modificar o array original
+
+        // --- LÓGICA DE EXCLUSÃO ---
+        if ($('#excluir-suprema').is(':checked')) {
+            dadosBase = dadosBase.filter(d => !CLUBES_SUPREMA.includes(d["Usuário - Nome de usuário"]));
+        }
+        if ($('#excluir-toni').is(':checked')) {
+            dadosBase = dadosBase.filter(d => !CLUBES_TONI.includes(d["Usuário - Nome de usuário"]));
+        }
+
         let ini = $("#filtroInicio").val(); let fim = $("#filtroFim").val(); 
         let clubeA = $("#filtroClubeA").val(); let clubeB = $("#filtroClubeB").val(); 
-        let dadosFiltrados = dados.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim)); 
+        
+        let dadosFiltrados = dadosBase.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim)); 
         if(dadosFiltrados.length === 0){ console.warn("Filtro de data não retornou resultados."); } 
         let dadosClubeA = obterDadosDoClube(dadosFiltrados, clubeA); 
         let dadosClubeB = clubeB !== "Nenhum" ? obterDadosDoClube(dadosFiltrados, clubeB) : []; 
@@ -394,10 +431,20 @@
         const selecao = $('#ranking-metric-select').val();
         const metricaAtual = metricas[selecao];
         $('#ranking-title').html(`<i class="fas fa-trophy"></i> ${metricaAtual.title}`);
+        
+        // REUTILIZA A LÓGICA DE FILTRAGEM PRINCIPAL
+        let dadosBase = [...dados];
+        if ($('#excluir-suprema').is(':checked')) {
+            dadosBase = dadosBase.filter(d => !CLUBES_SUPREMA.includes(d["Usuário - Nome de usuário"]));
+        }
+        if ($('#excluir-toni').is(':checked')) {
+            dadosBase = dadosBase.filter(d => !CLUBES_TONI.includes(d["Usuário - Nome de usuário"]));
+        }
         const ini = $("#filtroInicio").val();
         const fim = $("#filtroFim").val();
-        const dadosBase = dados.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim));
-        let mapaValores = dadosBase.reduce((acc, d) => {
+        const dadosFiltrados = dadosBase.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim));
+
+        let mapaValores = dadosFiltrados.reduce((acc, d) => {
             let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
             if(!clube) return acc;
             let valor = parseCurrency(d[metricaAtual.field]);
@@ -426,6 +473,11 @@
 
         $('#ranking-metric-select').on('change', function() {
             atualizarTabelas();
+        });
+
+        // --- EVENTO PARA ATUALIZAR AO CLICAR NAS CHECKBOXES DE EXCLUSÃO ---
+        $('#excluir-suprema, #excluir-toni').on('change', function() {
+            atualizar();
         });
     });
 </script>
