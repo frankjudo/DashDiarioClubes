@@ -284,11 +284,30 @@
         return parseFloat(s) || 0;
     }
     
-    // --- NOVA FUNÇÃO PARA FORMATAR DATA ---
     function formatarDataBR(dataString) {
         if (!dataString) return '';
         const [ano, mes, dia] = dataString.split('-');
         return `${dia}/${mes}/${ano}`;
+    }
+
+    // --- NOVA FUNÇÃO PARA CALCULAR O PERÍODO ANTERIOR ---
+    function getPreviousPeriod(startDateStr, endDateStr) {
+        const startDate = new Date(startDateStr + "T12:00:00Z"); // Usar T12:00:00Z para evitar problemas de fuso
+        const endDate = new Date(endDateStr + "T12:00:00Z");
+        
+        const diffTime = Math.abs(endDate - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+        const previousEndDate = new Date(startDate);
+        previousEndDate.setDate(previousEndDate.getDate() - 1);
+
+        const previousStartDate = new Date(previousEndDate);
+        previousStartDate.setDate(previousEndDate.getDate() - (diffDays - 1));
+
+        return {
+            start: previousStartDate.toISOString().slice(0, 10),
+            end: previousEndDate.toISOString().slice(0, 10)
+        };
     }
 
     function showLoading(on, msg="Carregando dados..."){ $("#loadingMessage").text(msg); $("#loadingOverlay").css("display", on ? "flex" : "none"); }
@@ -339,26 +358,31 @@
         }
 
         let ini = $("#filtroInicio").val(); let fim = $("#filtroFim").val(); 
-        let clubeA = $("#filtroClubeA").val(); let clubeB = $("#filtroClubeB").val(); 
         
-        // --- ATUALIZA A DATA NO CABEÇALHO ---
+        // Calcula período anterior
+        const periodoAnterior = getPreviousPeriod(ini, fim);
+
+        // Atualiza a data no cabeçalho
         let dataInicioFormatada = formatarDataBR(ini);
         let dataFimFormatada = formatarDataBR(fim);
-        let textoData = '';
-        if (dataInicioFormatada === dataFimFormatada) {
-            textoData = `Exibindo dados de: ${dataInicioFormatada}`;
-        } else {
-            textoData = `Exibindo dados de: ${dataInicioFormatada} até ${dataFimFormatada}`;
-        }
+        let textoData = (dataInicioFormatada === dataFimFormatada) ? `Exibindo dados de: ${dataInicioFormatada}` : `Exibindo dados de: ${dataInicioFormatada} até ${dataFimFormatada}`;
         $('#display-date-range').text(textoData);
 
-        let dadosFiltrados = dadosBase.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim)); 
-        if(dadosFiltrados.length === 0){ console.warn("Filtro de data não retornou resultados."); } 
-        let dadosClubeA = obterDadosDoClube(dadosFiltrados, clubeA); 
-        let dadosClubeB = clubeB !== "Nenhum" ? obterDadosDoClube(dadosFiltrados, clubeB) : []; 
-        atualizarKPIs(dadosClubeA, dadosClubeB); 
-        atualizarGraficos(dadosClubeA, dadosClubeB, clubeA, clubeB); 
-        atualizarTabelas(); 
+        // Filtra dados para os dois períodos
+        let dadosFiltradosAtual = dadosBase.filter(d => d.DATA >= ini && d.DATA <= fim); 
+        let dadosFiltradosAnterior = dadosBase.filter(d => d.DATA >= periodoAnterior.start && d.DATA <= periodoAnterior.end);
+
+        let clubeA = $("#filtroClubeA").val(); let clubeB = $("#filtroClubeB").val(); 
+        
+        // Separa os dados por clube para os dois períodos
+        let dadosClubeA_Atual = obterDadosDoClube(dadosFiltradosAtual, clubeA);
+        let dadosClubeB_Atual = clubeB !== "Nenhum" ? obterDadosDoClube(dadosFiltradosAtual, clubeB) : [];
+        let dadosClubeA_Anterior = obterDadosDoClube(dadosFiltradosAnterior, clubeA);
+        let dadosClubeB_Anterior = clubeB !== "Nenhum" ? obterDadosDoClube(dadosFiltradosAnterior, clubeB) : [];
+        
+        atualizarKPIs(dadosClubeA_Atual, dadosClubeB_Atual, dadosClubeA_Anterior, dadosClubeB_Anterior); 
+        atualizarGraficos(dadosClubeA_Atual, dadosClubeB_Atual, clubeA, clubeB); 
+        atualizarTabelas(dadosFiltradosAtual, dadosFiltradosAnterior); 
         $("#ultimaAtualizacao").text(new Date().toLocaleString('pt-BR')); 
     }
     
@@ -367,26 +391,46 @@
         return dadosBase.filter(d => (d["Usuário - Nome de username"] === nomeClube) || (d["Usuário - Nome de usuário"] === nomeClube)); 
     }
     
-    function animarKPI(sel, novo, anterior = 0){ let el = $(sel + " .valor"); let varEl = $(sel + " .variacao"); let variacao = (anterior !== 0 && Math.abs(anterior) > 0) ? ((novo - anterior) / Math.abs(anterior)) * 100 : (novo > 0 ? 100 : 0); let variacaoText = `<span style="color: ${variacao >= 0 ? '#2ecc71' : '#e74c3c'}">${variacao >= 0 ? '+' : ''}${variacao.toFixed(1)}%</span>`; varEl.html(variacaoText); $(sel).removeClass("positive negative").addClass(novo >= 0 ? "positive" : "negative"); let ant = valoresAnteriores[sel] || 0; let diff = (novo - ant) / 30; let cur = ant; let pass = 0; let h = setInterval(() => { cur += diff; pass++; if (pass >= 30) { clearInterval(h); cur = novo; } el.text("R$ " + cur.toLocaleString('pt-BR', {minimumFractionDigits: 2})); }, 20); valoresAnteriores[sel] = novo; }
-
-    function atualizarKPIs(dadosA, dadosB) {
-        let somador = (arr, field) => arr.reduce((s, d) => s + parseCurrency(d[field]), 0);
-        let totalFTD = somador(dadosA, "Usuário - FTD-Montante") + somador(dadosB, "Usuário - FTD-Montante");
-        let totalDepositos = somador(dadosA, "Usuário - Depósitos") + somador(dadosB, "Usuário - Depósitos");
-        let totalGGR = somador(dadosA, "Cálculo - GGR") + somador(dadosB, "Cálculo - GGR");
-        let totalSportsbook = somador(dadosA, "Sportsbook - GGR") + somador(dadosB, "Sportsbook - GGR");
-        let totalCassino = somador(dadosA, "Cassino - GGR") + somador(dadosB, "Cassino - GGR");
-        let totalBonus = somador(dadosA, "Cálculo - bônus convertidos") + somador(dadosB, "Cálculo - bônus convertidos");
+    function animarKPI(sel, novo, anterior = 0){ 
+        let el = $(sel + " .valor"); 
+        let varEl = $(sel + " .variacao"); 
+        let variacao = (anterior !== 0) ? ((novo - anterior) / Math.abs(anterior)) * 100 : (novo > 0 ? 100 : 0);
+        let variacaoText = `<span style="color: ${variacao >= 0 ? '#2ecc71' : '#e74c3c'}">${variacao >= 0 ? '+' : ''}${variacao.toFixed(1)}%</span>`; 
+        varEl.html(variacaoText); 
+        $(sel).removeClass("positive negative").addClass(novo >= anterior ? "positive" : "negative"); 
         
-        animarKPI("#kpi-ftd", totalFTD, valoresAnteriores["#kpi-ftd"]);
-        animarKPI("#kpi-depositos", totalDepositos, valoresAnteriores["#kpi-depositos"]);
-        animarKPI("#kpi-ggr", totalGGR, valoresAnteriores["#kpi-ggr"]);
-        animarKPI("#kpi-sportsbook", totalSportsbook, valoresAnteriores["#kpi-sportsbook"]);
-        animarKPI("#kpi-cassino", totalCassino, valoresAnteriores["#kpi-cassino"]);
-        animarKPI("#kpi-bonus", totalBonus, valoresAnteriores["#kpi-bonus"]);
+        let valorAntigoAnim = parseFloat(el.text().replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+        let diff = (novo - valorAntigoAnim) / 30; 
+        let cur = valorAntigoAnim; 
+        let pass = 0; 
+        let h = setInterval(() => { 
+            cur += diff; pass++; 
+            if (pass >= 30) { clearInterval(h); cur = novo; } 
+            el.text("R$ " + cur.toLocaleString('pt-BR', {minimumFractionDigits: 2})); 
+        }, 20); 
+    }
+
+    function atualizarKPIs(dadosA_Atual, dadosB_Atual, dadosA_Anterior, dadosB_Anterior) {
+        let somador = (arr, field) => arr.reduce((s, d) => s + parseCurrency(d[field]), 0);
+        
+        const kpiFields = {
+            ftd: "Usuário - FTD-Montante",
+            depositos: "Usuário - Depósitos",
+            ggr: "Cálculo - GGR",
+            sportsbook: "Sportsbook - GGR",
+            cassino: "Cassino - GGR",
+            bonus: "Cálculo - bônus convertidos"
+        };
+
+        for (const [key, field] of Object.entries(kpiFields)) {
+            const totalAtual = somador(dadosA_Atual, field) + somador(dadosB_Atual, field);
+            const totalAnterior = somador(dadosA_Anterior, field) + somador(dadosB_Anterior, field);
+            animarKPI(`#kpi-${key}`, totalAtual, totalAnterior);
+        }
     }
 
     function atualizarGraficos(dadosA, dadosB, nomeA, nomeB) {
+        // Esta função não precisa mudar, pois ela só exibe os dados do período ATUAL
         let agrupaPorData = arr => {
             return arr.reduce((out, d) => {
                 out[d.DATA] = out[d.DATA] || { ggr: 0, dep: 0, ftd: 0, sb: 0, cs: 0, bo: 0 };
@@ -440,7 +484,7 @@
         chartComp.update();
     }
 
-    function atualizarTabelas() {
+    function atualizarTabelas(dadosFiltradosAtual, dadosFiltradosAnterior) {
         const metricas = {
             'depositos': { field: 'Usuário - Depósitos', title: 'Top 10 Depósitos' },
             'ftd': { field: 'Usuário - FTD-Montante', title: 'Top 10 FTD' },
@@ -450,30 +494,31 @@
         const metricaAtual = metricas[selecao];
         $('#ranking-title').html(`<i class="fas fa-trophy"></i> ${metricaAtual.title}`);
         
-        let dadosBase = [...dados];
-        if ($('#excluir-suprema').is(':checked')) {
-            dadosBase = dadosBase.filter(d => !CLUBES_SUPREMA.includes(d["Usuário - Nome de usuário"]));
-        }
-        if ($('#excluir-toni').is(':checked')) {
-            dadosBase = dadosBase.filter(d => !CLUBES_TONI.includes(d["Usuário - Nome de usuário"]));
-        }
-        const ini = $("#filtroInicio").val();
-        const fim = $("#filtroFim").val();
-        const dadosFiltrados = dadosBase.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim));
+        const agruparValores = (dados) => {
+            return dados.reduce((acc, d) => {
+                const clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
+                if(!clube) return acc;
+                const valor = parseCurrency(d[metricaAtual.field]);
+                acc[clube] = (acc[clube] || 0) + valor;
+                return acc;
+            }, {});
+        };
 
-        let mapaValores = dadosFiltrados.reduce((acc, d) => {
-            let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
-            if(!clube) return acc;
-            let valor = parseCurrency(d[metricaAtual.field]);
-            acc[clube] = (acc[clube] || 0) + valor;
-            return acc;
-        }, {});
-        let top10 = Object.entries(mapaValores).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        const mapaValoresAtual = agruparValores(dadosFiltradosAtual);
+        const mapaValoresAnterior = agruparValores(dadosFiltradosAnterior);
+
+        const top10 = Object.entries(mapaValoresAtual).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        
         let html = top10.map(item => {
-            let variacao = (Math.random() * 10 - 5).toFixed(1);
-            let corVariacao = variacao >= 0 ? '#2ecc71' : '#e74c3c';
-            return `<tr><td>${item[0]}</td><td>R$ ${item[1].toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td style="color:${corVariacao}">${variacao >= 0 ? '+' : ''}${variacao}%</td></tr>`;
+            const clube = item[0];
+            const valorAtual = item[1];
+            const valorAnterior = mapaValoresAnterior[clube] || 0;
+            const variacao = (valorAnterior !== 0) ? ((valorAtual - valorAnterior) / Math.abs(valorAnterior)) * 100 : (valorAtual > 0 ? 100 : 0);
+            const corVariacao = variacao >= 0 ? '#2ecc71' : '#e74c3c';
+            
+            return `<tr><td>${clube}</td><td>R$ ${valorAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td style="color:${corVariacao}">${variacao >= 0 ? '+' : ''}${variacao.toFixed(1)}%</td></tr>`;
         }).join('');
+
         $("#top-10-table tbody").html(html || '<tr><td colspan="3">Sem dados para exibir.</td></tr>');
     }
 
@@ -489,7 +534,9 @@
         });
 
         $('#ranking-metric-select').on('change', function() {
-            atualizarTabelas();
+            // A tabela agora é atualizada dentro da função principal 'atualizar'
+            // mas podemos chamar de novo para uma resposta mais rápida
+            atualizar();
         });
 
         $('#excluir-suprema, #excluir-toni').on('change', function() {
