@@ -27,6 +27,7 @@
       header { text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(26, 37, 47, 0.7); border-radius: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
       header h1 { font-size: 2.8rem; margin-bottom: 10px; background: linear-gradient(to right, var(--secondary), var(--success)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
       header p { font-size: 1.2rem; color: var(--gray); max-width: 800px; margin: 0 auto; }
+      .date-display { margin-top: 15px; font-size: 1rem; color: var(--secondary); font-weight: 600; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 8px; display: inline-block;}
       .date-controls, .club-controls, .button-controls, .exclusion-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
       .exclusion-controls div { display: flex; align-items: center; gap: 8px; }
       label { font-weight: 600; color: var(--light); min-width: 80px; }
@@ -128,6 +129,7 @@
     <header>
         <h1><i class="fas fa-chart-line"></i> Dashboard d-1 dos Clubes</h1>
         <p>Analise e compare o desempenho de diferentes clubes em tempo real</p>
+        <div id="display-date-range" class="date-display"></div>
     </header>
     <div id="demoWarning">
         <i class="fas fa-exclamation-triangle"></i> Você está visualizando dados de demonstração. Conecte-se à fonte de dados real para ver informações atualizadas.
@@ -258,7 +260,6 @@
     let valoresAnteriores = {};
     const dadosDemo = [ /* Seus dados de demonstração aqui */ ];
 
-    // --- NOVAS LISTAS DE EXCLUSÃO ---
     const CLUBES_SUPREMA = [
         'romulo@xpgames.bet',
         'lucasfarinha@maximabet.net',
@@ -281,6 +282,13 @@
             s = s.replace(/,/g, '');
         }
         return parseFloat(s) || 0;
+    }
+    
+    // --- NOVA FUNÇÃO PARA FORMATAR DATA ---
+    function formatarDataBR(dataString) {
+        if (!dataString) return '';
+        const [ano, mes, dia] = dataString.split('-');
+        return `${dia}/${mes}/${ano}`;
     }
 
     function showLoading(on, msg="Carregando dados..."){ $("#loadingMessage").text(msg); $("#loadingOverlay").css("display", on ? "flex" : "none"); }
@@ -321,9 +329,8 @@
     function atualizarDados(){ showLoading(true, "Atualizando dados..."); carregar(); }
     
     function atualizar(){
-        let dadosBase = [...dados]; // Cria uma cópia para não modificar o array original
+        let dadosBase = [...dados];
 
-        // --- LÓGICA DE EXCLUSÃO ---
         if ($('#excluir-suprema').is(':checked')) {
             dadosBase = dadosBase.filter(d => !CLUBES_SUPREMA.includes(d["Usuário - Nome de usuário"]));
         }
@@ -334,6 +341,17 @@
         let ini = $("#filtroInicio").val(); let fim = $("#filtroFim").val(); 
         let clubeA = $("#filtroClubeA").val(); let clubeB = $("#filtroClubeB").val(); 
         
+        // --- ATUALIZA A DATA NO CABEÇALHO ---
+        let dataInicioFormatada = formatarDataBR(ini);
+        let dataFimFormatada = formatarDataBR(fim);
+        let textoData = '';
+        if (dataInicioFormatada === dataFimFormatada) {
+            textoData = `Exibindo dados de: ${dataInicioFormatada}`;
+        } else {
+            textoData = `Exibindo dados de: ${dataInicioFormatada} até ${dataFimFormatada}`;
+        }
+        $('#display-date-range').text(textoData);
+
         let dadosFiltrados = dadosBase.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim)); 
         if(dadosFiltrados.length === 0){ console.warn("Filtro de data não retornou resultados."); } 
         let dadosClubeA = obterDadosDoClube(dadosFiltrados, clubeA); 
@@ -432,7 +450,6 @@
         const metricaAtual = metricas[selecao];
         $('#ranking-title').html(`<i class="fas fa-trophy"></i> ${metricaAtual.title}`);
         
-        // REUTILIZA A LÓGICA DE FILTRAGEM PRINCIPAL
         let dadosBase = [...dados];
         if ($('#excluir-suprema').is(':checked')) {
             dadosBase = dadosBase.filter(d => !CLUBES_SUPREMA.includes(d["Usuário - Nome de usuário"]));
@@ -475,7 +492,6 @@
             atualizarTabelas();
         });
 
-        // --- EVENTO PARA ATUALIZAR AO CLICAR NAS CHECKBOXES DE EXCLUSÃO ---
         $('#excluir-suprema, #excluir-toni').on('change', function() {
             atualizar();
         });
