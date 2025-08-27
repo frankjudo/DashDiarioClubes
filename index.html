@@ -53,9 +53,10 @@
       .chart-container { background: rgba(26, 37, 47, 0.7); border-radius: 15px; padding: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
       .chart-container h3 { margin-bottom: 20px; font-size: 1.4rem; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
       .chart-container canvas { width: 100% !important; height: 300px !important; }
-      .tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; padding-top: 25px; }
+      .tables { display: grid; grid-template-columns: 1fr; gap: 25px; padding-top: 25px; } /* Alterado para 1fr */
       .table-container { background: rgba(26, 37, 47, 0.7); border-radius: 15px; padding: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; }
-      .table-container h3 { margin-bottom: 20px; font-size: 1.4rem; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
+      .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+      .table-header h3 { margin: 0; font-size: 1.4rem; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
       table { width: 100%; border-collapse: collapse; }
       th { background: rgba(52, 152, 219, 0.2); padding: 15px; text-align: left; font-weight: 600; color: var(--secondary); }
       td { padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
@@ -200,9 +201,28 @@
         </div>
         <div class="collapsible-content">
             <div class="tables">
-                <div class="table-container"><h3><i class="fas fa-trophy"></i> Top 10 Depósitos</h3><table id="topDepositos"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3">Carregando...</td></tr></tbody></table></div>
-                <div class="table-container"><h3><i class="fas fa-trophy"></i> Top 10 FTD</h3><table id="topFTD"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3">Carregando...</td></tr></tbody></table></div>
-                <div class="table-container"><h3><i class="fas fa-trophy"></i> Top 10 GGR</h3><table id="topGGR"><thead><tr><th>Clube</th><th>Valor</th><th>Variação</th></tr></thead><tbody><tr><td colspan="3">Carregando...</td></tr></tbody></table></div>
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3 id="ranking-title"><i class="fas fa-trophy"></i> Top 10 Depósitos</h3>
+                        <select id="ranking-metric-select">
+                            <option value="depositos">Depósitos</option>
+                            <option value="ftd">FTD</option>
+                            <option value="ggr">GGR</option>
+                        </select>
+                    </div>
+                    <table id="top-10-table">
+                        <thead>
+                            <tr>
+                                <th>Clube</th>
+                                <th>Valor</th>
+                                <th>Variação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="3">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -253,7 +273,6 @@
         let optsClubeB = '<option value="Nenhum">Nenhum</option>' + clubes.map(c => `<option>${c}</option>`).join(''); 
         $("#filtroClubeA").html(opts); $("#filtroClubeB").html(optsClubeB).val("Nenhum"); 
         
-        // --- ALTERAÇÃO: FILTRO DE DATA PADRÃO PARA "ONTEM" ---
         let ontem = new Date();
         ontem.setDate(ontem.getDate() - 1);
         const dataOntem = ontem.toISOString().slice(0,10);
@@ -284,7 +303,7 @@
         let dadosClubeB = clubeB !== "Nenhum" ? obterDadosDoClube(dadosFiltrados, clubeB) : []; 
         atualizarKPIs(dadosClubeA, dadosClubeB); 
         atualizarGraficos(dadosClubeA, dadosClubeB, clubeA, clubeB); 
-        atualizarTabelas(dadosFiltrados); 
+        atualizarTabelas(); 
         $("#ultimaAtualizacao").text(new Date().toLocaleString('pt-BR')); 
     }
     
@@ -366,26 +385,52 @@
         chartComp.update();
     }
 
-    function atualizarTabelas(dadosBase) {
-        function preenche(id, field) {
-            let mapaValores = dadosBase.reduce((acc, d) => {
-                let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
-                if(!clube) return acc;
-                let valor = parseCurrency(d[field]);
-                acc[clube] = (acc[clube] || 0) + valor;
-                return acc;
-            }, {});
-            let top10 = Object.entries(mapaValores).sort((a, b) => b[1] - a[1]).slice(0, 10);
-            let html = top10.map(item => {
-                let variacao = (Math.random() * 10 - 5).toFixed(1);
-                let corVariacao = variacao >= 0 ? '#2ecc71' : '#e74c3c';
-                return `<tr><td>${item[0]}</td><td>R$ ${item[1].toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td style="color:${corVariacao}">${variacao >= 0 ? '+' : ''}${variacao}%</td></tr>`;
-            }).join('');
-            $(id + " tbody").html(html || '<tr><td colspan="3">Sem dados para exibir.</td></tr>');
-        }
-        preenche("#topDepositos", "Usuário - Depósitos");
-        preenche("#topFTD", "Usuário - FTD-Montante");
-        preenche("#topGGR", "Cálculo - GGR");
+    // --- FUNÇÃO DE ATUALIZAR TABELAS MODIFICADA ---
+    function atualizarTabelas() {
+        // Mapeia o valor do select para a coluna e título corretos
+        const metricas = {
+            'depositos': {
+                field: 'Usuário - Depósitos',
+                title: 'Top 10 Depósitos'
+            },
+            'ftd': {
+                field: 'Usuário - FTD-Montante',
+                title: 'Top 10 FTD'
+            },
+            'ggr': {
+                field: 'Cálculo - GGR',
+                title: 'Top 10 GGR'
+            }
+        };
+
+        const selecao = $('#ranking-metric-select').val();
+        const metricaAtual = metricas[selecao];
+
+        // Atualiza o título da tabela
+        $('#ranking-title').html(`<i class="fas fa-trophy"></i> ${metricaAtual.title}`);
+
+        // Filtra os dados com base nos seletores de data/clube
+        const ini = $("#filtroInicio").val();
+        const fim = $("#filtroFim").val();
+        const dadosBase = dados.filter(d => (!ini || d.DATA >= ini) && (!fim || d.DATA <= fim));
+
+        let mapaValores = dadosBase.reduce((acc, d) => {
+            let clube = d["Usuário - Nome de username"] || d["Usuário - Nome de usuário"];
+            if(!clube) return acc;
+            let valor = parseCurrency(d[metricaAtual.field]);
+            acc[clube] = (acc[clube] || 0) + valor;
+            return acc;
+        }, {});
+
+        let top10 = Object.entries(mapaValores).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        
+        let html = top10.map(item => {
+            let variacao = (Math.random() * 10 - 5).toFixed(1);
+            let corVariacao = variacao >= 0 ? '#2ecc71' : '#e74c3c';
+            return `<tr><td>${item[0]}</td><td>R$ ${item[1].toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td style="color:${corVariacao}">${variacao >= 0 ? '+' : ''}${variacao}%</td></tr>`;
+        }).join('');
+
+        $("#top-10-table tbody").html(html || '<tr><td colspan="3">Sem dados para exibir.</td></tr>');
     }
 
     function exportarCSV(){ let csv = Papa.unparse(dados); let blob = new Blob(["\uFEFF" + csv], {type: "text/csv;charset=utf-8;"}); let a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "dados_clubes.csv"; a.click(); }
@@ -394,10 +439,15 @@
     $(document).ready(function(){ 
         carregar(); 
 
-        // --- CÓDIGO PARA O MENU SUSPENSO ---
+        // --- CÓDIGO PARA OS MENUS SUSPENSOS ---
         $('.collapsible-header').on('click', function() {
             $(this).toggleClass('active');
             $(this).next('.collapsible-content').slideToggle(300);
+        });
+
+        // --- EVENTO PARA ATUALIZAR RANKING AO MUDAR O SELECT ---
+        $('#ranking-metric-select').on('change', function() {
+            atualizarTabelas();
         });
     });
 </script>
